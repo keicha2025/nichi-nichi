@@ -547,7 +547,7 @@ createApp({
             clear: () => { localStorage.removeItem('guest_data'); window.location.reload(); }
         };
 
-        const handleUpdateUserData = async (data) => {
+        const handleUpdateUserData = async (data, silent = false) => {
             if (appMode.value === 'GUEST') {
                 if (data.categories) localStorage.setItem('guest_categories', JSON.stringify(data.categories));
                 if (data.paymentMethods) localStorage.setItem('guest_payments', JSON.stringify(data.paymentMethods));
@@ -556,16 +556,20 @@ createApp({
                 return;
             }
             if (appMode.value !== 'ADMIN') return;
-            loading.value = true;
-            await API.updateUserData(data);
-            await loadData();
-            loading.value = false;
+            if (!silent) loading.value = true;
+            try {
+                await API.updateUserData(data);
+                await loadData();
+            } finally {
+                if (!silent) loading.value = false;
+            }
         };
 
         const handleAddFriendToList = async (n) => {
             if (!friends.value.includes(n)) {
                 friends.value.push(n);
-                await handleUpdateUserData({ friends: friends.value });
+                // Silent update in background
+                handleUpdateUserData({ friends: friends.value }, true);
             }
         };
 
@@ -685,7 +689,8 @@ createApp({
                 }
 
                 if (!name) return;
-                loading.value = true;
+                if (!name) return;
+                // Silent update
                 try {
                     await API.saveTransaction({
                         action: 'updateProject',
@@ -694,11 +699,9 @@ createApp({
                         endDate: endDate
                     });
                     await loadData();
-                    dialog.alert("Project Created!", 'success');
+                    // dialog.alert("Project Created!", 'success'); // Silent, don't alert
                 } catch (e) {
                     dialog.alert("Error creating project: " + e, 'error');
-                } finally {
-                    loading.value = false;
                 }
             }
         };

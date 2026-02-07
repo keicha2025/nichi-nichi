@@ -20,11 +20,11 @@ export const HistoryPage = {
              <div v-for="item in group.items" :key="item.id" 
                   @click="$emit('edit-item', item)"
                   class="bg-white p-5 rounded-[1.8rem] muji-shadow flex justify-between items-center active:scale-[0.98] transition-transform">
-                <div class="flex items-center space-x-4">
-                    <div class="w-11 h-11 bg-gray-50 rounded-full flex items-center justify-center">
+                <div class="flex items-center space-x-4 flex-1 min-w-0 mr-2">
+                    <div class="w-11 h-11 bg-gray-50 rounded-full flex items-center justify-center shrink-0">
                         <span class="material-symbols-rounded text-gray-400 text-xl">{{ getIcon(item.categoryId) }}</span>
                     </div>
-                    <div class="flex flex-col min-w-0 flex-1 pr-2">
+                    <div class="flex flex-col min-w-0">
                         <span class="text-sm font-medium text-gray-700 truncate block">{{ item.name }}</span>
                         <div class="flex flex-wrap items-center gap-x-2 mt-0.5 text-[9px]">
                             <span class="text-gray-300 whitespace-nowrap flex items-center gap-1">
@@ -37,7 +37,8 @@ export const HistoryPage = {
                             <span v-if="item.projectId" class="text-gray-300 truncate max-w-[80px]">{{ getProjectName(item.projectId) }}</span>
                         </div>
                     </div>
-                <div class="text-right">
+                </div>
+                <div class="text-right shrink-0">
                     <p class="text-sm font-medium" :class="getSignClass(item.type)">
                         {{ getSign(item.type) }} {{ getSymbol(item.currency) }} {{ formatNumber(getConvertedDisplayAmount(item)) }}
                     </p>
