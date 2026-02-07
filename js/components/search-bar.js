@@ -5,7 +5,8 @@ export const SearchBar = {
         'app-select': AppSelect
     },
     template: `
-    <div class="sticky top-0 z-40 bg-[#FDFCFB]/95 backdrop-blur-sm py-2 -mx-4 px-4 border-b border-gray-50/50">
+    <!-- Transaction Filter Bar -->
+    <div class="sticky top-0 z-40 bg-[#FDFCFB]/95 backdrop-blur-sm py-2">
         <div class="flex space-x-2">
             <!-- Search Input -->
             <div class="flex-1 bg-white rounded-xl flex items-center px-3 h-9 shadow-sm border border-gray-50 transition-shadow focus-within:shadow-md">
