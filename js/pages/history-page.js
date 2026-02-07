@@ -37,13 +37,12 @@ export const HistoryPage = {
                             <span v-if="item.projectId" class="text-gray-300 truncate max-w-[80px]">{{ getProjectName(item.projectId) }}</span>
                         </div>
                     </div>
-                </div>
                 <div class="text-right">
                     <p class="text-sm font-medium" :class="getSignClass(item.type)">
-                        {{ getSign(item.type) }} {{ getCurrencySymbol }} {{ formatNumber(getConvertedDisplayAmount(item)) }}
+                        {{ getSign(item.type) }} {{ getSymbol(item.currency) }} {{ formatNumber(getConvertedDisplayAmount(item)) }}
                     </p>
                     <div v-if="item.debtAmount !== 0" class="text-[8px] mt-0.5 font-medium" :class="item.debtAmount > 0 ? 'text-gray-400' : 'text-red-300'">
-                        {{ item.debtAmount > 0 ? '債權 +' : '債務 ' }} {{ getCurrencySymbol }} {{ formatNumber(getConvertedDebtAmount(item)) }}
+                        {{ item.debtAmount > 0 ? '債權 +' : '債務 ' }} {{ getSymbol(item.currency) }} {{ formatNumber(getConvertedDebtAmount(item)) }}
                     </div>
                 </div>
             </div>
@@ -52,10 +51,10 @@ export const HistoryPage = {
     `,
     props: ['transactions', 'categories', 'paymentMethods', 'projects', 'fxRate'],
     setup() {
-        const { inject, computed } = window.Vue;
-        const baseCurrency = inject('baseCurrency');
-        const getCurrencySymbol = computed(() => baseCurrency.value === 'JPY' ? '¥' : '$');
-        return { baseCurrency, getCurrencySymbol };
+        // [Modified] No longer need global baseCurrency for individual items, but maybe for header? 
+        // User requested "明細頁面固定顯示「原始幣別」不得更改顯示幣別". 
+        // Assuming global toggle only affects Stats/Overview, not History list items.
+        return {};
     },
     data() {
         return {
@@ -100,32 +99,27 @@ export const HistoryPage = {
         formatNumber(num) { return new Intl.NumberFormat().format(Math.round(num || 0)); },
         getSign(type) { return type === '支出' ? '-' : '+'; },
         getSignClass(type) { return type === '支出' ? 'text-gray-600' : 'text-gray-400'; },
+        getSymbol(currency) { return currency === 'JPY' ? '¥' : '$'; },
         formatMonth(ym) {
             if (!ym) return '未知日期';
             const parts = ym.split('-');
             return parts[0] + '年' + parts[1] + '月';
         },
         getConvertedDisplayAmount(item) {
-            let val = 0;
-            const currency = item.originalCurrency || (item.currency) || 'JPY';
+            // [Modified] Always return original amount
             if (item.type === '收款') {
-                val = (item.amount !== undefined && item.amount !== null) ? Number(item.amount) : (currency === 'TWD' ? Number(item.amountTWD) : Number(item.amountJPY));
+                return (item.amount !== undefined && item.amount !== null) ? Number(item.amount) : 0;
             } else {
-                val = Number(item.personalShare || 0);
+                return Number(item.personalShare || 0);
             }
-            return this.convertValue(val, currency);
         },
         getConvertedDebtAmount(item) {
-            const currency = item.originalCurrency || (item.currency) || 'JPY';
-            const val = Math.abs(item.debtAmount || 0);
-            return this.convertValue(val, currency);
+            // [Modified] Always return original debt amount
+            return Math.abs(item.debtAmount || 0);
         },
         convertValue(val, fromCurr) {
-            const rate = Number(this.fxRate || 0.22);
-            const target = this.baseCurrency;
-            if (target === fromCurr) return val;
-            if (target === 'JPY') return val / rate;
-            return val * rate;
+            // [Modified] No operation, return value as is
+            return val;
         }
     }
 };

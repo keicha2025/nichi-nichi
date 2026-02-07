@@ -497,7 +497,7 @@ createApp({
             form.value = {
                 type: '支出', currency: 'JPY', amount: '', spendDate: getLocalISOString(),
                 categoryId: 'cat_001', name: '', note: '', paymentMethod: '',
-                isOneTime: false, isSplit: false, friendName: '', personalShare: 0, payer: defaultPayer, isAlreadyPaid: false,
+                isSplit: false, friendName: '', personalShare: 0, payer: defaultPayer, isAlreadyPaid: false,
                 projectId: '',
                 action: 'add'
             };
@@ -650,7 +650,7 @@ createApp({
                 try {
                     await API.login();
                     // AuthStateChanged will handle reload
-                    dialog.alert("歡迎回來", "success");
+                    dialog.alert("登入成功", "success");
                 } catch (e) {
                     dialog.alert("登入失敗: " + e.message);
                 }

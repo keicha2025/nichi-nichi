@@ -292,7 +292,6 @@ const handleMigrate = async () => {
                     projectId: payload.projectId || '',
                     payer: payload.payer || '我',
                     friendName: payload.friendName || '',
-                    isOneTime: !!payload.isOneTime,
                     isSplit: !!payload.isSplit,
                     personalShare: Number(payload.personalShare) || 0,
                     debtAmount: Number(payload.debtAmount) || 0

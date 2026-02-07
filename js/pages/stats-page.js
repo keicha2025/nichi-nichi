@@ -191,27 +191,31 @@ export const StatsPage = {
         },
         processedList() {
             return this.filteredList.map(t => {
-                const amtJPY = Number(t.amountJPY || 0);
-                const amtTWD = Number(t.amountTWD || 0);
+                const currency = t.currency || 'JPY'; // Use 'currency' field, default JPY
+                const amount = Number(t.amount || 0);
                 const personal = Number(t.personalShare || 0);
-                const originalCurr = t.originalCurrency || 'JPY';
                 const rate = Number(this.fxRate);
 
                 let finalVal = 0;
 
+                // 邏輯修正：直接依據 payer, personalShare, currency, fxRate計算
                 if (this.isMyShareOnly || t.payer !== '我') {
-                    if (originalCurr === this.baseCurrency) {
+                    // 顯示個人份額 (來源貨幣 -> 目標貨幣)
+                    if (this.baseCurrency === currency) {
                         finalVal = personal;
-                    } else if (this.baseCurrency === 'JPY') {
+                    } else if (this.baseCurrency === 'JPY') { // TWD -> JPY
                         finalVal = personal / rate;
-                    } else {
+                    } else { // JPY -> TWD
                         finalVal = personal * rate;
                     }
                 } else {
-                    if (this.baseCurrency === 'JPY') {
-                        finalVal = amtJPY;
-                    } else {
-                        finalVal = amtTWD;
+                    // 顯示總金額 (來源貨幣 -> 目標貨幣)
+                    if (this.baseCurrency === currency) {
+                        finalVal = amount;
+                    } else if (this.baseCurrency === 'JPY') { // TWD -> JPY
+                        finalVal = amount / rate;
+                    } else { // JPY -> TWD
+                        finalVal = amount * rate;
                     }
                 }
 
