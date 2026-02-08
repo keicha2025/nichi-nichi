@@ -98,6 +98,14 @@
 - Fixed `js/app.js` auto-backup logic.
 ---
 
+## [2026-02-08T06:17:00Z] Added Favicon
+
+### Features & Improvements
+- **Favicon**: Added `favicon.ico` support to `index.html`, `view.html`, and `migration-tool.html` for better browser tab recognition.
+  - 新增網頁圖示：為所有頁面加入 Favicon，提升辨識度。
+
+### Technical Details
+- Added `<link rel="icon" href="favicon.ico" type="image/x-icon">` to HTML heads.
 # Changelog - 2026-02-08 Update (UX Optimization)
 
 ## ⚡️ Optimistic UI & Performance
