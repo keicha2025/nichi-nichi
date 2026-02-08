@@ -108,6 +108,20 @@
 - Added `<link rel="icon" href="favicon.ico" type="image/x-icon">` to HTML heads.
 # Changelog - 2026-02-08 Update (UX Optimization)
 
+## [2026-02-08T07:15:00Z] Import Feature & UI Updates
+
+### Features & Improvements
+- **Import Data**: Added a new "Import Data" feature in Settings > Account. Users can now restore or overwrite data using a JSON backup file.
+  - 新增資料匯入功能：位於設定頁面的帳號區塊，允許使用者匯入 JSON 備份檔以還原資料。
+- **UI Text Updates**: Renamed "Export" button to "匯出" and "Backup" button to "備份" for simplicity and consistency.
+  - 介面文字調整：簡化匯出與備份按鈕的文字標籤。
+- **Visual Consistency**: The new Import button matches the design of the existing Logout button, maintaining a cohesive look and feel.
+  - 視覺一致性：匯入按鈕的設計與登出按鈕保持一致。
+
+### Technical Details
+- Added `js/pages/import-page.js` component with file parsing and `API.importData` integration.
+- Implemented batch write logic in `js/api.js` using `writeBatch` for efficient data import.
+- Updated `js/pages/settings-page.js` to include the new button and routing event.
 ## ⚡️ Optimistic UI & Performance
 - **Instant Feedback (Optimistic UI)**:
   - **Add/Edit/Delete**: Actions now reflect immediately on the UI without waiting for the server. Data synchronization happens in the background.
