@@ -91,6 +91,11 @@ export const API = {
         return null;
     },
 
+    invalidateGoogleToken() {
+        sessionStorage.removeItem('google_access_token_v4');
+        sessionStorage.removeItem('google_token_expiry');
+    },
+
     // Data Access
     async fetchInitialData(options = {}) {
         const user = getCurrentUser();

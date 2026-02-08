@@ -288,7 +288,7 @@ export const SettingsPage = {
                           <div class="flex items-center justify-between px-1">
                               <div class="flex flex-col">
                                   <span class="text-[10px] text-gray-600 font-medium tracking-wide">每日自動備份</span>
-                                  <span class="text-[8px] text-gray-300">將儲存於「日日記-個人記帳資料備份」</span>
+                                  <span class="text-[8px] text-gray-300">將儲存於 Google 雲端硬碟「日日記」資料夾</span>
                               </div>
                               <label class="relative inline-flex items-center cursor-pointer">
                                   <input type="checkbox" v-model="localConfig.auto_backup" @change="debouncedUpdate" class="sr-only peer">
@@ -613,6 +613,7 @@ export const SettingsPage = {
             this.exporting = true;
             try {
                 let token = API.getGoogleToken();
+                // Initial check: if no token, request one.
                 if (!token) token = await API.requestIncrementalScope();
                 if (!token) throw new Error("尚未獲得授權");
 
@@ -625,7 +626,9 @@ export const SettingsPage = {
                     config: this.config
                 };
 
-                const result = await GoogleSheetsService.exportReadableSheet(data, token);
+                // Pass token AND the retry callback (API.requestIncrementalScope)
+                const result = await GoogleSheetsService.exportReadableSheet(data, token, API.requestIncrementalScope);
+
                 this.dialog.alert(`匯出成功！\n檔案已儲存於「${result.folder}」資料夾。`, { title: '匯出完成' });
                 window.open(result.url, '_blank');
             } catch (e) {
@@ -652,7 +655,9 @@ export const SettingsPage = {
                     config: this.config
                 };
 
-                const result = await GoogleSheetsService.backupFullData(data, token);
+                // Pass token AND retry callback
+                const result = await GoogleSheetsService.backupFullData(data, token, API.requestIncrementalScope);
+
                 this.dialog.alert(`備份成功！\n檔案：${result.file}\n已儲存於「${result.folder}」資料夾。`, { title: '備份完成' });
             } catch (e) {
                 console.error(e);

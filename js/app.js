@@ -156,17 +156,21 @@ createApp({
         const form = ref({
             type: '支出', currency: 'JPY', amount: '', spendDate: getLocalISOString(),
             categoryId: 'cat_001', name: '', note: '', paymentMethod: '',
-            isOneTime: false, isSplit: false, friendName: '', personalShare: 0, payer: systemConfig.value.user_name || '我', isAlreadyPaid: false,
+            isOneTime: false, isSplit: false, friendName: '', personalShare: 0, payer: '我', isAlreadyPaid: false,
             projectId: '',
             action: 'add'
         });
 
         // Update payer when user_name loads
-        watch(() => systemConfig.value.user_name, (newName) => {
-            if (newName && (form.value.payer === '我' || !form.value.payer)) {
-                form.value.payer = newName;
-            }
-        });
+        /* 
+           [UX CHANGE] Payer always defaults to '我' (Me). 
+           Disabled auto-override by systemConfig.user_name to ensure consistent pre-selection.
+        */
+        // watch(() => systemConfig.value.user_name, (newName) => {
+        //     if (newName && (form.value.payer === '我' || !form.value.payer)) {
+        //         form.value.payer = newName;
+        //     }
+        // });
 
         const syncStatus = ref('idle');
 
@@ -349,7 +353,8 @@ createApp({
             const dataToSave = targetForm || form.value;
             if (!dataToSave.amount || !dataToSave.name) return;
 
-            loading.value = true; // Lock UI
+            // Optimistic UI: Don't lock UI, but prevent double submit logic if needed
+            // loading.value = true; // [UX] optimistic: do not show loading
 
             try {
                 // Prepare Payload
@@ -384,24 +389,18 @@ createApp({
                     transactions.value.unshift({ ...payload });
                 }
 
-                if (appMode.value === 'ADMIN') {
-                    await API.saveTransaction(payload);
-                } else if (appMode.value === 'GUEST') {
-                    const localOnly = transactions.value.filter(t => !t.isRemote);
-                    localStorage.setItem('guest_data', JSON.stringify({ transactions: localOnly }));
-                }
-
+                // [UX] IMMEDIATE FEEDBACK
                 const goHistory = () => { currentTab.value = 'history'; resetForm(); };
-                const doReload = () => { loadData(true); };
 
                 if (dataToSave.action === 'edit') {
-                    dialog.showTransactionSuccess({ ...dataToSave }, doReload, {
+                    dialog.showTransactionSuccess({ ...dataToSave }, () => loadData(true), {
                         title: '已更新',
                         confirmText: '返回明細',
-                        secondaryText: '重新整理',
+                        secondaryText: '重新整理', // Keep this option in case user wants to force sync check
                         onConfirm: goHistory
                     });
                 } else {
+                    // For Add, we can just reset and notify
                     dialog.showTransactionSuccess({ ...dataToSave }, goHistory, {
                         title: '已新增',
                         confirmText: '確認',
@@ -409,6 +408,24 @@ createApp({
                     });
                     resetForm();
                 }
+
+                // BACKGROUND SYNC
+                (async () => {
+                    try {
+                        if (appMode.value === 'ADMIN') {
+                            await API.saveTransaction(payload);
+                            console.log("[Background Sync] Save success", payload.id);
+                        } else if (appMode.value === 'GUEST') {
+                            const localOnly = transactions.value.filter(t => !t.isRemote);
+                            localStorage.setItem('guest_data', JSON.stringify({ transactions: localOnly }));
+                        }
+                    } catch (bgError) {
+                        console.error("[Background Sync] Failed", bgError);
+                        // Optional: Show a toaster or notification if critical
+                        // dialog.alert("背景同步失敗，請檢查網路連線"); 
+                    }
+                })();
+
             } catch (e) {
                 console.error("Save Error", e);
                 dialog.alert("儲存錯誤: " + e.message);
@@ -470,15 +487,31 @@ createApp({
                 transactions.value = transactions.value.filter(t => t.id !== item.id);
             }
 
+            // [UX] IMMEDIATE FEEDBACK
+            const goHistory = () => { currentTab.value = 'history'; editForm.value = null; };
+            if (item) {
+                dialog.showTransactionSuccess(item, goHistory, {
+                    title: '已刪除',
+                    confirmText: '返回明細',
+                    secondaryText: '',
+                    onConfirm: goHistory
+                });
+            }
+
+            // BACKGROUND SYNC
             if (appMode.value === 'ADMIN' && idToDelete) {
-                try {
-                    await API.saveTransaction({ action: 'delete', id: idToDelete });
-                } catch (e) {
-                    console.error("Delete failed", e);
-                    dialog.alert("刪除失敗");
-                }
+                (async () => {
+                    try {
+                        await API.saveTransaction({ action: 'delete', id: idToDelete });
+                        console.log("[Background Sync] Delete success", idToDelete);
+                    } catch (e) {
+                        console.error("[Background Sync] Delete failed", e);
+                        // dialog.alert("刪除失敗"); // Optional
+                    }
+                })();
             } else if (!idToDelete) {
-                dialog.alert("無法刪除：找不到 ID");
+                // Keep this check for sanity, though inconsistent with optimistic if we don't alert
+                console.warn("無法刪除：找不到 ID");
             }
 
             if (item) {
@@ -493,7 +526,7 @@ createApp({
         };
 
         const resetForm = () => {
-            const defaultPayer = systemConfig.value.user_name || '我';
+            const defaultPayer = '我'; // UX: Always default to '我'
             form.value = {
                 type: '支出', currency: 'JPY', amount: '', spendDate: getLocalISOString(),
                 categoryId: 'cat_001', name: '', note: '', paymentMethod: '',
@@ -712,13 +745,26 @@ createApp({
                 const lastBackup = localStorage.getItem('last_backup_date');
                 if (lastBackup === today) return;
 
-                const currentHour = new Date().getHours();
-                if (currentHour < 23 && lastBackup) return;
+                // Removed hour check to ensure backup runs on first visit of the day
+                // if (currentHour < 23 && lastBackup) return;
 
                 try {
                     const token = API.getGoogleToken();
+                    // Auto-backup should verify token validity or try to refresh silently?
+                    // if (!token) ... we can try requestIncrementalScope but that might pop up.
+                    // If no token, we can't backup silently.
                     if (!token) return;
-                    await GoogleSheetsService.backupTransactions(transactions.value, categories.value, token);
+
+                    const data = {
+                        transactions: transactions.value,
+                        categories: categories.value,
+                        paymentMethods: paymentMethods.value,
+                        projects: projects.value,
+                        friends: friends.value,
+                        config: systemConfig.value
+                    };
+
+                    await GoogleSheetsService.backupFullData(data, token, API.requestIncrementalScope);
                     localStorage.setItem('last_backup_date', today);
                     console.log("Auto-backup completed.");
                 } catch (e) {

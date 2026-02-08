@@ -76,3 +76,34 @@
 - **Edit/Delete Feedback**:
   - Implemented a clear success dialog after editing or deleting a transaction.
   - Added a "Reload" (重新整理) action to these dialogs to ensure data consistency with the backend, alongside the standard "Return to Details" (返回明細) button.
+
+## [2026-02-08T05:56:00Z] Unified Authorization & Persistent Backup
+
+### Features & Improvements
+- **Unified Authorization**: Implemented shared authorization scope for both `Export` and `Backup features`. Users now only need to provide consent once for both operations.
+  - 統一授權機制：匯出與備份功能現共用授權，使用者僅需同意一次即可。
+- **Persistent Auth & Auto-Retry**: Added `_fetchWithRetry` logic to `GoogleSheetsService` to automatically handle token expiration (401/403 errors) by triggering a re-auth flow or refreshing the token.
+  - 持續性存取與自動重試：當 Token 過期時，系統將自動嘗試重新驗證，減少重複登入的困擾。
+- **File Naming Convention**: Updated backup and export filenames to use the precision format `yyyymmddhhmmss` (e.g., `backup_20240208123045.json`).
+  - 檔名格式更新：備份與匯出檔名現包含精確的時間戳記（年月日時分秒）。
+- **Auto-Backup Fix**: Resolved an issue in `app.js` where `autoBackupIfNeeded` was calling a non-existent method and improved the daily trigger logic to ensure it runs on the first app open of the day.
+  - 自動備份修復：修正自動備份的程式邏輯，確保每日首次開啟 App 時能正確執行備份。
+- **UI Updates**: Updated the Backup destination description in Settings to clearly state "Google Drive '日日記' folder".
+  - 介面文字更新：更清楚地說明備份檔案的儲存位置。
+
+### Technical Details
+- Modified `js/api.js` to include `invalidateGoogleToken`.
+- Refactored `js/services/google-sheets-service.js` to include retry logic and updated file naming.
+- Updated `js/pages/settings-page.js` to pass retry callbacks.
+- Fixed `js/app.js` auto-backup logic.
+---
+
+# Changelog - 2026-02-08 Update (UX Optimization)
+
+## ⚡️ Optimistic UI & Performance
+- **Instant Feedback (Optimistic UI)**:
+  - **Add/Edit/Delete**: Actions now reflect immediately on the UI without waiting for the server. Data synchronization happens in the background.
+  - **Zero Latency**: Removed loading spinners for standard operations to improve perceived speed.
+- **Payer Pre-selection**:
+  - **Default to "Me"**: The payer field in the Add Page now strictly defaults to "Me" (我), reducing clicks for the most common use case.
+
