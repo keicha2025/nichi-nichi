@@ -1,6 +1,6 @@
 import {
     db, auth, googleProvider, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider,
-    collection, doc, setDoc, addDoc, getDocs, updateDoc, deleteDoc, query, orderBy, where, getDoc
+    collection, doc, setDoc, addDoc, getDocs, updateDoc, deleteDoc, query, orderBy, where, getDoc, writeBatch
 } from './firebase-config.js';
 
 import { CONFIG } from './config.js?v=1.3';
@@ -339,24 +339,70 @@ export const API = {
     },
 
     async clearAccountData() {
+        // ... (existing)
+    },
+
+    async importData(data, onProgress) {
         const user = auth.currentUser;
         if (!user) throw new Error("Not logged in");
 
         const uid = user.uid;
         const userRef = doc(db, 'users', uid);
-        const txRef = collection(db, 'users', uid, 'transactions');
+
+        let count = 0;
 
         try {
-            // 1. Delete all transactions
-            const txSnapshot = await getDocs(txRef);
-            const deletePromises = txSnapshot.docs.map(doc => deleteDoc(doc.ref));
-            await Promise.all(deletePromises);
+            // 1. Update User Metadata (Config, Categories, etc.)
+            const updates = {};
+            if (data.categories) updates.categories = data.categories;
+            if (data.paymentMethods) updates.paymentMethods = data.paymentMethods;
+            if (data.friends) updates.friends = data.friends;
+            if (data.projects) updates.projects = data.projects;
+            if (data.config) updates.config = data.config;
 
-            // 2. Delete main user doc
-            await deleteDoc(userRef);
-            return true;
+            if (Object.keys(updates).length > 0) {
+                if (onProgress) onProgress("正在更新設定與類別...");
+                await setDoc(userRef, updates, { merge: true });
+            }
+
+            // 2. Import Transactions (Batch Write)
+            if (data.transactions && data.transactions.length > 0) {
+                if (onProgress) onProgress(`準備匯入 ${data.transactions.length} 筆交易...`);
+
+                // Chunk into batches of 500
+                const chunkSize = 450; // Safer limit
+                const chunks = [];
+                for (let i = 0; i < data.transactions.length; i += chunkSize) {
+                    chunks.push(data.transactions.slice(i, i + chunkSize));
+                }
+
+                for (let i = 0; i < chunks.length; i++) {
+                    const chunk = chunks[i];
+                    const batch = writeBatch(db);
+
+                    if (onProgress) onProgress(`正在寫入批次 ${i + 1}/${chunks.length}...`);
+
+                    chunk.forEach(tx => {
+                        // Ensure we use the ID from JSON or generate one?
+                        // If JSON has ID, use it (Restore).
+                        // If checking for duplicates? "Restore" usually implies we trust the backup ID.
+                        // If ID exists, setDoc matches overwrite.
+                        const txId = tx.id || `tx_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+                        const txRef = doc(db, 'users', uid, 'transactions', txId);
+
+                        // Clean data
+                        const { id, ...txData } = tx;
+                        batch.set(txRef, txData);
+                    });
+
+                    await batch.commit();
+                    count += chunk.length;
+                }
+            }
+
+            return { success: true, count };
         } catch (error) {
-            console.error("Clear Account Data Error", error);
+            console.error("Import Data Error", error);
             throw error;
         }
     }

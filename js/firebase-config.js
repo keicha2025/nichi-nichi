@@ -15,7 +15,8 @@ import {
     query,
     where,
     orderBy,
-    onSnapshot
+    onSnapshot,
+    writeBatch
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import {
     getAuth,
@@ -69,5 +70,6 @@ export {
     query,
     where,
     orderBy,
-    onSnapshot
+    onSnapshot,
+    writeBatch
 };

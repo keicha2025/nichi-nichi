@@ -100,15 +100,21 @@
                 @update-user-data="handleUpdateUserData" @login="handleGoogleLogin" @logout="handleLogout"
                 @clear-guest-data="clearGuestData" @view-friend="handleViewFriend" @view-project="handleViewProject"
                 @create-project="handleCreateProject" @open-icon-edit="handleOpenIconEdit"
-                @clear-account-data="handleClearAccountData" @update:dirty="isSettingsDirty = $event"></settings-page>
+                @clear-account-data="handleClearAccountData" @view-import="currentTab = 'import'"
+                @update:dirty="isSettingsDirty = $event"></settings-page>
 
             <!-- Icon Edit Page -->
             <icon-edit-page v-if="currentTab === 'icon-edit'" :context="iconEditContext" @select="handleSelectIcon"
                 @cancel="currentTab = 'settings'"></icon-edit-page>
 
+            <!-- Project Detail Page -->
             <project-detail-page v-if="currentTab === 'project-detail'" :project="selectedProject"
                 :transactions="transactions" :fx-rate="fxRate" @back="currentTab = 'settings'; selectedProject = null"
                 @update-project="handleUpdateProject" @view-history="handleViewHistory"></project-detail-page>
+
+            <!-- Import Page -->
+            <import-page v-if="currentTab === 'import'" @back="currentTab = 'settings'"
+                @refresh-data="retrySync"></import-page>
         </main>
 
         <app-footer :current-tab="currentTab" @update:current-tab="handleTabChange" :app-mode="appMode">

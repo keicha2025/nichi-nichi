@@ -8,6 +8,7 @@ import { StatsPage } from './pages/stats-page.js';
 import { SettingsPage } from './pages/settings-page.js';
 import { OverviewPage } from "./pages/overview-page.js";
 import { ProjectDetailPage } from './pages/project-detail-page.js';
+import { ImportPage } from './pages/import-page.js';
 
 import { ViewDashboard } from './pages/view-dashboard.js';
 import { SystemModal } from './components/system-modal.js';
@@ -27,6 +28,7 @@ createApp({
         'history-page': HistoryPage,
         'stats-page': StatsPage,
         'settings-page': SettingsPage,
+        'import-page': ImportPage,
         'project-detail-page': ProjectDetailPage,
         'view-dashboard': ViewDashboard,
         'system-modal': SystemModal,

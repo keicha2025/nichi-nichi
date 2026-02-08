@@ -272,23 +272,24 @@ export const SettingsPage = {
                              <span class="text-xs text-gray-600 font-medium">Google Spreadsheet Services</span>
                           </div>
                           
-                          <div class="grid grid-cols-2 gap-3">
-                              <button @click="handleExport" :disabled="exporting" class="flex flex-col items-center justify-center p-3 bg-white rounded-xl border border-gray-100 active:scale-95 transition-all disabled:opacity-50">
-                                  <span v-if="exporting" class="material-symbols-rounded animate-spin text-lg text-gray-400">sync</span>
-                                  <span v-else class="material-symbols-rounded text-lg text-gray-400">ios_share</span>
-                                  <span class="text-[9px] text-gray-500 mt-1">匯出目前資料</span>
-                              </button>
-                              <button @click="handleBackup" :disabled="backingUp" class="flex flex-col items-center justify-center p-3 bg-white rounded-xl border border-gray-100 active:scale-95 transition-all disabled:opacity-50">
-                                  <span v-if="backingUp" class="material-symbols-rounded animate-spin text-lg text-gray-400">sync</span>
-                                  <span v-else class="material-symbols-rounded text-lg text-gray-400">backup</span>
-                                  <span class="text-[9px] text-gray-500 mt-1">立即備份 (Daily)</span>
-                              </button>
-                          </div>
-     
-                          <div class="flex items-center justify-between px-1">
+                          <div class="space-y-3 pt-2">
+                    <button @click="handleBackup" :disabled="backingUp" class="w-full bg-gray-800 text-white py-3 rounded-xl shadow-lg shadow-gray-200 active:scale-95 transition-all flex items-center justify-center space-x-2 disabled:opacity-50">
+                        <span v-if="backingUp" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        <span class="material-symbols-rounded text-sm">cloud_sync</span>
+                        <span class="text-sm font-medium tracking-wide">備份</span>
+                    </button>
+                    <button @click="handleExport" :disabled="exporting" class="w-full bg-white border border-gray-200 text-gray-700 py-3 rounded-xl hover:bg-gray-50 active:bg-gray-100 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50">
+                        <span v-if="exporting" class="w-4 h-4 border-2 border-gray-400 border-t-gray-700 rounded-full animate-spin"></span>
+                        <span class="material-symbols-rounded text-sm">ios_share</span>
+                        <span class="text-sm font-medium">匯出</span>
+                    </button>
+                    <p class="text-[10px] text-gray-400 text-center px-4">
+                        將儲存於 Google 雲端硬碟「日日記」資料夾
+                    </p>
+                </div>                <div class="flex items-center justify-between px-1">
                               <div class="flex flex-col">
                                   <span class="text-[10px] text-gray-600 font-medium tracking-wide">每日自動備份</span>
-                                  <span class="text-[8px] text-gray-300">將儲存於 Google 雲端硬碟「日日記」資料夾</span>
+                                  <span class="text-[8px] text-gray-300"></span>
                               </div>
                               <label class="relative inline-flex items-center cursor-pointer">
                                   <input type="checkbox" v-model="localConfig.auto_backup" @change="debouncedUpdate" class="sr-only peer">
@@ -306,7 +307,7 @@ export const SettingsPage = {
                              <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#4A4A4A]"></div>
                          </label>
                      </div>
-                     <div v-if="sharedLink" class="space-y-2 animate-in fade-in">
+                    <div v-if="sharedLink" class="space-y-2 animate-in fade-in">
                         <p class="text-[9px] text-gray-400">將此連結分享給朋友，他們能檢視但無法編輯。</p>
                         <div class="flex items-center space-x-2 bg-white px-2 py-2 rounded-lg border border-gray-100">
                              <input type="text" readonly :value="sharedLink" class="w-full text-[10px] text-gray-500 outline-none">
@@ -317,6 +318,9 @@ export const SettingsPage = {
                      </div>
                  </div>
 
+                 <button @click="$emit('view-import')" class="w-full border border-gray-200 text-gray-500 py-3 rounded-xl text-xs font-medium active:bg-gray-50">
+                     匯入資料
+                 </button>
                  <button @click="$emit('logout')" class="w-full border border-gray-200 text-gray-500 py-3 rounded-xl text-xs font-medium active:bg-gray-50">
                      登出 Google 帳號
                  </button>
@@ -350,7 +354,7 @@ export const SettingsPage = {
     </section>
     `,
     props: ['config', 'friends', 'projects', 'transactions', 'appMode', 'currentUser', 'categories', 'paymentMethods'],
-    emits: ['update-config', 'update-user-data', 'view-project', 'view-friend', 'login', 'logout', 'clear-guest-data', 'create-project', 'open-icon-edit', 'clear-account-data'],
+    emits: ['update-config', 'update-user-data', 'view-project', 'view-friend', 'login', 'logout', 'clear-guest-data', 'create-project', 'open-icon-edit', 'clear-account-data', 'view-import'],
     data() {
         return {
             localConfig: { user_name: '', fx_rate: 0.22 },
