@@ -66,8 +66,7 @@ createApp({
         const savedGuestConfig = JSON.parse(localStorage.getItem('guest_config') || '{}');
         const systemConfig = ref({
             user_name: savedGuestConfig.user_name || '',
-            fx_rate: savedGuestConfig.fx_rate || 0.22,
-            import_default: savedGuestConfig.import_default || false
+            fx_rate: savedGuestConfig.fx_rate || 0.22
         });
 
         const editForm = ref(null);
@@ -269,6 +268,25 @@ createApp({
                     } else if (paymentMethods.value.length === 0) {
                         paymentMethods.value = [...DEFAULTS.paymentMethods];
                     }
+
+                    // Load Friends
+                    const savedFriends = localStorage.getItem('guest_friends');
+                    if (savedFriends) {
+                        friends.value = JSON.parse(savedFriends);
+                    } else {
+                        friends.value = [];
+                    }
+
+                    // Load Projects
+                    const savedProjects = localStorage.getItem('guest_projects');
+                    if (savedProjects) {
+                        projects.value = JSON.parse(savedProjects);
+                    } else {
+                        projects.value = [];
+                    }
+
+                    // Sync FX Rate
+                    fxRate.value = systemConfig.value.fx_rate || 0.22;
 
                     transactions.value = localTransactions;
                     // Recalc Stats
@@ -702,7 +720,7 @@ createApp({
             },
             retrySync: () => { }, // No-op now
             handleCreateProject: async (input) => {
-                if (appMode.value !== 'ADMIN') return dialog.alert("權限不足");
+                if (appMode.value !== 'ADMIN' && appMode.value !== 'GUEST') return dialog.alert("權限不足");
                 if (!input) return;
 
                 let name = '';
@@ -719,6 +737,23 @@ createApp({
 
                 if (!name) return;
                 if (!name) return;
+
+                // Guest Mode Project Creation
+                if (appMode.value === 'GUEST') {
+                    const newProject = {
+                        id: 'proj_' + Date.now(),
+                        name: name,
+                        startDate: startDate,
+                        endDate: endDate,
+                        status: 'Planned',
+                        createdAt: new Date().toISOString()
+                    };
+                    projects.value.push(newProject);
+                    localStorage.setItem('guest_projects', JSON.stringify(projects.value));
+                    dialog.alert("計畫已建立 (Guest)", 'success');
+                    return;
+                }
+
                 // Silent update
                 try {
                     await API.saveTransaction({

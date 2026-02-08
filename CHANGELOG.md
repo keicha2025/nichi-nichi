@@ -127,6 +127,10 @@
   - 使用者體驗優化：資料匯入成功後自動重新整理頁面，確保使用者即時看到最新資料。
 - **Unification**: Unified default settings (categories, payment methods) for Guest Mode and New Users by centralizing configuration.
   - 設定統一：統一訪客模式與新使用者的預設設定（類別、支付方式），集中管理配置。
+- **Guest Mode Refinement**: Removed legacy import tool, fixed FX rate persistence, and enabled Project creation for guests.
+  - 訪客模式優化：移除舊版匯入工具，修復匯率儲存問題，並開放訪客建立旅行計畫。
+- **Fix**: Resolved issue where added friends were not persisting in Guest Mode.
+  - 修正：解決訪客模式下新增朋友無法儲存的問題。
 
 ### Technical Details
 - Added `js/pages/import-page.js` component with file parsing and `API.importData` integration.
