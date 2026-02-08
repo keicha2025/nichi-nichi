@@ -272,21 +272,21 @@ export const SettingsPage = {
                              <span class="text-xs text-gray-600 font-medium">Google Spreadsheet Services</span>
                           </div>
                           
-                          <div class="space-y-3 pt-2">
-                    <button @click="handleBackup" :disabled="backingUp" class="w-full bg-gray-800 text-white py-3 rounded-xl shadow-lg shadow-gray-200 active:scale-95 transition-all flex items-center justify-center space-x-2 disabled:opacity-50">
-                        <span v-if="backingUp" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                        <span class="material-symbols-rounded text-sm">cloud_sync</span>
-                        <span class="text-sm font-medium tracking-wide">備份</span>
-                    </button>
-                    <button @click="handleExport" :disabled="exporting" class="w-full bg-white border border-gray-200 text-gray-700 py-3 rounded-xl hover:bg-gray-50 active:bg-gray-100 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50">
-                        <span v-if="exporting" class="w-4 h-4 border-2 border-gray-400 border-t-gray-700 rounded-full animate-spin"></span>
-                        <span class="material-symbols-rounded text-sm">ios_share</span>
-                        <span class="text-sm font-medium">匯出</span>
-                    </button>
-                    <p class="text-[10px] text-gray-400 text-center px-4">
-                        將儲存於 Google 雲端硬碟「日日記」資料夾
-                    </p>
-                </div>                <div class="flex items-center justify-between px-1">
+                          <div class="grid grid-cols-2 gap-3 pt-2">
+                              <button @click="handleBackup" :disabled="backingUp" class="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-gray-100 active:scale-95 transition-all disabled:opacity-50 hover:bg-gray-50">
+                                  <span v-if="backingUp" class="w-4 h-4 border-2 border-gray-400 border-t-gray-700 rounded-full animate-spin"></span>
+                                  <span v-else class="material-symbols-rounded text-xl text-gray-400">cloud_sync</span>
+                                  <span class="text-[10px] text-gray-500 mt-2 font-medium tracking-wide">備份</span>
+                              </button>
+                              <button @click="handleExport" :disabled="exporting" class="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-gray-100 active:scale-95 transition-all disabled:opacity-50 hover:bg-gray-50">
+                                  <span v-if="exporting" class="w-4 h-4 border-2 border-gray-400 border-t-gray-700 rounded-full animate-spin"></span>
+                                  <span v-else class="material-symbols-rounded text-xl text-gray-400">ios_share</span>
+                                  <span class="text-[10px] text-gray-500 mt-2 font-medium tracking-wide">匯出</span>
+                              </button>
+                          </div>
+                          <p class="text-[10px] text-gray-400 text-center px-4 pt-2 pb-1">
+                              將儲存於 Google 雲端硬碟「日日記」資料夾
+                          </p>                <div class="flex items-center justify-between px-1">
                               <div class="flex flex-col">
                                   <span class="text-[10px] text-gray-600 font-medium tracking-wide">每日自動備份</span>
                                   <span class="text-[8px] text-gray-300"></span>

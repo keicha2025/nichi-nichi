@@ -117,6 +117,10 @@
   - 介面文字調整：簡化匯出與備份按鈕的文字標籤。
 - **Visual Consistency**: The new Import button matches the design of the existing Logout button, maintaining a cohesive look and feel.
   - 視覺一致性：匯入按鈕的設計與登出按鈕保持一致。
+- **UI Refinement**: Updated `ImportPage` to use a grayscale color palette matching `HistoryPage` and added a standard header.
+  - 介面優化：匯入頁面改採與歷史紀錄頁面一致的灰階色系，並加入標準頁首。
+- **Layout Adjustment**: Reverted "Backup" and "Export" buttons to a side-by-side grid layout for better accessibility.
+  - 版面調整：將備份與匯出按鈕還原為並排網格佈局。
 
 ### Technical Details
 - Added `js/pages/import-page.js` component with file parsing and `API.importData` integration.
