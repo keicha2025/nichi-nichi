@@ -320,6 +320,9 @@ export const SettingsPage = {
                  <button @click="confirmDeleteData" class="w-full py-2 text-[10px] text-gray-300 tracking-widest uppercase hover:text-gray-500 transition-colors">
                      刪除記帳資料
                  </button>
+                 <button @click="$emit('delete-account')" class="w-full py-2 text-[10px] text-gray-300 tracking-widest uppercase hover:text-gray-500 transition-colors">
+                     註銷帳戶
+                 </button>
              </div>
 
              <!-- GUEST MODE -->
@@ -347,7 +350,7 @@ export const SettingsPage = {
     </section>
     `,
     props: ['config', 'friends', 'projects', 'transactions', 'appMode', 'currentUser', 'categories', 'paymentMethods'],
-    emits: ['update-config', 'update-user-data', 'view-project', 'view-friend', 'login', 'logout', 'clear-guest-data', 'create-project', 'open-icon-edit', 'clear-account-data', 'view-import'],
+    emits: ['update-config', 'update-user-data', 'view-project', 'view-friend', 'login', 'logout', 'clear-guest-data', 'create-project', 'open-icon-edit', 'clear-account-data', 'view-import', 'delete-account'],
     data() {
         return {
             localConfig: { user_name: '', fx_rate: 0.22 },

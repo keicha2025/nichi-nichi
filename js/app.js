@@ -666,7 +666,7 @@ createApp({
             }
         };
 
-        return {
+        const methods = {
             currentTab, handleTabChange, loading, categories, friends, paymentMethods, projects, transactions, filteredTransactions, historyFilter, form, editForm, stats, systemConfig, fxRate, selectedProject, isSettingsDirty,
             appMode, syncStatus, currentUser,
             handleSubmit, handleDelete, handleEditItem,
@@ -770,6 +770,37 @@ createApp({
             handleLogout: async () => {
                 if (await dialog.confirm("確定要登出嗎？")) {
                     await API.logout();
+                }
+            },
+
+            handleDeleteAccount: async () => {
+                // 1. Confirm Request
+                const confirmed = await dialog.confirm(
+                    "請重新登入驗證身分，驗證後將執行帳戶刪除。\n(刪除後所有資料將無法復原)",
+                    {
+                        title: "註銷帳戶",
+                        confirmText: "進行驗證",
+                        cancelText: "取消"
+                    }
+                );
+
+                if (!confirmed) return;
+
+                // 2. Re-authenticate
+                try {
+                    await API.login(); // Re-login to get fresh credential
+
+                    loading.value = true;
+                    // 3. Delete Account
+                    await API.deleteFullAccount();
+
+                    await dialog.alert("帳戶已成功註銷。", "success");
+                    window.location.reload(); // Force reload to clear state
+                } catch (e) {
+                    console.error("Delete Account Failed", e);
+                    dialog.alert("驗證失敗或刪除除錯誤: " + e.message);
+                } finally {
+                    loading.value = false;
                 }
             },
 

@@ -101,7 +101,7 @@
                 @clear-guest-data="clearGuestData" @view-friend="handleViewFriend" @view-project="handleViewProject"
                 @create-project="handleCreateProject" @open-icon-edit="handleOpenIconEdit"
                 @clear-account-data="handleClearAccountData" @view-import="currentTab = 'import'"
-                @update:dirty="isSettingsDirty = $event"></settings-page>
+                @delete-account="handleDeleteAccount" @update:dirty="isSettingsDirty = $event"></settings-page>
 
             <!-- Icon Edit Page -->
             <icon-edit-page v-if="currentTab === 'icon-edit'" :context="iconEditContext" @select="handleSelectIcon"
@@ -135,7 +135,7 @@
         }
     </script>
     <script src="./js/env.js"></script>
-    <script type="module" src="./js/app.js?v=1.1"></script>
+    <script type="module" src="./js/app.js?v=1.2"></script>
 </body>
 
 </html>

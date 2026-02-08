@@ -405,5 +405,38 @@ export const API = {
             console.error("Import Data Error", error);
             throw error;
         }
+
+
+    },
+
+    async deleteFullAccount() {
+        const user = getCurrentUser();
+        if (!user) throw new Error("No user logged in");
+
+        const uid = user.uid;
+        const batch = writeBatch(db);
+
+        // 1. Delete Subcollections
+        const collections = ['transactions', 'projects', 'categories', 'paymentMethods', 'friends'];
+
+        // Note: Client SDK cannot delete collections directly. 
+        // We must fetch docs and delete them.
+        for (const colName of collections) {
+            const colRef = collection(db, 'users', uid, colName);
+            const snapshot = await getDocs(colRef);
+            snapshot.forEach(doc => {
+                batch.delete(doc.ref);
+            });
+        }
+
+        // 2. Delete User Doc
+        const userRef = doc(db, 'users', uid);
+        batch.delete(userRef);
+
+        await batch.commit();
+
+        // 3. Delete Auth User
+        // This requires recent login. If it fails, we catch it in UI and ask for re-login.
+        await user.delete();
     }
 };
