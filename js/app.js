@@ -440,6 +440,9 @@ createApp({
             if (appMode.value === 'VIEWER') return;
             if (loading.value) return; // Prevent double submit
 
+            // [UX] Immediate scroll to top to show alerts/success/errors
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
             const dataToSave = targetForm || form.value;
             if (!dataToSave.amount || !dataToSave.name) return;
 

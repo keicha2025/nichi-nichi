@@ -249,8 +249,13 @@
     - **Alert-Triggered Refresh**: Updated `handleDeleteAccount` and `handleClearAccountData` to ensure the page reloads or redirects **only after** the user clicks the "Confirm" button on the success or error dialogs. This improves UX by allowing users to read the final outcome before the application state is reset.
     - 同步重整機制：優化重整時機，確保使用者在看完成功或失敗提示並點擊按鈕後，頁面才會進行重整，提升操作體驗。
 
+- **Add Page UX Enhancement**:
+    - **Auto-Scroll to Top**: Implemented immediate scroll-to-top when clicking "Confirm & Save" on the Add Page. This ensures users instantly see the entry result or error messages regardless of the form length.
+    - 新增頁面體驗優化：實作「儲存並確認」按鈕按下後自動滑動至最上方，確保使用者能立即看清新增結果或錯誤提示。
+
 ### Technical Details
 - Updated `js/api.js` with `_deleteCollectionChunked` helper and refined `deleteFullAccount`.
-- Updated `js/app.js` with `await` on all `dialog.alert` calls and refined the `finally` block logic for reloads.
-- 修正 `js/api.js` 與 `js/app.js` 的非同步操作流程與批次刪除限制。
+- Updated `js/app.js` with `await` on all `dialog.alert` calls, refined `finally` block logic, and added `window.scrollTo` to `handleSubmit`.
+- 修正 `js/api.js` 與 `js/app.js` 的非同步操作流程與批次刪除限制，並優化 `handleSubmit` 的捲動回饋。
+
 
