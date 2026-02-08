@@ -228,3 +228,29 @@
 - **Form Logic**: Fixed `add-page.js` syntax errors and optimized the project watcher logic.
 
 ---
+
+# Changelog - 2026-02-08 Update (Account & Data Deletion Fixes)
+
+## [2026-02-08T23:40:00Z] Refined Account Deletion & Data Clearing Logic
+
+### Features & Improvements
+- **Robust Account Deletion**:
+    - **Simplified Targeting**: Corrected `deleteFullAccount` to target only actual subcollections (`transactions`, `shared_links`). Removed redundant deletion attempts for fields like `projects` and `categories`, resolving the "Missing or insufficient permissions" error.
+    - **Chunked Deletion**: Implemented a chunked batching mechanism (`_deleteCollectionChunked`) to handle large datasets effectively, bypassing the Firestore 500-document batch limit.
+    - **Thorough Cleanup**: Added `shared_links` to the deletion process to ensure complete removal of user-associated data.
+    - 帳戶註銷優化：修正權限錯誤，改為僅針對子集合進行手動刪除，並實作分段批次處理以應對大量交易資料，確保註銷過程穩定徹底。
+
+- **Fixed Bookkeeping Data Clearing**:
+    - **Implemented logic**: Fully implemented `clearAccountData` to delete all documents in the `transactions` subcollection while preserving the account itself.
+    - **Logout Integration**: Ensuring a clean state by logging out and forcing a refresh after data clearing.
+    - 刪除記帳資料修正：實作 transactions 子集合的完整清空邏輯，並確保在操作完成後自動登出並重整頁面。
+
+- **Synchronized Page Reload**:
+    - **Alert-Triggered Refresh**: Updated `handleDeleteAccount` and `handleClearAccountData` to ensure the page reloads or redirects **only after** the user clicks the "Confirm" button on the success or error dialogs. This improves UX by allowing users to read the final outcome before the application state is reset.
+    - 同步重整機制：優化重整時機，確保使用者在看完成功或失敗提示並點擊按鈕後，頁面才會進行重整，提升操作體驗。
+
+### Technical Details
+- Updated `js/api.js` with `_deleteCollectionChunked` helper and refined `deleteFullAccount`.
+- Updated `js/app.js` with `await` on all `dialog.alert` calls and refined the `finally` block logic for reloads.
+- 修正 `js/api.js` 與 `js/app.js` 的非同步操作流程與批次刪除限制。
+

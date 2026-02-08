@@ -771,13 +771,14 @@ createApp({
                 try {
                     await API.clearAccountData();
                     await API.logout();
-                    // Force full reload to clean all states
-                    window.location.href = window.location.origin + window.location.pathname;
+                    await dialog.alert("記帳資料已全數刪除。", "success");
                 } catch (e) {
                     console.error(e);
-                    dialog.alert("刪除失敗，請稍後再試");
+                    await dialog.alert("刪除失敗，請稍後再試: " + e.message);
                 } finally {
                     loading.value = false;
+                    // Force full reload to clean all states only after alert is dismissed
+                    window.location.href = window.location.origin + window.location.pathname;
                 }
             },
             handleSelectIcon: ({ icon, name }) => {
@@ -867,12 +868,13 @@ createApp({
                     await API.deleteFullAccount();
 
                     await dialog.alert("帳戶已成功註銷。", "success");
-                    window.location.reload(); // Force reload to clear state
+                    // window.location.reload(); // Moved to finally
                 } catch (e) {
                     console.error("Delete Account Failed", e);
-                    dialog.alert("驗證失敗或刪除除錯誤: " + e.message);
+                    await dialog.alert("驗證失敗或刪除錯誤: " + e.message);
                 } finally {
                     loading.value = false;
+                    window.location.reload(); // Force reload regardless of success/fail after verification confirmation
                 }
             },
 

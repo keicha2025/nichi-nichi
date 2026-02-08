@@ -468,7 +468,29 @@ export const API = {
     },
 
     async clearAccountData() {
-        // ... (existing)
+        const user = getCurrentUser();
+        if (!user) throw new Error("No user logged in");
+
+        const uid = user.uid;
+
+        // Delete 'transactions' Subcollection with chunked batching
+        await this._deleteCollectionChunked(collection(db, 'users', uid, 'transactions'));
+    },
+
+    // Helper: Chunked Deletion to handle batch limits (500)
+    async _deleteCollectionChunked(colRef) {
+        const snapshot = await getDocs(colRef);
+        if (snapshot.empty) return;
+
+        const docs = snapshot.docs;
+        const chunkSize = 450; // Safer limit
+
+        for (let i = 0; i < docs.length; i += chunkSize) {
+            const batch = writeBatch(db);
+            const chunk = docs.slice(i, i + chunkSize);
+            chunk.forEach(doc => batch.delete(doc.ref));
+            await batch.commit();
+        }
     },
 
     async importData(data, onProgress) {
@@ -541,26 +563,18 @@ export const API = {
         if (!user) throw new Error("No user logged in");
 
         const uid = user.uid;
-        const batch = writeBatch(db);
 
-        // 1. Delete Subcollections
-        const collections = ['transactions', 'projects', 'categories', 'paymentMethods', 'friends'];
+        // 1. Delete Subcollections with chunked batching
+        // Only target actual subcollections. Fields (projects, categories, friends) are deleted with user doc.
+        const collections = ['transactions', 'shared_links'];
 
-        // Note: Client SDK cannot delete collections directly. 
-        // We must fetch docs and delete them.
         for (const colName of collections) {
-            const colRef = collection(db, 'users', uid, colName);
-            const snapshot = await getDocs(colRef);
-            snapshot.forEach(doc => {
-                batch.delete(doc.ref);
-            });
+            await this._deleteCollectionChunked(collection(db, 'users', uid, colName));
         }
 
         // 2. Delete User Doc
         const userRef = doc(db, 'users', uid);
-        batch.delete(userRef);
-
-        await batch.commit();
+        await deleteDoc(userRef); // Use deleteDoc instead of batch for single doc if simple
 
         // 3. Delete Auth User
         // This requires recent login. If it fails, we catch it in UI and ask for re-login.
