@@ -20,7 +20,6 @@
     <link rel="stylesheet" href="css/design-tokens.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="css/markdown-body.css">
-    <link rel="stylesheet" href="css/components/app-header.css">
 
     <style>
         body {
@@ -28,18 +27,18 @@
         }
 
         .demo-container {
-            max-width: 800px;
-            margin: 40px auto;
+            /* Width managed by #app max-w-md */
             background: var(--color-bg-card);
-            padding: 40px;
-            border-radius: 2.5rem;
+            padding: 24px;
+            border-radius: 2rem;
             box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.05);
             border: 1px solid var(--color-border-light);
+            margin-bottom: 80px;
         }
 
         .demo-content-header {
-            margin-bottom: 40px;
-            padding-bottom: 20px;
+            margin-bottom: 32px;
+            padding-bottom: 16px;
             border-bottom: 1px solid var(--color-border-medium);
             display: flex;
             justify-content: space-between;
@@ -49,35 +48,34 @@
 </head>
 
 <body>
-    <div id="app" class="px-4" v-cloak>
-        <!-- App Header (引進現有 UI) -->
+    <div id="app" class="max-w-md mx-auto min-h-screen relative px-4 pt-4" v-cloak>
+        <!-- App Header -->
         <app-header :app-mode="'GUEST'" :sync-status="'idle'" :current-tab="'demo'" :show-currency-switcher="false"
             @close="handleClose">
         </app-header>
 
-        <div class="demo-container animate-in fade-in mt-24">
+        <div class="demo-container animate-in fade-in mt-6">
             <header class="demo-content-header">
                 <div>
-                    <h1 class="text-xl font-medium tracking-[0.2em] text-gray-700 uppercase">Page Rendering Demo</h1>
-                    <p class="text-[10px] text-gray-400 tracking-widest mt-1">MARKDOWN PARSER & DESIGN SYSTEM
-                        INTEGRATION</p>
+                    <h1 class="text-sm font-medium tracking-[0.2em] text-gray-700 uppercase">Page Rendering Demo</h1>
+                    <p class="text-[9px] text-gray-400 tracking-widest mt-1">MARKDOWN PARSER & DESIGN SYSTEM</p>
                 </div>
                 <button @click="handleClose"
-                    class="text-[10px] bg-gray-50 text-gray-400 px-6 py-2 rounded-full border border-gray-100 hover:bg-gray-100 transition-all font-medium uppercase tracking-widest">
+                    class="text-[9px] bg-gray-50 text-gray-400 px-4 py-2 rounded-full border border-gray-100 hover:bg-gray-100 transition-all font-medium uppercase tracking-widest">
                     關閉
                 </button>
             </header>
 
             <div v-if="loading" class="flex flex-col items-center py-20">
                 <div class="w-8 h-8 border-2 border-gray-100 border-t-gray-400 rounded-full animate-spin mb-4"></div>
-                <p class="text-[10px] tracking-[0.2em] text-gray-300">PARSING DOCUMENT...</p>
+                <p class="text-[9px] tracking-[0.2em] text-gray-300 uppercase">Parsing Document...</p>
             </div>
 
             <!-- Markdown 渲染元件 -->
             <markdown-renderer v-else :content="markdownContent"></markdown-renderer>
 
-            <footer class="mt-20 pt-10 border-t border-gray-50 text-center">
-                <p class="text-[10px] text-gray-300 tracking-[0.3em] font-light uppercase">End of Demonstration</p>
+            <footer class="mt-16 pt-8 border-t border-gray-50 text-center">
+                <p class="text-[9px] text-gray-300 tracking-[0.3em] font-light uppercase">End of Demonstration</p>
             </footer>
         </div>
     </div>
