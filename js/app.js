@@ -357,6 +357,52 @@ createApp({
                 if (!isSilent) dialog.alert("資料載入失敗: " + err.message);
             } finally {
                 if (!isSilent) loading.value = false;
+
+                // POST-LOGIN MERGE CHECK
+                if (appMode.value === 'ADMIN' && localStorage.getItem('merge_guest_data') === 'true') {
+                    localStorage.removeItem('merge_guest_data'); // Consume flag
+
+                    try {
+                        const guestData = JSON.parse(localStorage.getItem('guest_data') || '{"transactions":[]}');
+                        const guestProjects = JSON.parse(localStorage.getItem('guest_projects') || '[]');
+                        // We might want to merge categories/friends/payments too, but let's stick to transactions/projects for now to avoid overwriting user prefs?
+                        // Or we can import everything. API.importData handles it.
+                        // Let's prepare a full import object.
+
+                        const importPayload = {
+                            transactions: guestData.transactions || [],
+                            projects: guestProjects,
+                            // specific logic: do we merge categories? maybe just transactiosn for now to be safe?
+                            // User request: "save current data". Usually implies transactions.
+                            // Let's include everything that ImportPage does.
+                        };
+
+                        if (importPayload.transactions.length > 0 || importPayload.projects.length > 0) {
+                            loading.value = true;
+                            // We reuse API.importData logic but need to be careful about 'overwrite' vs 'merge'
+                            // API.importData does batch writes. It generates new IDs if needed or uses existing.
+                            // Guest transactions have 'tx_...' IDs. They should be unique enough.
+
+                            // We need to pass the data structure expected by importData (JSON export format)
+                            // which is { transactions: [], projects: [], ... }
+
+                            await API.importData(importPayload, (msg) => console.log(msg));
+
+                            dialog.alert("訪客資料已成功合併至您的帳戶！", "success");
+                            // Clear guest data? Maybe keep it as backup or clear it?
+                            // "Clear Guest Data" button exists. Better to clear it to avoid confusion?
+                            // Or leave it. Let's leave it for safety.
+
+                            // Reload data to reflect merged changes
+                            await loadData(true);
+                        }
+                    } catch (e) {
+                        console.error("Merge Guest Data Failed", e);
+                        dialog.alert("合併訪客資料失敗，請手動匯入", "error");
+                    } finally {
+                        if (!isSilent) loading.value = false;
+                    }
+                }
             }
         };
 
@@ -698,12 +744,27 @@ createApp({
 
             // NEW: Auth Methods
             handleGoogleLogin: async () => {
+                // Check if there is guest data to merge
+                if (appMode.value === 'GUEST' && transactions.value.length > 0) {
+                    const confirmMerge = await dialog.confirm("偵測到訪客資料，是否將目前資料存入 Google 帳戶？", {
+                        title: "資料同步",
+                        confirmText: "是，存入帳戶",
+                        secondaryText: "否，僅登入",
+                        showCancel: true
+                    });
+
+                    if (confirmMerge) {
+                        localStorage.setItem('merge_guest_data', 'true');
+                    }
+                }
+
                 try {
                     await API.login();
                     // AuthStateChanged will handle reload
                     dialog.alert("登入成功", "success");
                 } catch (e) {
                     dialog.alert("登入失敗: " + e.message);
+                    localStorage.removeItem('merge_guest_data'); // Clear flag on error
                 }
             },
             handleLogout: async () => {

@@ -131,6 +131,8 @@
   - 訪客模式優化：移除舊版匯入工具，修復匯率儲存問題，並開放訪客建立旅行計畫。
 - **Fix**: Resolved issue where added friends were not persisting in Guest Mode.
   - 修正：解決訪客模式下新增朋友無法儲存的問題。
+- **Feature**: Implemented "Guest Data Merge" on login. Users are prompted to save their guest data to their Google Account upon logging in.
+  - 新功能：實作「訪客資料合併」功能。登入時若偵測到訪客資料，系統將詢問是否將其存入 Google 帳戶。
 
 ### Technical Details
 - Added `js/pages/import-page.js` component with file parsing and `API.importData` integration.
