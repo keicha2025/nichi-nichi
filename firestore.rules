@@ -1,0 +1,26 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // User Data
+    match /users/{userId} {
+      // Owner has full access
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // Allow finding user by sharedId (Viewer Mode)
+      // This allows querying users where sharedId is not null
+      allow list: if resource.data.sharedId != null;
+      allow get: if resource.data.sharedId != null;
+
+      // Transactions Subcollection
+      match /transactions/{txId} {
+        // Owner has full access
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+        
+        // Viewer Mode: Allow read if the parent user has a sharedId set
+        allow read: if get(/databases/$(database)/documents/users/$(userId)).data.sharedId != null;
+      }
+    }
+  }
+}

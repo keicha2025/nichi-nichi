@@ -22,7 +22,9 @@ export const AppFooter = {
     },
     methods: {
         shouldShowTab(tab) {
-            if (this.appMode === 'VIEWER' && tab === 'add') return false;
+            if (this.appMode === 'VIEWER') {
+                if (tab === 'add' || tab === 'settings') return false;
+            }
             return true;
         },
         getTabIcon(tab) {

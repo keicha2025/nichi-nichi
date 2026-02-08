@@ -3,177 +3,87 @@ import { Theme } from '../theme.js';
 export const ViewDashboard = {
     template: `
     <section class="space-y-6 py-4 animate-in fade-in pb-10">
-        <!-- Hero: Total Spending -->
-        <div class="bg-white p-6 rounded-[2rem] muji-shadow border border-gray-50 space-y-4 text-center">
-            
-            <!-- Currency Toggle -->
-            <div class="flex bg-gray-50 rounded-xl p-1 mb-2">
-                 <button @click="baseCurrency = 'JPY'" 
-                         :class="baseCurrency === 'JPY' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-400'" 
-                         class="flex-1 py-2 text-[10px] tracking-widest rounded-lg transition-all font-medium">JPY</button>
-                 <button @click="baseCurrency = 'TWD'" 
-                         :class="baseCurrency === 'TWD' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-400'" 
-                         class="flex-1 py-2 text-[10px] tracking-widest rounded-lg transition-all font-medium">TWD</button>
-            </div>
-
-            <div class="space-y-1">
-                <p class="text-[10px] text-gray-400 uppercase tracking-widest">我的留學總支出 ({{ baseCurrency }})</p>
-                <h2 class="text-4xl font-extralight text-gray-700 tracking-tight">{{ getCurrencySymbol }} {{ formatNumber(totalOutflow) }}</h2>
-                <p class="text-[10px] text-gray-300 pt-1">唯讀模式 • 資料已去識別化</p>
-            </div>
-        </div>
-
-        <!-- Charts: Category Distribution (Bar Chart) -->
+        <!-- Layer 1: Information Container -->
         <div class="bg-white p-6 rounded-[2rem] muji-shadow border border-gray-50 space-y-4">
-            <h3 class="text-[10px] text-gray-400 uppercase tracking-widest px-2">Category Breakdown</h3>
-            <div class="h-64 w-full"> 
-                <canvas ref="categoryChart"></canvas>
+            <!-- User Name Header -->
+            <div class="space-y-1 text-center">
+                <h1 class="text-xl font-light text-gray-700 tracking-widest">
+                    {{ config.user_name || '使用者' }} 的生活筆記
+                </h1>
+                <p class="text-[10px] text-gray-300 uppercase tracking-widest">唯讀模式 • 資料已去識別化</p>
+            </div>
+
+            <!-- Conditional Info Blocks -->
+            <div class="space-y-3 pt-2">
+                <!-- FX Rate (Show if multiple currencies OR rate is not default) -->
+                <div v-if="shouldShowFxRate" class="flex justify-between items-center bg-gray-50 rounded-xl px-4 py-3">
+                    <span class="text-[11px] text-gray-400 font-medium">匯率設定 (JPY/TWD)</span>
+                    <span class="text-sm font-light text-gray-600 tracking-wider">{{ Number(config.fx_rate || 0.22) }}</span>
+                </div>
+
+                <!-- Friends (Show if exists) -->
+                <div v-if="friends && friends.length > 0" class="space-y-2">
+                    <p class="text-[10px] text-gray-300 uppercase tracking-widest px-1">往來對象</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span v-for="friend in friends" :key="friend" 
+                              class="px-3 py-1 bg-gray-50 text-gray-500 rounded-full text-[11px] tracking-wider border border-gray-100">
+                            {{ friend }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Projects (Show if exists) -->
+                <div v-if="projects && projects.length > 0" class="space-y-2 pt-1">
+                    <p class="text-[10px] text-gray-300 uppercase tracking-widest px-1">記帳專案</p>
+                    <div class="space-y-2">
+                        <div v-for="proj in projects" :key="proj.id" class="bg-gray-50 rounded-xl p-3 border border-gray-100 flex justify-between items-center">
+                            <span class="text-xs text-gray-600 tracking-wider">{{ proj.name }}</span>
+                            <span class="text-[10px] text-gray-400" v-if="proj.status === 'Archived'">已封存</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Navigation Tiles -->
+        <!-- Layer 2: Navigation Shortcuts -->
         <div class="grid grid-cols-2 gap-4">
-            <div @click="$emit('switch-tab', 'history')" class="bg-white p-5 rounded-2xl muji-shadow border border-gray-50 active:scale-95 transition-all cursor-pointer">
-                <span class="material-symbols-rounded text-gray-400 text-2xl mb-2">list_alt</span>
-                <p class="text-xs text-gray-600 font-medium">交易明細</p>
-                <p class="text-[9px] text-gray-300 mt-1">檢視去個資後的紀錄</p>
+            <div @click="$emit('switch-tab', 'history')" class="bg-white p-5 rounded-[2rem] muji-shadow border border-gray-50 active:scale-95 transition-all cursor-pointer flex flex-col items-center justify-center space-y-2 h-32">
+                <span class="material-symbols-rounded text-gray-300 text-3xl">list_alt</span>
+                <span class="text-sm text-gray-600 font-medium tracking-widest">交易明細</span>
             </div>
-            <div @click="$emit('switch-tab', 'stats')" class="bg-white p-5 rounded-2xl muji-shadow border border-gray-50 active:scale-95 transition-all cursor-pointer">
-                <span class="material-symbols-rounded text-gray-400 text-2xl mb-2">pie_chart</span>
-                <p class="text-xs text-gray-600 font-medium">統計分析</p>
-                <p class="text-[9px] text-gray-300 mt-1">支出類別分佈</p>
+            <div @click="$emit('switch-tab', 'stats')" class="bg-white p-5 rounded-[2rem] muji-shadow border border-gray-50 active:scale-95 transition-all cursor-pointer flex flex-col items-center justify-center space-y-2 h-32">
+                <span class="material-symbols-rounded text-gray-300 text-3xl">pie_chart</span>
+                <span class="text-sm text-gray-600 font-medium tracking-widest">統計分析</span>
             </div>
-            
-            <!-- Enter Guest Mode -->
-            <div @click="enterGuestMode" class="bg-white p-5 rounded-2xl muji-shadow border border-gray-50 active:scale-95 transition-all cursor-pointer col-span-2 flex items-center justify-between">
-                <div>
-                    <p class="text-xs text-gray-600 font-medium">進入體驗模式</p>
-                    <p class="text-[9px] text-gray-300 mt-1">開啟沙盒試用完整功能 (不儲存)</p>
-                </div>
-                <span class="material-symbols-rounded text-gray-300">arrow_forward</span>
+        </div>
+        
+        <!-- Layer 3: CTA to Guest Mode -->
+        <div @click="enterGuestMode" class="bg-white p-6 rounded-[2rem] muji-shadow border border-gray-50 active:scale-95 transition-all cursor-pointer flex items-center justify-between">
+            <div class="flex flex-col">
+                <p class="text-sm text-gray-700 font-medium tracking-widest">打造你的專屬帳本</p>
+                <p class="text-[10px] text-gray-300 mt-1">無需註冊 • 立即開始體驗</p>
             </div>
+            <span class="material-symbols-rounded text-gray-300">arrow_forward</span>
         </div>
     </section>
     `,
-    props: ['transactions', 'categories', 'fxRate'],
-    data() {
-        const params = new URLSearchParams(window.location.search);
-        const urlCurrency = params.get('currency');
-        return {
-            baseCurrency: urlCurrency === 'TWD' ? 'TWD' : 'JPY',
-        };
-    },
+    props: ['transactions', 'stats', 'friends', 'projects', 'config', 'hasMultipleCurrencies'],
     computed: {
-        getCurrencySymbol() { return this.baseCurrency === 'JPY' ? '¥' : '$'; },
+        shouldShowFxRate() {
+            // Show if multiple currencies exist OR if rate is weird (not 1 and not default 0.22 if we cared, but mostly just if relevant)
+            // Implementation Plan said: "if multiple currencies OR fxRate != default"
+            // Let's assume default is 0.22. But users might have different defaults.
+            // Check if hasMultipleCurrencies is true.
+            if (this.hasMultipleCurrencies) return true;
 
-        // Centralized logic mimicking stats-page.js 'processedList'
-        processedTransactions() {
-            const rate = Number(this.fxRate) || 0.22;
-            // console.log("[ViewDashboard] Calculation Rate:", rate); // Debug removed for cleanliness
-
-            return this.transactions
-                .filter(t => t.type === '支出')
-                .map(t => {
-                    const originalCurr = t.originalCurrency || 'JPY';
-                    const personal = Number(t.personalShare || 0);
-                    let finalVal = 0;
-
-                    // Logic from stats-page.js (isMyShareOnly=true)
-                    if (originalCurr === this.baseCurrency) {
-                        finalVal = personal;
-                    } else if (this.baseCurrency === 'JPY') {
-                        // Target JPY, Orig TWD
-                        finalVal = personal / rate;
-                    } else {
-                        // Target TWD, Orig JPY
-                        finalVal = personal * rate;
-                    }
-
-                    return { ...t, convertedAmount: finalVal };
-                });
-        },
-
-        totalOutflow() {
-            return this.processedTransactions.reduce((acc, t) => acc + t.convertedAmount, 0);
+            // Or if rate is significantly different from a "standard" that implies it matters?
+            // Actually, if there is only one currency (e.g. TWD), FX rate is irrelevant for display usually, UNLESS they have mixed legacy data.
+            // User requirement: "如貨幣資料都相同（例如他的資料都是TWD）就不顯示" -> implies strict check on data.
+            // So hasMultipleCurrencies is the main switch.
+            return false;
         }
     },
     methods: {
-        formatNumber(num) { return new Intl.NumberFormat().format(Math.round(num || 0)); },
-        enterGuestMode() { window.location.href = 'index.html'; },
-
-        renderChart() {
-            if (!this.$refs.categoryChart) return;
-            const ctx = this.$refs.categoryChart.getContext('2d');
-
-            // Destroy existing chart instance if exists
-            if (this.chartInstance) {
-                this.chartInstance.destroy();
-                this.chartInstance = null;
-            }
-
-            // Aggregate sorted by value using processed data
-            const map = {};
-            this.processedTransactions.forEach(t => {
-                let catName = '其他';
-                if (this.categories) {
-                    const c = this.categories.find(cat => cat.id === t.categoryId);
-                    if (c) catName = c.name;
-                }
-                if (!map[catName]) map[catName] = 0;
-                map[catName] += t.convertedAmount;
-            });
-
-            // Remove zero values and sort desc
-            const sorted = Object.entries(map)
-                .filter(s => s[1] > 0)
-                .sort((a, b) => b[1] - a[1]);
-
-            const labels = sorted.map(s => s[0]);
-            const data = sorted.map(s => s[1]);
-
-            // Create new chart instance (assigned to this, not data)
-            this.chartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: data,
-                        backgroundColor: Theme.colors.primary,
-                        borderRadius: 4,
-                        barThickness: 16,
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { display: false, grid: { display: false } },
-                        y: {
-                            grid: { display: false },
-                            ticks: {
-                                font: { family: '"Noto Sans TC", sans-serif', size: 11, weight: '500' },
-                                color: Theme.colors.primary
-                            }
-                        }
-                    },
-                    animation: { duration: 500 }
-                }
-            });
-        }
-    },
-    mounted() {
-        this.$nextTick(() => this.renderChart());
-    },
-    beforeUnmount() {
-        if (this.chartInstance) {
-            this.chartInstance.destroy();
-            this.chartInstance = null;
-        }
-    },
-    watch: {
-        transactions: { handler() { this.$nextTick(() => this.renderChart()); }, deep: true },
-        fxRate: { handler() { this.$nextTick(() => this.renderChart()); } },
-        baseCurrency: { handler() { this.$nextTick(() => this.renderChart()); } }
+        enterGuestMode() { window.location.href = 'index.html'; }
     }
 };

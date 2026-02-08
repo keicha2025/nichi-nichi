@@ -234,6 +234,13 @@ createApp({
             return list;
         });
 
+        // Computed: Check if we have multiple currencies (for Viewer Mode)
+        const hasMultipleCurrencies = computed(() => {
+            if (!transactions.value || transactions.value.length === 0) return false;
+            const currencies = new Set(transactions.value.map(t => t.originalCurrency || (t.amountTWD ? 'TWD' : 'JPY')));
+            return currencies.has('JPY') && currencies.has('TWD');
+        });
+
         const handleViewHistory = (keyword) => {
             historyFilter.value = { mode: 'all', categoryId: null, friendName: null, currency: null, keyword: keyword };
             currentTab.value = 'history';
@@ -668,7 +675,7 @@ createApp({
 
         const methods = {
             currentTab, handleTabChange, loading, categories, friends, paymentMethods, projects, transactions, filteredTransactions, historyFilter, form, editForm, stats, systemConfig, fxRate, selectedProject, isSettingsDirty,
-            appMode, syncStatus, currentUser,
+            appMode, syncStatus, currentUser, hasMultipleCurrencies,
             handleSubmit, handleDelete, handleEditItem,
             formatNumber: (n) => new Intl.NumberFormat().format(Math.round(n || 0)),
             getTabIcon,
