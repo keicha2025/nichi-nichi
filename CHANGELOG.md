@@ -271,4 +271,18 @@
 - Updated `js/app.js` with `await` on all `dialog.alert` calls, refined `finally` block logic, added `window.scrollTo` to `handleSubmit`, and implemented smart currency detection in `loadData`.
 - Updated `js/view-app.js` and `view.html` to support the header switcher and base currency management in Viewer mode.
 - Created `css/markdown-body.css`, `js/components/markdown-renderer.js`, and `page-demo.html`.
-- 修正 `js/api.js` 與 `js/app.js` 的非同步操作流程與批次刪除限制，優化 `handleSubmit` 的捲動回饋，全面整合貨幣智慧切換邏輯，並新增 Markdown 前端渲染解決方案。
+
+---
+
+## [2026-02-09T00:46:00Z] Fixed FX Rate Loading in Viewer Mode
+
+### Bug Fixes
+- **Corrected Configuration Structure**: Fixed a bug where the `Viewer Mode` (Shared Links) was receiving an incorrect data structure for user settings. This caused the exchange rate (FX Rate) to default to 0.22 instead of using the sharer's personalized settings.
+- **Improved Data Consistency**: Standardized the data format returned by the shared data fetcher to match the regular admin/guest modes.
+
+### Technical Details
+- Modified `_fetchDataForUser` in `js/api.js` to correctly return the `config` sub-object from the user document instead of the entire document.
+- Ensured `user_name` override from the shared link configuration is correctly merged into the final `config` object.
+
+修正檢視模式匯率讀取：修復了分享連結中設定結構回傳錯誤的問題，確保檢視者能正確看到分享者所設定的匯率，而非系統預設值。
+同時統一了資料回傳格式以增進系統穩定性。

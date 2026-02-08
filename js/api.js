@@ -451,13 +451,16 @@ export const API = {
             }
         }
 
-        // Override User Name with Link Name
+        // Merge Owner Config
+        const config = { ...(userData.config || {}) };
+
+        // Override User Name with Link Name if provided
         if (linkConfig.name) {
-            userData.user_name = linkConfig.name;
+            config.user_name = linkConfig.name;
         }
 
         return {
-            config: userData, // Includes fx_rate
+            config, // Correctly returns the config sub-object
             transactions,
             friends: userData.friends || [], // Might be empty if masked
             projects: userData.projects || [],
