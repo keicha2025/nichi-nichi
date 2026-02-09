@@ -381,3 +381,23 @@ Added comprehensive debug logging throughout the category save flow for easier t
 
 ---
 
+## [2026-02-09T11:28:00Z] Unified App Icon Configuration
+
+### Features & Improvements
+- **Unified App Icon**: Standardized the application icon across all platforms (Favicon, Apple Touch Icon, and PWA) to use the local `kakei.png`.
+  - 統一應用程式圖示：將 Favicon、Apple Touch Icon 及 PWA 圖示統一指向本地檔案 `kakei.png`。
+- **Self-Hosting Icons**: Replaced external Flaticon and GitHub Pages links with local relative paths to ensure offline availability and visual consistency.
+  - 本地化圖示資源：移除外部連結，改用相對路徑引用，確保離線可用性與視覺一致。
+
+### Technical Details
+- Updated `index.html`:
+  - Changed `apple-touch-icon` href to `./kakei.png`.
+  - Changed `favicon` href to `kakei.png`.
+- Updated `view.html`:
+  - Changed `apple-touch-icon` href to `./kakei.png`.
+  - Changed `favicon` href to `kakei.png`.
+- Updated `manifest.json`:
+  - Changed `icons[0].src` to `kakei.png`.
+
+---
+

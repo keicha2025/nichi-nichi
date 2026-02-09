@@ -9,7 +9,7 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "https://keicha2025.github.io/jing-record/kakei.png",
+      "src": "kakei.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
