@@ -1,5 +1,3 @@
-import { Theme } from '../theme.js';
-
 export const OverviewPage = {
     template: `
     <section class="space-y-6 py-4 animate-in fade-in pb-10">
@@ -63,15 +61,12 @@ export const OverviewPage = {
         return { baseCurrency, getCurrencySymbol };
     },
     data() {
-        return { isMyShareOnly: false, selectedDateStr: '', barChart: null };
+        return { isMyShareOnly: false, selectedDateStr: '', chartInstance: null };
     },
     computed: {
         todayStr() {
             const now = new Date();
-            const y = now.getFullYear();
-            const m = String(now.getMonth() + 1).padStart(2, '0');
-            const d = String(now.getDate()).padStart(2, '0');
-            return `${y}-${m}-${d}`;
+            return now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
         },
         selectedDateLabel() { return this.selectedDateStr === this.todayStr ? '本日' : this.selectedDateStr.substring(5); },
         displayAmount() {
@@ -186,56 +181,30 @@ export const OverviewPage = {
         renderChart() {
             if (!this.$refs.barChart) return;
             const ctx = this.$refs.barChart.getContext('2d');
-            if (this.barChart) this.barChart.destroy();
+            if (this.chartInstance) this.chartInstance.destroy();
             const days = [];
             for (let i = 4; i >= 0; i--) {
                 const d = new Date(); d.setDate(d.getDate() - i);
-                const y = d.getFullYear();
-                const m = String(d.getMonth() + 1).padStart(2, '0');
-                const dd = String(d.getDate()).padStart(2, '0');
-                const ds = `${y}-${m}-${dd}`;
-                const label = `${m}-${dd}`;
+                const ds = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
                 const val = this.transactions.filter(t => t.spendDate.startsWith(ds) && t.type === '支出').reduce((acc, t) => acc + this.getNormalizedAmount(t), 0);
-                days.push({ date: ds, label, val });
+                days.push({ date: ds, label: ds.substring(5), val });
             }
-
-            const primaryColor = Theme.resolveColor('--action-primary-bg', '#424242');
-            const secondaryColor = Theme.resolveColor('--p-brand-200', '#D6D6D6');
-
-            this.barChart = new Chart(ctx, {
+            this.chartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: days.map(d => d.label),
-                    datasets: [{
-                        data: days.map(d => d.val),
-                        backgroundColor: days.map(d => d.date === this.selectedDateStr ? primaryColor : secondaryColor),
-                        borderRadius: 4,
-                        barThickness: 20
-                    }]
+                    datasets: [{ data: days.map(d => d.val), backgroundColor: days.map(d => d.date === this.selectedDateStr ? '#4A4A4A' : '#E5E5E5'), borderRadius: 4, barThickness: 20 }]
                 },
                 options: {
                     responsive: true, animation: false, maintainAspectRatio: false,
-                    scales: {
-                        y: { display: false, beginAtZero: true },
-                        x: {
-                            grid: { display: false },
-                            border: { display: false },
-                            ticks: { font: { size: 10 }, padding: 4, color: '#666' }
-                        }
-                    },
-                    layout: { padding: { bottom: 0, left: 10, right: 10, top: 5 } },
+                    scales: { y: { display: false }, x: { grid: { display: false }, border: { display: false } } },
                     plugins: { legend: { display: false }, tooltip: { enabled: false } },
-                    onClick: (e, el) => {
-                        if (el.length > 0) {
-                            if (e.native) e.native.stopPropagation();
-                            this.selectedDateStr = days[el[0].index].date;
-                        }
-                    }
+                    onClick: (e, el) => { if (el.length > 0) this.selectedDateStr = days[el[0].index].date; }
                 }
             });
         }
     },
-    beforeUnmount() { if (this.barChart) this.barChart.destroy(); },
+    beforeUnmount() { if (this.chartInstance) this.chartInstance.destroy(); },
     mounted() { this.selectedDateStr = this.todayStr; this.$nextTick(() => this.renderChart()); },
     watch: {
         isMyShareOnly() { this.renderChart(); },

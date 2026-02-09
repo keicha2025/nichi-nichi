@@ -7,21 +7,21 @@ export const IconPicker = {
              @click="$emit('close')"></div>
              
         <!-- Modal Card -->
-        <div class="relative bg-white w-full max-w-[320px] rounded-[2.5rem] shadow-2xl flex flex-col max-h-[70vh] animate-spring-up overflow-hidden border border-gray-50">
+        <div class="relative bg-white w-full max-w-[320px] rounded-[2.5rem] shadow-2xl flex flex-col max-h-[70vh] animate-spring-up overflow-hidden border border-bdr-subtle">
             <!-- Header (edit-page style) -->
-            <div class="flex justify-between items-center px-6 py-5 border-b border-gray-50 shrink-0">
-                <span class="text-[10px] text-gray-400 uppercase tracking-[0.3em] font-medium">選取圖示</span>
-                <button @click="$emit('close')" class="text-[10px] text-gray-300 uppercase tracking-widest hover:text-gray-500 transition-colors">取消</button>
+            <div class="flex justify-between items-center px-6 py-5 border-b border-bdr-subtle shrink-0">
+                <span class="text-[10px] text-txt-secondary uppercase tracking-[0.3em] font-medium">選取圖示</span>
+                <button @click="$emit('close')" class="text-[10px] text-txt-muted uppercase tracking-widest hover:text-txt-secondary transition-colors">取消</button>
             </div>
             
             <!-- Icon Grid Container -->
             <div class="flex-1 overflow-y-auto p-6 no-scrollbar">
                 <div v-for="(group, name) in iconGroups" :key="name" class="mb-6 last:mb-0">
-                    <h4 class="text-[9px] text-gray-300 font-medium mb-3 uppercase tracking-[0.2em] px-1">{{ name }}</h4>
+                    <h4 class="text-[9px] text-txt-muted font-medium mb-3 uppercase tracking-[0.2em] px-1">{{ name }}</h4>
                     <div class="grid grid-cols-4 gap-3">
                         <button v-for="icon in group" :key="icon" 
                             @click="$emit('select', icon)"
-                            class="aspect-square rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-[#4A4A4A] hover:text-white active:scale-95 transition-all">
+                            class="aspect-square rounded-2xl bg-bg-subtle flex items-center justify-center text-txt-secondary hover:bg-[var(--action-primary-bg)] hover:text-white active:scale-95 transition-all">
                             <span class="material-symbols-rounded text-xl">{{ icon }}</span>
                         </button>
                     </div>

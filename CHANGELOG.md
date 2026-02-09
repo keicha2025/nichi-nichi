@@ -284,5 +284,51 @@
 - Modified `_fetchDataForUser` in `js/api.js` to correctly return the `config` sub-object from the user document instead of the entire document.
 - Ensured `user_name` override from the shared link configuration is correctly merged into the final `config` object.
 
-修正檢視模式匯率讀取：修復了分享連結中設定結構回傳錯誤的問題，確保檢視者能正確看到分享者所設定的匯率，而非系統預設值。
-同時統一了資料回傳格式以增進系統穩定性。
+
+---
+
+## [2026-02-09T13:20:00Z] Design System v1.0 Rollout (Color Audit & Tokens)
+
+### Features & Improvements
+- **3-Layer Token Architecture**: Implemented a comprehensive design token system with Primitive, Semantic, and Component layers to ensure scalability and dark-mode readiness.
+  - 實作三層式設計標記架構（Primitive, Semantic, Component），確保系統擴展性並預留暗色模式支援。
+- **Full Color Audit**: Performed a codebase-wide audit, identifying 72 unique colors and mapping them to standardized tokens.
+  - 完成全站色彩審核：識別出 72 種唯一色彩，並將其全數映射至標準化語義標記。
+- **Decoupled Brand & Text**: Separated brand color usage from functional text tokens to improve accessibility and theme flexibility.
+  - 品牌色與文字色解耦：將品牌色使用處與功能性文字標記分離，提升無障礙對比度與主題切換彈性。
+- **Chart Palette Optimization**: Expanded brand-toned palette (Brand Tones) for statistics charts, ensuring better category differentiation while maintaining a muted, premium aesthetic.
+  - 圖表配色優化：實作「品牌明度階梯」配色，在維持低飽和高級感的同時，提升統計圖表的類別辨識度。
+- **Core Technical Update**: Updated `design-tokens.css` with 10-step brand primitives and synced with Tailwind CDN configuration across all HTML entry points.
+  - 核心技術更新：擴展 10 階品牌色基礎標記，並同步更新所有 HTML 進入點的 Tailwind 配置。
+- Updated `css/design-tokens.css` with v1.0 specification.
+- Refactored `js/theme.js` to utilize semantic CSS variables.
+- Cleaned up legacy color mappings for backward compatibility.
+- 核心技術更新：重構 `design-tokens.css` 與 `theme.js`，導入語義化變數並優化舊有映射。
+
+---
+
+## [2026-02-09T15:06:00Z] Chart Stability Restoration & Toggle Color Fix
+
+### Bug Fixes
+- **Stats Page Chart Colors**: Restored the original remote chart color palette to ensure the highest amount category uses the brand color `#4A4A4A`. The previous implementation incorrectly started with `#424242`, causing visual inconsistency.
+  - 統計頁面圖表顏色修正：恢復遠端原始配色，確保最高金額分類使用品牌色 `#4A4A4A`。
+- **Overview Page Rendering Failure**: Fixed a critical bug where the Overview page failed to render charts due to a missing `Theme` import in `js/pages/overview-page.js`.
+  - 總覽頁面渲染失敗修正：補上缺少的 `Theme` 模組引入，修復圖表無法顯示的問題。
+- **Toggle Switch Color**: Updated the "Split Expense" (幫朋友代墊 / 需分帳) toggle switch in the Add Page to use the brand primary color when active, replacing the previous light gray.
+  - 開關顏色修正：將新增頁面的「需分帳」開關改為品牌主色，提升視覺一致性。
+
+### Technical Details
+- **Chart Color Palette**: Reverted `js/theme.js` chart colors to the original sequence: `['#4A4A4A', '#7A7A7A', '#9A9A9A', '#BDBDBD', '#D1C7BD', '#E5E5E5']`. This ensures Chart.js applies the brand color to the first (highest value) data point in sorted category data.
+  - 圖表配色技術細節：Chart.js 會依序將顏色套用至資料點，因此第一個顏色（品牌色）會對應至排序後的最大值分類。
+- **Import Fix**: Added `import { Theme } from '../theme.js';` to `js/pages/overview-page.js` to resolve `ReferenceError` when calling `Theme.resolveColor()`.
+  - 引入修正：為 `overview-page.js` 補上 Theme 模組引入，解決 `ReferenceError` 錯誤。
+- **Toggle Styling**: Modified `js/pages/add-page.js` line 85 to use `:class="form.isSplit ? 'bg-[var(--action-primary-bg)]' : 'bg-bg-subtle'"` for consistent brand color application.
+  - 開關樣式：修改 `add-page.js` 第 85 行，使用 CSS 變數 `--action-primary-bg` 確保品牌色一致性。
+
+### Files Modified
+- `js/theme.js` - Restored original chart color palette
+- `js/pages/overview-page.js` - Added Theme import
+- `js/pages/add-page.js` - Updated toggle switch color
+- `js/pages/stats-page.js` - Ensured compatibility with restored palette
+
+---

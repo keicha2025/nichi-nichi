@@ -7,7 +7,7 @@
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>日日記 | Nichi-Nichi Log (View Only)</title>
 
-    <meta name="theme-color" content="#4A4A4A">
+    <meta name="theme-color" content="var(--action-primary-bg)">
     <!-- No Manifest for View Mode to keep it separate -->
 
     <!-- iOS 專屬優化 -->
@@ -19,6 +19,47 @@
     <!-- 外部資源 -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        txt: {
+                            primary: 'var(--txt-primary)',
+                            secondary: 'var(--txt-secondary)',
+                            muted: 'var(--txt-muted)',
+                            onbrand: 'var(--txt-on-brand)'
+                        },
+                        bg: {
+                            main: 'var(--bg-main)',
+                            canvas: 'var(--bg-canvas)',
+                            subtle: 'var(--bg-subtle)',
+                            default: 'var(--bg-main)'
+                        },
+                        bdr: {
+                            default: 'var(--bdr-default)',
+                            subtle: 'var(--bdr-subtle)'
+                        },
+                        action: {
+                            primary: {
+                                bg: 'var(--action-primary-bg)',
+                                hover: 'var(--action-primary-hover)',
+                                text: 'var(--action-primary-text)'
+                            }
+                        },
+                        chart: {
+                            1: 'var(--chart-color-1)',
+                            2: 'var(--chart-color-2)',
+                            3: 'var(--chart-color-3)',
+                            4: 'var(--chart-color-4)',
+                            5: 'var(--chart-color-5)',
+                            6: 'var(--chart-color-6)'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500&family=Noto+Sans+JP:wght@300;400;500&display=swap"
@@ -58,8 +99,8 @@
 <body>
     <div id="app" class="max-w-md mx-auto min-h-screen relative" v-cloak>
         <div v-if="loading" class="fixed inset-0 z-[100] loading-overlay flex flex-col items-center justify-center">
-            <div class="w-8 h-8 border-2 border-gray-100 border-t-gray-500 rounded-full animate-spin mb-4"></div>
-            <p class="text-[10px] tracking-[0.2em] text-gray-400 uppercase font-light">Loading...</p>
+            <div class="w-8 h-8 border-2 border-bdr-subtle border-t-gray-500 rounded-full animate-spin mb-4"></div>
+            <p class="text-[10px] tracking-[0.2em] text-txt-secondary uppercase font-light">Loading...</p>
         </div>
 
         <!-- Header -->

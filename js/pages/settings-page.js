@@ -7,32 +7,32 @@ export const SettingsPage = {
     template: `
     <section class="space-y-4 py-4 animate-in fade-in pb-24">
         <!-- 0. 基本設定卡片 -->
-        <div class="bg-white p-6 rounded-[2rem] muji-shadow border border-gray-50 space-y-6">
-            <h3 class="text-[10px] text-gray-400 uppercase tracking-[0.2em] font-medium px-2">System Config</h3>
+        <div class="bg-white p-6 rounded-[2rem] muji-shadow border border-bdr-subtle space-y-6">
+            <h3 class="text-[10px] text-txt-secondary uppercase tracking-[0.2em] font-medium px-2">System Config</h3>
             
             <div class="space-y-4">
                 <!-- 1. 使用者名稱 -->
                 <div class="flex items-center justify-between px-2">
-                    <span class="text-xs text-gray-500">使用者名稱</span>
-                    <input type="text" v-model="localConfig.user_name" @change="debouncedUpdate" class="text-right text-xs bg-gray-50 px-3 py-2 rounded-xl outline-none w-32 placeholder-gray-300">
+                    <span class="text-xs text-txt-secondary">使用者名稱</span>
+                    <input type="text" v-model="localConfig.user_name" @change="debouncedUpdate" class="text-right text-xs bg-bg-subtle px-3 py-2 rounded-xl outline-none w-32 placeholder-gray-300">
                 </div>
 
                 <!-- 2. 當前匯率 -->
                 <div class="flex items-center justify-between px-2">
-                    <span class="text-xs text-gray-500">當前匯率 (1 JPY = ? TWD)</span>
-                    <input type="number" v-model="localConfig.fx_rate" step="0.001" @change="debouncedUpdate" class="text-right text-xs bg-gray-50 px-3 py-2 rounded-xl outline-none w-32">
+                    <span class="text-xs text-txt-secondary">當前匯率 (1 JPY = ? TWD)</span>
+                    <input type="number" v-model="localConfig.fx_rate" step="0.001" @change="debouncedUpdate" class="text-right text-xs bg-bg-subtle px-3 py-2 rounded-xl outline-none w-32">
                 </div>
 
 
             </div>
 
             <!-- 更新按鈕 -->
-            <button @click="saveSettings" :disabled="saving" class="w-full bg-[#4A4A4A] text-white py-4 rounded-2xl text-[10px] font-medium tracking-[0.3em] uppercase active:scale-95 transition-all">
+            <button @click="saveSettings" :disabled="saving" class="w-full bg-[var(--action-primary-bg)] text-white py-4 rounded-2xl text-[10px] font-medium tracking-[0.3em] uppercase active:scale-95 transition-all">
                 {{ saving ? 'Saving...' : '更新設定' }}
             </button>
 
              <!-- 清除訪客資料 -->
-             <div v-if="appMode === 'GUEST'" class="pt-2 border-t border-gray-100">
+             <div v-if="appMode === 'GUEST'" class="pt-2 border-t border-bdr-subtle">
                 <button @click="$emit('clear-guest-data')" class="w-full text-red-400 text-[10px] tracking-widest py-2 rounded-lg transition-colors">
                     清除訪客資料
                 </button>
@@ -41,47 +41,47 @@ export const SettingsPage = {
 
         <!-- NEW: 類別管理 -->
         <!-- 支出類別管理 -->
-        <div class="bg-white p-6 rounded-[2rem] muji-shadow border border-gray-50 space-y-4">
-            <h3 class="text-[10px] text-gray-400 uppercase tracking-[0.2em] font-medium px-2 flex justify-between items-center">
+        <div class="bg-white p-6 rounded-[2rem] muji-shadow border border-bdr-subtle space-y-4">
+            <h3 class="text-[10px] text-txt-secondary uppercase tracking-[0.2em] font-medium px-2 flex justify-between items-center">
                 <span>支出類別</span>
                 <div class="flex items-center space-x-3">
                     <template v-if="isCategoryModeEdit">
-                        <button @click="addCategory('支出')" class="text-gray-400 hover:text-gray-600">
+                        <button @click="addCategory('支出')" class="text-txt-secondary hover:text-txt-primary">
                             <span class="material-symbols-rounded text-lg">add</span>
                         </button>
-                        <button @click="cancelCategoryEdit" class="text-gray-300 hover:text-gray-500">
+                        <button @click="cancelCategoryEdit" class="text-txt-muted hover:text-txt-secondary">
                             <span class="material-symbols-rounded text-lg">close</span>
                         </button>
-                        <button @click="saveCategoryEdit" class="text-gray-300 hover:text-slate-600 transition-colors">
+                        <button @click="saveCategoryEdit" class="text-txt-muted hover:text-slate-600 transition-colors">
                             <span class="material-symbols-rounded text-lg">check_circle</span>
                         </button>
                     </template>
-                    <button v-else @click="toggleCategoryEdit" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <button v-else @click="toggleCategoryEdit" class="text-txt-secondary hover:text-txt-primary transition-colors">
                         <span class="material-symbols-rounded text-lg">edit</span>
                     </button>
                 </div>
             </h3>
             <div class="space-y-3">
                 <template v-if="isCategoryModeEdit">
-                    <div v-for="(cat, idx) in expenseCategories" :key="'edit-cat-exp-'+cat.id" class="flex items-center space-x-4 bg-gray-50 p-2 rounded-xl">
+                    <div v-for="(cat, idx) in expenseCategories" :key="'edit-cat-exp-'+cat.id" class="flex items-center space-x-4 bg-bg-subtle p-2 rounded-xl">
                         <div class="flex flex-col space-y-0.5 px-1">
-                            <button @click="moveItem('categories', cat.id, -1)" class="text-gray-300 hover:text-gray-500 text-[10px]" :disabled="idx===0">▲</button>
-                            <button @click="moveItem('categories', cat.id, 1)" class="text-gray-300 hover:text-gray-500 text-[10px]" :disabled="idx===expenseCategories.length-1">▼</button>
+                            <button @click="moveItem('categories', cat.id, -1)" class="text-txt-muted hover:text-txt-secondary text-[10px]" :disabled="idx===0">▲</button>
+                            <button @click="moveItem('categories', cat.id, 1)" class="text-txt-muted hover:text-txt-secondary text-[10px]" :disabled="idx===expenseCategories.length-1">▼</button>
                         </div>
-                        <button @click="openIconPicker('category', cat.id)" class="w-10 h-10 aspect-square bg-white rounded-xl flex items-center justify-center text-gray-400 shadow-sm border border-gray-100 flex-shrink-0">
+                        <button @click="openIconPicker('category', cat.id)" class="w-10 h-10 aspect-square bg-white rounded-xl flex items-center justify-center text-txt-secondary shadow-sm border border-bdr-subtle flex-shrink-0">
                              <span class="material-symbols-rounded text-xl">{{ cat.icon }}</span>
                         </button>
-                        <input type="text" v-model="cat.name" class="bg-transparent text-xs font-medium text-gray-700 w-full outline-none">
-                        <button @click="deleteItem('categories', cat.id)" class="text-gray-300 hover:text-slate-600 px-2 transition-colors">
+                        <input type="text" v-model="cat.name" class="bg-transparent text-xs font-medium text-txt-primary w-full outline-none">
+                        <button @click="deleteItem('categories', cat.id)" class="text-txt-muted hover:text-slate-600 px-2 transition-colors">
                             <span class="material-symbols-rounded text-sm">remove_circle</span>
                         </button>
                     </div>
                 </template>
                 <template v-else>
                     <div class="grid grid-cols-5 gap-2 px-2">
-                        <div v-for="cat in expenseCategories" :key="'view-cat-exp-'+cat.id" class="flex flex-col items-center p-2 rounded-xl bg-gray-50">
-                             <span class="material-symbols-rounded text-lg text-gray-400 mb-1">{{ cat.icon }}</span>
-                             <span class="text-[9px] text-gray-500 truncate w-full text-center">{{ cat.name }}</span>
+                        <div v-for="cat in expenseCategories" :key="'view-cat-exp-'+cat.id" class="flex flex-col items-center p-2 rounded-xl bg-bg-subtle">
+                             <span class="material-symbols-rounded text-lg text-txt-secondary mb-1">{{ cat.icon }}</span>
+                             <span class="text-[9px] text-txt-secondary truncate w-full text-center">{{ cat.name }}</span>
                         </div>
                     </div>
                 </template>
@@ -89,47 +89,47 @@ export const SettingsPage = {
         </div>
 
         <!-- 收入類別管理 -->
-        <div class="bg-white p-6 rounded-[2rem] muji-shadow border border-gray-50 space-y-4">
-            <h3 class="text-[10px] text-gray-400 uppercase tracking-[0.2em] font-medium px-2 flex justify-between items-center">
+        <div class="bg-white p-6 rounded-[2rem] muji-shadow border border-bdr-subtle space-y-4">
+            <h3 class="text-[10px] text-txt-secondary uppercase tracking-[0.2em] font-medium px-2 flex justify-between items-center">
                 <span>收入類別</span>
                 <div class="flex items-center space-x-3">
                     <template v-if="isCategoryModeEdit">
-                        <button @click="addCategory('收入')" class="text-gray-400 hover:text-gray-600">
+                        <button @click="addCategory('收入')" class="text-txt-secondary hover:text-txt-primary">
                             <span class="material-symbols-rounded text-lg">add</span>
                         </button>
-                        <button @click="cancelCategoryEdit" class="text-gray-300 hover:text-gray-500">
+                        <button @click="cancelCategoryEdit" class="text-txt-muted hover:text-txt-secondary">
                             <span class="material-symbols-rounded text-lg">close</span>
                         </button>
-                        <button @click="saveCategoryEdit" class="text-gray-300 hover:text-slate-600 transition-colors">
+                        <button @click="saveCategoryEdit" class="text-txt-muted hover:text-slate-600 transition-colors">
                             <span class="material-symbols-rounded text-lg">check_circle</span>
                         </button>
                     </template>
-                    <button v-else @click="toggleCategoryEdit" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <button v-else @click="toggleCategoryEdit" class="text-txt-secondary hover:text-txt-primary transition-colors">
                         <span class="material-symbols-rounded text-lg">edit</span>
                     </button>
                 </div>
             </h3>
             <div class="space-y-3">
                 <template v-if="isCategoryModeEdit">
-                    <div v-for="(cat, idx) in incomeCategories" :key="'edit-cat-inc-'+cat.id" class="flex items-center space-x-4 bg-gray-50 p-2 rounded-xl">
+                    <div v-for="(cat, idx) in incomeCategories" :key="'edit-cat-inc-'+cat.id" class="flex items-center space-x-4 bg-bg-subtle p-2 rounded-xl">
                         <div class="flex flex-col space-y-0.5 px-1">
-                            <button @click="moveItem('categories', cat.id, -1)" class="text-gray-300 hover:text-gray-500 text-[10px]" :disabled="idx===0">▲</button>
-                            <button @click="moveItem('categories', cat.id, 1)" class="text-gray-300 hover:text-gray-500 text-[10px]" :disabled="idx===incomeCategories.length-1">▼</button>
+                            <button @click="moveItem('categories', cat.id, -1)" class="text-txt-muted hover:text-txt-secondary text-[10px]" :disabled="idx===0">▲</button>
+                            <button @click="moveItem('categories', cat.id, 1)" class="text-txt-muted hover:text-txt-secondary text-[10px]" :disabled="idx===incomeCategories.length-1">▼</button>
                         </div>
-                        <button @click="openIconPicker('category', cat.id)" class="w-10 h-10 aspect-square bg-white rounded-xl flex items-center justify-center text-gray-400 shadow-sm border border-gray-100 flex-shrink-0">
+                        <button @click="openIconPicker('category', cat.id)" class="w-10 h-10 aspect-square bg-white rounded-xl flex items-center justify-center text-txt-secondary shadow-sm border border-bdr-subtle flex-shrink-0">
                              <span class="material-symbols-rounded text-xl">{{ cat.icon }}</span>
                         </button>
-                        <input type="text" v-model="cat.name" class="bg-transparent text-xs font-medium text-gray-700 w-full outline-none">
-                        <button @click="deleteItem('categories', cat.id)" class="text-gray-300 hover:text-slate-600 px-2 transition-colors">
+                        <input type="text" v-model="cat.name" class="bg-transparent text-xs font-medium text-txt-primary w-full outline-none">
+                        <button @click="deleteItem('categories', cat.id)" class="text-txt-muted hover:text-slate-600 px-2 transition-colors">
                             <span class="material-symbols-rounded text-sm">remove_circle</span>
                         </button>
                     </div>
                 </template>
                 <template v-else>
                     <div class="grid grid-cols-5 gap-2 px-2">
-                        <div v-for="cat in incomeCategories" :key="'view-cat-inc-'+cat.id" class="flex flex-col items-center p-2 rounded-xl bg-gray-50">
-                             <span class="material-symbols-rounded text-lg text-gray-400 mb-1">{{ cat.icon }}</span>
-                             <span class="text-[9px] text-gray-500 truncate w-full text-center">{{ cat.name }}</span>
+                        <div v-for="cat in incomeCategories" :key="'view-cat-inc-'+cat.id" class="flex flex-col items-center p-2 rounded-xl bg-bg-subtle">
+                             <span class="material-symbols-rounded text-lg text-txt-secondary mb-1">{{ cat.icon }}</span>
+                             <span class="text-[9px] text-txt-secondary truncate w-full text-center">{{ cat.name }}</span>
                         </div>
                     </div>
                 </template>
@@ -137,22 +137,22 @@ export const SettingsPage = {
         </div>
 
         <!-- 支付方式管理 -->
-        <div class="bg-white p-6 rounded-[2rem] muji-shadow border border-gray-50 space-y-4">
-             <h3 class="text-[10px] text-gray-400 uppercase tracking-[0.2em] font-medium px-2 flex justify-between items-center">
+        <div class="bg-white p-6 rounded-[2rem] muji-shadow border border-bdr-subtle space-y-4">
+             <h3 class="text-[10px] text-txt-secondary uppercase tracking-[0.2em] font-medium px-2 flex justify-between items-center">
                 <span>支付方式管理</span>
                 <div class="flex items-center space-x-3">
                     <template v-if="isPaymentModeEdit">
-                        <button @click="addPaymentMethod" class="text-gray-400 hover:text-gray-600">
+                        <button @click="addPaymentMethod" class="text-txt-secondary hover:text-txt-primary">
                             <span class="material-symbols-rounded text-lg">add</span>
                         </button>
-                        <button @click="cancelPaymentEdit" class="text-gray-300 hover:text-gray-500">
+                        <button @click="cancelPaymentEdit" class="text-txt-muted hover:text-txt-secondary">
                             <span class="material-symbols-rounded text-lg">close</span>
                         </button>
-                        <button @click="savePaymentEdit" class="text-gray-300 hover:text-slate-600 transition-colors">
+                        <button @click="savePaymentEdit" class="text-txt-muted hover:text-slate-600 transition-colors">
                             <span class="material-symbols-rounded text-lg">check_circle</span>
                         </button>
                     </template>
-                    <button v-else @click="togglePaymentEdit" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <button v-else @click="togglePaymentEdit" class="text-txt-secondary hover:text-txt-primary transition-colors">
                         <span class="material-symbols-rounded text-lg">edit</span>
                     </button>
                 </div>
@@ -160,17 +160,17 @@ export const SettingsPage = {
              <div class="space-y-3">
                 <!-- 編輯模式 -->
                 <template v-if="isPaymentModeEdit">
-                    <div v-for="(pm, idx) in localPaymentMethods" :key="'edit-pm-'+pm.id" class="flex items-center space-x-4 bg-gray-50 p-2 rounded-xl">
+                    <div v-for="(pm, idx) in localPaymentMethods" :key="'edit-pm-'+pm.id" class="flex items-center space-x-4 bg-bg-subtle p-2 rounded-xl">
                         <div class="flex flex-col space-y-0.5 px-1">
-                             <button @click="moveItem('paymentMethods', pm.id, -1)" class="text-gray-300 hover:text-gray-500 text-[10px]" :disabled="idx===0">▲</button>
-                             <button @click="moveItem('paymentMethods', pm.id, 1)" class="text-gray-300 hover:text-gray-500 text-[10px]" :disabled="idx===localPaymentMethods.length-1">▼</button>
+                             <button @click="moveItem('paymentMethods', pm.id, -1)" class="text-txt-muted hover:text-txt-secondary text-[10px]" :disabled="idx===0">▲</button>
+                             <button @click="moveItem('paymentMethods', pm.id, 1)" class="text-txt-muted hover:text-txt-secondary text-[10px]" :disabled="idx===localPaymentMethods.length-1">▼</button>
                         </div>
                         <!-- Icon -->
-                        <button @click="openIconPicker('payment', pm.id)" class="w-10 h-10 aspect-square bg-white rounded-xl flex items-center justify-center text-gray-400 shadow-sm border border-gray-100 flex-shrink-0">
+                        <button @click="openIconPicker('payment', pm.id)" class="w-10 h-10 aspect-square bg-white rounded-xl flex items-center justify-center text-txt-secondary shadow-sm border border-bdr-subtle flex-shrink-0">
                              <span class="material-symbols-rounded text-xl">{{ pm.icon || 'payments' }}</span>
                         </button>
-                        <input type="text" v-model="pm.name" class="bg-transparent text-xs font-medium text-gray-700 w-full outline-none">
-                        <button @click="deleteItem('paymentMethods', pm.id)" class="text-gray-300 hover:text-slate-600 px-2 transition-colors">
+                        <input type="text" v-model="pm.name" class="bg-transparent text-xs font-medium text-txt-primary w-full outline-none">
+                        <button @click="deleteItem('paymentMethods', pm.id)" class="text-txt-muted hover:text-slate-600 px-2 transition-colors">
                             <span class="material-symbols-rounded text-sm">remove_circle</span>
                         </button>
                     </div>
@@ -178,9 +178,9 @@ export const SettingsPage = {
                 <!-- 預覽模式 -->
                 <template v-else>
                     <div class="grid grid-cols-2 gap-2 px-2">
-                         <div v-for="pm in sortedPaymentMethods" :key="'view-pm-'+pm.id" class="flex items-center space-x-3 p-3 rounded-xl bg-gray-50">
-                             <span class="material-symbols-rounded text-base text-gray-400">{{ pm.icon || 'payments' }}</span>
-                             <span class="text-xs text-gray-600 font-medium">{{ pm.name }}</span>
+                         <div v-for="pm in sortedPaymentMethods" :key="'view-pm-'+pm.id" class="flex items-center space-x-3 p-3 rounded-xl bg-bg-subtle">
+                             <span class="material-symbols-rounded text-base text-txt-secondary">{{ pm.icon || 'payments' }}</span>
+                             <span class="text-xs text-txt-primary font-medium">{{ pm.name }}</span>
                          </div>
                     </div>
                 </template>
@@ -189,21 +189,21 @@ export const SettingsPage = {
 
 
         <!-- 1. 旅行計畫 (Projects) -->
-        <div class="bg-white p-6 rounded-[2rem] muji-shadow border border-gray-50 space-y-4">
-            <h3 class="text-[10px] text-gray-400 uppercase tracking-[0.2em] font-medium px-2 flex justify-between items-center">
+        <div class="bg-white p-6 rounded-[2rem] muji-shadow border border-bdr-subtle space-y-4">
+            <h3 class="text-[10px] text-txt-secondary uppercase tracking-[0.2em] font-medium px-2 flex justify-between items-center">
                 <span>旅行計畫</span>
-                <button @click="isAddingProject = !isAddingProject" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <button @click="isAddingProject = !isAddingProject" class="text-txt-secondary hover:text-txt-primary transition-colors">
                     <span class="material-symbols-rounded text-lg">{{ isAddingProject ? 'remove' : 'add' }}</span>
                 </button>
             </h3>
             
             <!-- 新增專案表單 -->
-            <div v-if="isAddingProject" class="bg-gray-50 p-4 rounded-xl space-y-3 animate-in slide-in-from-top-2">
+            <div v-if="isAddingProject" class="bg-bg-subtle p-4 rounded-xl space-y-3 animate-in slide-in-from-top-2">
                 <input type="text" v-model="newProject.name" placeholder="計畫名稱 (例如: 京都之旅)" class="w-full bg-white px-3 py-2 rounded-lg text-xs outline-none">
                 <div class="grid grid-cols-[1fr_auto_1fr] gap-2 items-center">
-                    <input type="date" v-model="newProject.startDate" class="bg-white px-3 py-2 rounded-lg text-xs outline-none text-gray-500 w-full">
-                    <span class="text-gray-300">~</span>
-                    <input type="date" v-model="newProject.endDate" class="bg-white px-3 py-2 rounded-lg text-xs outline-none text-gray-500 w-full">
+                    <input type="date" v-model="newProject.startDate" class="bg-white px-3 py-2 rounded-lg text-xs outline-none text-txt-secondary w-full">
+                    <span class="text-txt-muted">~</span>
+                    <input type="date" v-model="newProject.endDate" class="bg-white px-3 py-2 rounded-lg text-xs outline-none text-txt-secondary w-full">
                 </div>
                 <button @click="createProject" :disabled="projectSaving" class="w-full bg-gray-800 text-white py-2 rounded-lg text-[10px] tracking-widest uppercase">
                     {{ projectSaving ? '新增中...' : '新增計畫' }}
@@ -211,119 +211,119 @@ export const SettingsPage = {
             </div>
 
             <div class="space-y-3">
-                 <div v-if="!projects || projects.length === 0" class="text-xs text-gray-300 px-2">無專案</div>
+                 <div v-if="!projects || projects.length === 0" class="text-xs text-txt-muted px-2">無專案</div>
                  <div v-for="p in projects" :key="p.id" 
                       @click="$emit('view-project', p)"
-                      class="flex justify-between items-center p-3 bg-gray-50 rounded-xl active:bg-gray-100 transition-colors cursor-pointer">
+                      class="flex justify-between items-center p-3 bg-bg-subtle rounded-xl active:bg-bg-subtle transition-colors cursor-pointer">
                     <div class="flex flex-col">
-                        <span class="text-xs font-medium text-gray-700">{{ typeof p.name === 'object' ? p.name.name : p.name }}</span>
-                        <span class="text-[9px] text-gray-400">{{ p.startDate }} ~ {{ p.endDate }}</span>
+                        <span class="text-xs font-medium text-txt-primary">{{ typeof p.name === 'object' ? p.name.name : p.name }}</span>
+                        <span class="text-[9px] text-txt-secondary">{{ p.startDate }} ~ {{ p.endDate }}</span>
                     </div>
-                    <span :class="p.status === 'Active' ? 'bg-[#4A4A4A] text-white' : 'bg-gray-200 text-gray-500'" class="text-[9px] px-2 py-1 rounded-full">{{ getStatusLabel(p.status) }}</span>
+                    <span :class="p.status === 'Active' ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-bg-subtle text-txt-secondary'" class="text-[9px] px-2 py-1 rounded-full">{{ getStatusLabel(p.status) }}</span>
                  </div>
             </div>
         </div>
 
         <!-- 2. 朋友名單管理 -->
-        <div class="bg-white p-6 rounded-[2rem] muji-shadow border border-gray-50 space-y-4">
-            <h3 class="text-[10px] text-gray-400 uppercase tracking-[0.2em] font-medium px-2">Friends List</h3>
+        <div class="bg-white p-6 rounded-[2rem] muji-shadow border border-bdr-subtle space-y-4">
+            <h3 class="text-[10px] text-txt-secondary uppercase tracking-[0.2em] font-medium px-2">Friends List</h3>
             <div class="grid grid-cols-1 divide-y divide-gray-50">
                 <div v-for="f in friends" :key="f" @click="$emit('view-friend', f)" 
-                     class="py-4 flex justify-between items-center active:bg-gray-50 transition-colors px-2 cursor-pointer">
+                     class="py-4 flex justify-between items-center active:bg-bg-subtle transition-colors px-2 cursor-pointer">
                     <div class="flex items-center space-x-3">
-                        <div class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                            <span class="material-symbols-rounded text-gray-400 text-sm">person</span>
+                        <div class="w-8 h-8 bg-bg-subtle rounded-full flex items-center justify-center">
+                            <span class="material-symbols-rounded text-txt-secondary text-sm">person</span>
                         </div>
-                        <span class="text-xs text-gray-600 font-medium">{{ f }}</span>
+                        <span class="text-xs text-txt-primary font-medium">{{ f }}</span>
                     </div>
-                    <span class="material-symbols-rounded text-gray-200 text-sm">arrow_forward_ios</span>
+                    <span class="material-symbols-rounded text-txt-muted text-sm">arrow_forward_ios</span>
                 </div>
             </div>
         </div>
 
              <!-- 4. Account & Sync -->
-             <div class="bg-white p-6 rounded-[2rem] muji-shadow border border-gray-50 space-y-4">
-                  <h3 class="text-[10px] text-gray-400 uppercase tracking-[0.2em] font-medium px-2">Account</h3>
+             <div class="bg-white p-6 rounded-[2rem] muji-shadow border border-bdr-subtle space-y-4">
+                  <h3 class="text-[10px] text-txt-secondary uppercase tracking-[0.2em] font-medium px-2">Account</h3>
                   
                   <!-- ADMIN MODE (Logged In) -->
                   <div v-if="appMode === 'ADMIN'" class="space-y-4">
                       <div class="flex items-center space-x-3 px-2">
-                          <div class="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
+                          <div class="w-10 h-10 rounded-full bg-bg-subtle overflow-hidden">
                               <img v-if="config.photoURL" :src="config.photoURL" class="w-full h-full object-cover">
-                              <span v-else class="material-symbols-rounded text-gray-400 p-2">person</span>
+                              <span v-else class="material-symbols-rounded text-txt-secondary p-2">person</span>
                           </div>
                           <div class="flex flex-col justify-center">
-                              <span class="text-xs font-medium text-gray-700">{{ currentUser?.email }}</span>
-                              <span class="text-[9px] text-gray-400">已登入 Google 帳號</span>
+                              <span class="text-xs font-medium text-txt-primary">{{ currentUser?.email }}</span>
+                              <span class="text-[9px] text-txt-secondary">已登入 Google 帳號</span>
                           </div>
                       </div>
  
                       <!-- GOOGLE SERVICES (New) -->
-                      <div class="bg-gray-50 p-4 rounded-xl space-y-4">
+                      <div class="bg-bg-subtle p-4 rounded-xl space-y-4">
                           <div class="flex items-center space-x-2 px-1">
-                             <span class="material-symbols-rounded text-base text-gray-400">cloud_sync</span>
-                             <span class="text-xs text-gray-600 font-medium">Google Spreadsheet Services</span>
+                             <span class="material-symbols-rounded text-base text-txt-secondary">cloud_sync</span>
+                             <span class="text-xs text-txt-primary font-medium">Google Spreadsheet Services</span>
                           </div>
                           
-                          <p class="text-[10px] text-gray-400 px-1 pb-2">
+                          <p class="text-[10px] text-txt-secondary px-1 pb-2">
                               將儲存於 Google 雲端硬碟「日日記」資料夾
                           </p>
                           <div class="grid grid-cols-2 gap-3">
-                              <button @click="handleBackup" :disabled="backingUp" class="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-gray-100 active:scale-95 transition-all disabled:opacity-50 hover:bg-gray-50">
-                                  <span v-if="backingUp" class="w-4 h-4 border-2 border-gray-400 border-t-gray-700 rounded-full animate-spin"></span>
-                                  <span v-else class="material-symbols-rounded text-xl text-gray-400">cloud_sync</span>
-                                  <span class="text-[10px] text-gray-500 mt-2 font-medium tracking-wide">備份</span>
+                              <button @click="handleBackup" :disabled="backingUp" class="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-bdr-subtle active:scale-95 transition-all disabled:opacity-50 hover:bg-bg-subtle">
+                                  <span v-if="backingUp" class="w-4 h-4 border-2 border-bdr-default border-t-gray-700 rounded-full animate-spin"></span>
+                                  <span v-else class="material-symbols-rounded text-xl text-txt-secondary">cloud_sync</span>
+                                  <span class="text-[10px] text-txt-secondary mt-2 font-medium tracking-wide">備份</span>
                               </button>
-                              <button @click="handleExport" :disabled="exporting" class="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-gray-100 active:scale-95 transition-all disabled:opacity-50 hover:bg-gray-50">
-                                  <span v-if="exporting" class="w-4 h-4 border-2 border-gray-400 border-t-gray-700 rounded-full animate-spin"></span>
-                                  <span v-else class="material-symbols-rounded text-xl text-gray-400">ios_share</span>
-                                  <span class="text-[10px] text-gray-500 mt-2 font-medium tracking-wide">匯出</span>
+                              <button @click="handleExport" :disabled="exporting" class="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-bdr-subtle active:scale-95 transition-all disabled:opacity-50 hover:bg-bg-subtle">
+                                  <span v-if="exporting" class="w-4 h-4 border-2 border-bdr-default border-t-gray-700 rounded-full animate-spin"></span>
+                                  <span v-else class="material-symbols-rounded text-xl text-txt-secondary">ios_share</span>
+                                  <span class="text-[10px] text-txt-secondary mt-2 font-medium tracking-wide">匯出</span>
                               </button>
                           </div>                <div class="flex items-center justify-between px-1">
                               <div class="flex flex-col">
-                                  <span class="text-[10px] text-gray-600 font-medium tracking-wide">每日自動備份</span>
-                                  <span class="text-[8px] text-gray-300"></span>
+                                  <span class="text-[10px] text-txt-primary font-medium tracking-wide">每日自動備份</span>
+                                  <span class="text-[8px] text-txt-muted"></span>
                               </div>
                               <label class="relative inline-flex items-center cursor-pointer">
                                   <input type="checkbox" v-model="localConfig.auto_backup" @change="debouncedUpdate" class="sr-only peer">
-                                  <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#4A4A4A]"></div>
+                                  <div class="w-9 h-5 bg-bg-subtle peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-bdr-default after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[var(--action-primary-bg)]"></div>
                               </label>
                           </div>
                       </div>
  
                       <!-- SHARED LINK MANAGEMENT -->
-                      <div class="bg-gray-50 p-4 rounded-xl relative">
+                      <div class="bg-bg-subtle p-4 rounded-xl relative">
                           <div class="flex items-center justify-between">
                               <div class="space-y-0.5">
-                                  <span class="text-xs text-gray-600 font-medium block">公開分享連結管理</span>
-                                  <p class="text-[9px] text-gray-400">建立多個分享連結，並可設定不同的分享範圍與權限。</p>
+                                  <span class="text-xs text-txt-primary font-medium block">公開分享連結管理</span>
+                                  <p class="text-[9px] text-txt-secondary">建立多個分享連結，並可設定不同的分享範圍與權限。</p>
                               </div>
-                              <button @click="$emit('manage-shared-links')" class="w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-sm border border-gray-100 active:scale-95 transition-all text-gray-500 hover:text-gray-700 mt-1">
+                              <button @click="$emit('manage-shared-links')" class="w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-sm border border-bdr-subtle active:scale-95 transition-all text-txt-secondary hover:text-txt-primary mt-1">
                                   <span class="material-symbols-rounded text-sm">edit</span>
                               </button>
                           </div>
                       </div>
 
-                 <button @click="$emit('view-import')" class="w-full border border-gray-200 text-gray-500 py-3 rounded-xl text-xs font-medium active:bg-gray-50">
+                 <button @click="$emit('view-import')" class="w-full border border-bdr-default text-txt-secondary py-3 rounded-xl text-xs font-medium active:bg-bg-subtle">
                      匯入資料
                  </button>
-                 <button @click="$emit('logout')" class="w-full border border-gray-200 text-gray-500 py-3 rounded-xl text-xs font-medium active:bg-gray-50">
+                 <button @click="$emit('logout')" class="w-full border border-bdr-default text-txt-secondary py-3 rounded-xl text-xs font-medium active:bg-bg-subtle">
                      登出 Google 帳號
                  </button>
-                 <button @click="confirmDeleteData" class="w-full py-2 text-[10px] text-gray-300 tracking-widest uppercase hover:text-gray-500 transition-colors">
+                 <button @click="confirmDeleteData" class="w-full py-2 text-[10px] text-txt-muted tracking-widest uppercase hover:text-txt-secondary transition-colors">
                      刪除記帳資料
                  </button>
-                 <button @click="$emit('delete-account')" class="w-full py-2 text-[10px] text-gray-300 tracking-widest uppercase hover:text-gray-500 transition-colors">
+                 <button @click="$emit('delete-account')" class="w-full py-2 text-[10px] text-txt-muted tracking-widest uppercase hover:text-txt-secondary transition-colors">
                      註銷帳戶
                  </button>
              </div>
 
              <!-- GUEST MODE -->
              <div v-else-if="appMode === 'GUEST'" class="space-y-4">
-                 <p class="text-[10px] text-gray-400 px-2 leading-relaxed">
+                 <p class="text-[10px] text-txt-secondary px-2 leading-relaxed">
                     登入 Google 帳號以開啟雲端同步、多裝置存取與分享功能。
                  </p>
-                 <button @click="$emit('login')" class="w-full border border-gray-200 text-gray-600 py-3 rounded-xl flex items-center justify-center space-x-2 active:scale-95 transition-transform hover:bg-gray-50">
+                 <button @click="$emit('login')" class="w-full border border-bdr-default text-txt-primary py-3 rounded-xl flex items-center justify-center space-x-2 active:scale-95 transition-transform hover:bg-bg-subtle">
                      <svg class="w-4 h-4 bg-white rounded-full p-0.5" viewBox="0 0 24 24">
                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                         <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -335,7 +335,7 @@ export const SettingsPage = {
              </div>
              <!-- VIEWER MODE -->
              <div v-else class="space-y-3">
-                 <div class="text-[10px] text-gray-400 px-2">閱覽模式 (唯讀)</div>
+                 <div class="text-[10px] text-txt-secondary px-2">閱覽模式 (唯讀)</div>
              </div>
         </div>
         

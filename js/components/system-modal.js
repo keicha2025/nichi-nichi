@@ -20,16 +20,16 @@ export const SystemModal = {
 
             <!-- Title & Content -->
             <div class="text-center space-y-2 w-full">
-                <h3 v-if="config.title" class="text-base font-bold text-gray-800 tracking-wider">{{ config.title }}</h3>
+                <h3 v-if="config.title" class="text-base font-bold text-txt-primary tracking-wider">{{ config.title }}</h3>
                 
                 <!-- Simple Message -->
-                <p v-if="config.message" class="text-sm text-gray-500 font-medium leading-relaxed whitespace-pre-wrap">{{ config.message }}</p>
+                <p v-if="config.message" class="text-sm text-txt-secondary font-medium leading-relaxed whitespace-pre-wrap">{{ config.message }}</p>
 
                 <!-- Transaction Details Slot (Custom Content) -->
                 <div v-if="config.type === 'transaction_success' && config.data" class="pt-1">
-                    <p class="text-sm text-gray-500 font-medium tracking-wide">
+                    <p class="text-sm text-txt-secondary font-medium tracking-wide">
                         {{ config.data.name }}
-                        <span class="ml-1 text-[#4A4A4A] font-bold">{{ currencySymbol }} {{ formatNumber(config.data.amount) }}</span>
+                        <span class="ml-1 text-[var(--action-primary-bg)] font-bold">{{ currencySymbol }} {{ formatNumber(config.data.amount) }}</span>
                     </p>
                 </div>
             </div>
@@ -46,7 +46,7 @@ export const SystemModal = {
                 <!-- Secondary Action (Cancel / View Details) -->
                 <button v-if="config.showCancel || config.secondaryText"
                         @click="$emit('cancel')" 
-                        class="w-full text-gray-400 py-2 text-[11px] tracking-widest font-medium active:bg-gray-50 rounded-xl transition-colors">
+                        class="w-full text-txt-secondary py-2 text-[11px] tracking-widest font-medium active:bg-bg-subtle rounded-xl transition-colors">
                     {{ config.secondaryText || '取消' }}
                 </button>
             </div>
@@ -66,19 +66,19 @@ export const SystemModal = {
         },
         iconBgClass() {
             // 所有狀態統一使用灰色背景
-            return 'bg-gray-50';
+            return 'bg-bg-subtle';
         },
         iconColorClass() {
             const map = {
-                success: 'text-[#4A4A4A]',
-                transaction_success: 'text-[#4A4A4A]',
+                success: 'text-[var(--action-primary-bg)]',
+                transaction_success: 'text-[var(--action-primary-bg)]',
                 // error, warning, confirm 使用灰色
             };
-            return map[this.config.type] || 'text-gray-400';
+            return map[this.config.type] || 'text-txt-secondary';
         },
         primaryBtnClass() {
             // 所有按鈕統一使用主色
-            return 'bg-[#4A4A4A] shadow-gray-200';
+            return 'bg-[var(--action-primary-bg)] shadow-gray-200';
         },
         currencySymbol() {
             return this.config.data && this.config.data.currency === 'TWD' ? '$' : '¥';

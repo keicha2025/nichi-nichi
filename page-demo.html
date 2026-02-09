@@ -9,6 +9,47 @@
     <!-- 外部資源 -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        txt: {
+                            primary: 'var(--txt-primary)',
+                            secondary: 'var(--txt-secondary)',
+                            muted: 'var(--txt-muted)',
+                            onbrand: 'var(--txt-on-brand)'
+                        },
+                        bg: {
+                            main: 'var(--bg-main)',
+                            canvas: 'var(--bg-canvas)',
+                            subtle: 'var(--bg-subtle)',
+                            default: 'var(--bg-main)'
+                        },
+                        bdr: {
+                            default: 'var(--bdr-default)',
+                            subtle: 'var(--bdr-subtle)'
+                        },
+                        action: {
+                            primary: {
+                                bg: 'var(--action-primary-bg)',
+                                hover: 'var(--action-primary-hover)',
+                                text: 'var(--action-primary-text)'
+                            }
+                        },
+                        chart: {
+                            1: 'var(--chart-color-1)',
+                            2: 'var(--chart-color-2)',
+                            3: 'var(--chart-color-3)',
+                            4: 'var(--chart-color-4)',
+                            5: 'var(--chart-color-5)',
+                            6: 'var(--chart-color-6)'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
 
     <!-- Markdown 相關庫 -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -57,25 +98,25 @@
         <div class="demo-container animate-in fade-in mt-6">
             <header class="demo-content-header">
                 <div>
-                    <h1 class="text-sm font-medium tracking-[0.2em] text-gray-700 uppercase">Page Rendering Demo</h1>
-                    <p class="text-[9px] text-gray-400 tracking-widest mt-1">MARKDOWN PARSER & DESIGN SYSTEM</p>
+                    <h1 class="text-sm font-medium tracking-[0.2em] text-txt-primary uppercase">Page Rendering Demo</h1>
+                    <p class="text-[9px] text-txt-secondary tracking-widest mt-1">MARKDOWN PARSER & DESIGN SYSTEM</p>
                 </div>
                 <button @click="handleClose"
-                    class="text-[9px] bg-gray-50 text-gray-400 px-4 py-2 rounded-full border border-gray-100 hover:bg-gray-100 transition-all font-medium uppercase tracking-widest">
+                    class="text-[9px] bg-bg-subtle text-txt-secondary px-4 py-2 rounded-full border border-bdr-subtle hover:bg-bg-subtle transition-all font-medium uppercase tracking-widest">
                     關閉
                 </button>
             </header>
 
             <div v-if="loading" class="flex flex-col items-center py-20">
-                <div class="w-8 h-8 border-2 border-gray-100 border-t-gray-400 rounded-full animate-spin mb-4"></div>
-                <p class="text-[9px] tracking-[0.2em] text-gray-300 uppercase">Parsing Document...</p>
+                <div class="w-8 h-8 border-2 border-bdr-subtle border-t-gray-400 rounded-full animate-spin mb-4"></div>
+                <p class="text-[9px] tracking-[0.2em] text-txt-muted uppercase">Parsing Document...</p>
             </div>
 
             <!-- Markdown 渲染元件 -->
             <markdown-renderer v-else :content="markdownContent"></markdown-renderer>
 
-            <footer class="mt-16 pt-8 border-t border-gray-50 text-center">
-                <p class="text-[9px] text-gray-300 tracking-[0.3em] font-light uppercase">End of Demonstration</p>
+            <footer class="mt-16 pt-8 border-t border-bdr-subtle text-center">
+                <p class="text-[9px] text-txt-muted tracking-[0.3em] font-light uppercase">End of Demonstration</p>
             </footer>
         </div>
     </div>

@@ -325,7 +325,7 @@ API.onAuthStateChanged((user) => {
         migrateBtn.disabled = false;
         log("Authenticated.");
     } else {
-        authStatus.innerHTML = `<span class="text-gray-500">未登入</span>`;
+        authStatus.innerHTML = `<span class="text-txt-secondary">未登入</span>`;
         loginBtn.classList.remove('hidden');
         migrateBtn.disabled = true;
         log("Waiting for login...");

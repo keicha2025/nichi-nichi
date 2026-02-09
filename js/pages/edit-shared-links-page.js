@@ -7,87 +7,87 @@ export const EditSharedLinksPage = {
     template: `
     <section class="space-y-4 py-4 animate-in fade-in pb-24">
         <!-- Main Form Card with Integrated Header -->
-        <div class="bg-white p-6 rounded-[2rem] muji-shadow border border-gray-50 space-y-6">
+        <div class="bg-white p-6 rounded-[2rem] muji-shadow border border-bdr-subtle space-y-6">
             
             <!-- Integrated Header -->
-            <div class="flex items-center justify-between pb-2 border-b border-gray-50">
-                <h2 class="text-sm font-medium text-gray-700">{{ isNew ? '新增分享連結' : '編輯分享連結' }}</h2>
-                <button @click="$emit('back')" class="text-xs text-gray-400 font-medium tracking-widest hover:text-gray-600 transition-colors">
+            <div class="flex items-center justify-between pb-2 border-b border-bdr-subtle">
+                <h2 class="text-sm font-medium text-txt-primary">{{ isNew ? '新增分享連結' : '編輯分享連結' }}</h2>
+                <button @click="$emit('back')" class="text-xs text-txt-secondary font-medium tracking-widest hover:text-txt-primary transition-colors">
                     取消
                 </button>
             </div>
             
             <!-- 1. 分享名稱 -->
             <div class="space-y-2">
-                <label class="text-[10px] text-gray-400 uppercase tracking-widest px-1">分享名稱</label>
+                <label class="text-[10px] text-txt-secondary uppercase tracking-widest px-1">分享名稱</label>
                 <input type="text" v-model="form.name" placeholder="例如：Jing 的記帳本" 
-                       class="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm text-gray-700 outline-none placeholder-gray-300 focus:bg-white focus:ring-2 focus:ring-gray-100 transition-all">
-                <p class="text-[9px] text-gray-300 px-1">此名稱將顯示於閱覽模式的標題，取代預設的使用者名稱。</p>
+                       class="w-full bg-bg-subtle px-4 py-3 rounded-xl text-sm text-txt-primary outline-none placeholder-gray-300 focus:bg-white focus:ring-2 focus:ring-gray-100 transition-all">
+                <p class="text-[9px] text-txt-muted px-1">此名稱將顯示於閱覽模式的標題，取代預設的使用者名稱。</p>
             </div>
 
             <!-- 2. 分享範圍 (Scope) -->
             <div class="space-y-2">
-                <label class="text-[10px] text-gray-400 uppercase tracking-widest px-1">分享範圍</label>
+                <label class="text-[10px] text-txt-secondary uppercase tracking-widest px-1">分享範圍</label>
                 <app-select v-model="form.scope" :options="scopeOptions" placeholder="請選擇分享範圍"></app-select>
             </div>
 
             <!-- Scope Details -->
             <div v-if="form.scope === 'range'" class="space-y-2 animate-in fade-in">
-                <label class="text-[10px] text-gray-400 uppercase tracking-widest px-1">日期區間</label>
+                <label class="text-[10px] text-txt-secondary uppercase tracking-widest px-1">日期區間</label>
                 <div class="grid grid-cols-[1fr_auto_1fr] gap-2 items-center">
-                    <input type="date" v-model="form.scopeValue.start" class="bg-gray-50 px-3 py-2 rounded-xl text-xs outline-none text-gray-600 w-full focus:bg-white focus:ring-2 focus:ring-gray-100 transition-all">
-                    <span class="text-gray-300">~</span>
-                    <input type="date" v-model="form.scopeValue.end" class="bg-gray-50 px-3 py-2 rounded-xl text-xs outline-none text-gray-600 w-full focus:bg-white focus:ring-2 focus:ring-gray-100 transition-all">
+                    <input type="date" v-model="form.scopeValue.start" class="bg-bg-subtle px-3 py-2 rounded-xl text-xs outline-none text-txt-primary w-full focus:bg-white focus:ring-2 focus:ring-gray-100 transition-all">
+                    <span class="text-txt-muted">~</span>
+                    <input type="date" v-model="form.scopeValue.end" class="bg-bg-subtle px-3 py-2 rounded-xl text-xs outline-none text-txt-primary w-full focus:bg-white focus:ring-2 focus:ring-gray-100 transition-all">
                 </div>
             </div>
 
             <div v-if="form.scope === 'project'" class="space-y-2 animate-in fade-in">
-                <label class="text-[10px] text-gray-400 uppercase tracking-widest px-1">選擇專案</label>
+                <label class="text-[10px] text-txt-secondary uppercase tracking-widest px-1">選擇專案</label>
                 <app-select v-model="form.scopeValue" :options="projectOptions" placeholder="請選擇專案"></app-select>
             </div>
 
             <!-- 3. 第二層篩選 (Filter) -->
-            <div v-if="form.scope !== 'project'" class="space-y-2 pt-2 border-t border-gray-50 animate-in fade-in">
-                <div class="flex items-center justify-between p-2 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer" @click="form.excludeProjectExpenses = !form.excludeProjectExpenses">
-                    <span class="text-xs text-gray-600">排除所有專案花費</span>
+            <div v-if="form.scope !== 'project'" class="space-y-2 pt-2 border-t border-bdr-subtle animate-in fade-in">
+                <div class="flex items-center justify-between p-2 rounded-xl hover:bg-bg-subtle transition-colors cursor-pointer" @click="form.excludeProjectExpenses = !form.excludeProjectExpenses">
+                    <span class="text-xs text-txt-primary">排除所有專案花費</span>
                     <!-- Custom Checkbox (Stats Page Style) -->
                     <div class="w-4 h-4 rounded border flex items-center justify-center transition-colors shadow-sm"
-                         :class="form.excludeProjectExpenses ? 'bg-gray-700 border-gray-700' : 'bg-white border-gray-300'">
+                         :class="form.excludeProjectExpenses ? 'bg-gray-700 border-gray-700' : 'bg-white border-bdr-default'">
                         <span v-if="form.excludeProjectExpenses" class="material-symbols-rounded text-white text-[10px]">check</span>
                     </div>
                 </div>
-                <p class="text-[9px] text-gray-300 px-2">勾選後，任何已關聯專案的交易將不會顯示。</p>
+                <p class="text-[9px] text-txt-muted px-2">勾選後，任何已關聯專案的交易將不會顯示。</p>
             </div>
 
             <!-- 4. 隱私設定 (Privacy) -->
-            <div class="space-y-2 pt-2 border-t border-gray-50">
-                 <label class="text-[10px] text-gray-400 uppercase tracking-widest px-1">隱私保護</label>
+            <div class="space-y-2 pt-2 border-t border-bdr-subtle">
+                 <label class="text-[10px] text-txt-secondary uppercase tracking-widest px-1">隱私保護</label>
                  
-                 <div class="flex items-center justify-between p-2 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer" @click="form.hideFriendNames = !form.hideFriendNames">
-                    <span class="text-xs text-gray-600">隱藏朋友名稱 (顯示為 "友")</span>
+                 <div class="flex items-center justify-between p-2 rounded-xl hover:bg-bg-subtle transition-colors cursor-pointer" @click="form.hideFriendNames = !form.hideFriendNames">
+                    <span class="text-xs text-txt-primary">隱藏朋友名稱 (顯示為 "友")</span>
                     <div class="w-4 h-4 rounded border flex items-center justify-center transition-colors shadow-sm"
-                         :class="form.hideFriendNames ? 'bg-gray-700 border-gray-700' : 'bg-white border-gray-300'">
+                         :class="form.hideFriendNames ? 'bg-gray-700 border-gray-700' : 'bg-white border-bdr-default'">
                         <span v-if="form.hideFriendNames" class="material-symbols-rounded text-white text-[10px]">check</span>
                     </div>
                 </div>
                 
                 <div v-if="(form.scope === 'all' || form.scope === 'range' || (form.scope === 'project' && form.hideProjectNames !== undefined)) && !form.excludeProjectExpenses" 
-                     class="flex items-center justify-between p-2 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer" 
+                     class="flex items-center justify-between p-2 rounded-xl hover:bg-bg-subtle transition-colors cursor-pointer" 
                      @click="form.hideProjectNames = !form.hideProjectNames">
-                    <span class="text-xs text-gray-600">隱藏專案名稱 (顯示為 "專案 代號")</span>
+                    <span class="text-xs text-txt-primary">隱藏專案名稱 (顯示為 "專案 代號")</span>
                     <div class="w-4 h-4 rounded border flex items-center justify-center transition-colors shadow-sm"
-                         :class="form.hideProjectNames ? 'bg-gray-700 border-gray-700' : 'bg-white border-gray-300'">
+                         :class="form.hideProjectNames ? 'bg-gray-700 border-gray-700' : 'bg-white border-bdr-default'">
                         <span v-if="form.hideProjectNames" class="material-symbols-rounded text-white text-[10px]">check</span>
                     </div>
                 </div>
             </div>
 
             <!-- Existing Link Info -->
-            <div v-if="!isNew && linkId" class="pt-4 border-t border-gray-50 space-y-3">
-                 <p class="text-[10px] text-gray-400 uppercase tracking-widest px-1">連結網址</p>
-                 <div class="flex items-center space-x-2 bg-gray-50 px-3 py-3 rounded-xl border border-gray-100">
-                     <input type="text" readonly :value="fullLink" class="w-full text-[10px] text-gray-500 outline-none bg-transparent">
-                     <button @click="copyLink" class="text-gray-400 hover:text-gray-600">
+            <div v-if="!isNew && linkId" class="pt-4 border-t border-bdr-subtle space-y-3">
+                 <p class="text-[10px] text-txt-secondary uppercase tracking-widest px-1">連結網址</p>
+                 <div class="flex items-center space-x-2 bg-bg-subtle px-3 py-3 rounded-xl border border-bdr-subtle">
+                     <input type="text" readonly :value="fullLink" class="w-full text-[10px] text-txt-secondary outline-none bg-transparent">
+                     <button @click="copyLink" class="text-txt-secondary hover:text-txt-primary">
                          <span class="material-symbols-rounded text-sm">{{ copied ? 'check' : 'content_copy' }}</span>
                      </button>
                 </div>
@@ -95,11 +95,11 @@ export const EditSharedLinksPage = {
 
             <!-- Actions -->
             <div class="pt-4 space-y-3">
-                <button @click="save" :disabled="saving" class="w-full bg-[#4A4A4A] text-white py-4 rounded-2xl text-[10px] font-medium tracking-[0.3em] uppercase active:scale-95 transition-all shadow-md hover:shadow-lg disabled:opacity-50">
+                <button @click="save" :disabled="saving" class="w-full bg-[var(--action-primary-bg)] text-white py-4 rounded-2xl text-[10px] font-medium tracking-[0.3em] uppercase active:scale-95 transition-all shadow-md hover:shadow-lg disabled:opacity-50">
                     {{ saving ? '儲存中...' : '儲存設定' }}
                 </button>
                 
-                <button v-if="!isNew" @click="closeLink" class="w-full py-2 text-[10px] text-gray-300 tracking-widest uppercase hover:text-gray-500 transition-colors">
+                <button v-if="!isNew" @click="closeLink" class="w-full py-2 text-[10px] text-txt-muted tracking-widest uppercase hover:text-txt-secondary transition-colors">
                     關閉此連結
                 </button>
             </div>

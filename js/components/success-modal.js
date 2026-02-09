@@ -10,16 +10,16 @@ export const SuccessModal = {
         <div class="relative bg-white w-full max-w-sm mx-4 mb-6 sm:mb-0 p-6 rounded-[2rem] shadow-2xl pointer-events-auto transform transition-all duration-500 animate-spring-up flex flex-col items-center space-y-5">
             
             <!-- Icon -->
-            <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-2">
-                <span class="material-symbols-rounded text-3xl text-[#4A4A4A]">check</span>
+            <div class="w-16 h-16 bg-bg-subtle rounded-full flex items-center justify-center mb-2">
+                <span class="material-symbols-rounded text-3xl text-[var(--action-primary-bg)]">check</span>
             </div>
 
             <!-- Title & Content -->
             <div class="text-center space-y-1">
-                <h3 class="text-base font-bold text-gray-800 tracking-wider">已新增</h3>
-                <p class="text-sm text-gray-500 font-medium tracking-wide">
+                <h3 class="text-base font-bold text-txt-primary tracking-wider">已新增</h3>
+                <p class="text-sm text-txt-secondary font-medium tracking-wide">
                     {{ item.name }}
-                    <span class="ml-1 text-[#4A4A4A] font-bold">{{ currencySymbol }} {{ formatNumber(item.amount) }}</span>
+                    <span class="ml-1 text-[var(--action-primary-bg)] font-bold">{{ currencySymbol }} {{ formatNumber(item.amount) }}</span>
                 </p>
             </div>
 
@@ -27,13 +27,13 @@ export const SuccessModal = {
             <div class="w-full space-y-3 pt-2">
                 <!-- Confirm Button -->
                 <button @click="$emit('close')" 
-                        class="w-full bg-[#4A4A4A] text-white py-4 rounded-2xl text-xs font-bold tracking-[0.2em] uppercase active:scale-[0.92] transition-transform duration-200 ease-out shadow-lg shadow-gray-200">
+                        class="w-full bg-[var(--action-primary-bg)] text-white py-4 rounded-2xl text-xs font-bold tracking-[0.2em] uppercase active:scale-[0.92] transition-transform duration-200 ease-out shadow-lg shadow-gray-200">
                     確認
                 </button>
                 
                 <!-- View Details -->
                 <button @click="$emit('view-details')" 
-                        class="w-full text-gray-300 py-2 text-[10px] tracking-widest font-medium active:bg-gray-50 active:text-gray-400 rounded-xl transition-colors">
+                        class="w-full text-txt-muted py-2 text-[10px] tracking-widest font-medium active:bg-bg-subtle active:text-txt-secondary rounded-xl transition-colors">
                     看明細
                 </button>
             </div>

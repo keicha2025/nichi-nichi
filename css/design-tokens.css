@@ -3,49 +3,108 @@
  * 定義網站的全域設計變數，包含顏色、字體等。
  */
 
+/* 
+ * Design Tokens v1.0
+ * 定義網站的設計系統，包含 Primitive (基礎) 與 Semantic (語義) 層級。
+ */
+
 :root {
-    /* --- Brand Colors (品牌主色) --- */
-    /* 深灰/炭黑：主要用於文字、按鈕、強調色 */
-    --color-primary: #4A4A4A;
-    --color-primary-rgb: 74, 74, 74;
+    /* ==========================================================================
+       1. Primitive Tokens (基礎色階) - 單一數據源
+       ========================================================================== */
 
-    /* --- Background Colors (背景色) --- */
-    /* 米白/紙張色：主要背景 */
-    --color-bg-main: #FDFCFB;
-    /* 純白：卡片背景 */
-    --color-bg-card: #FFFFFF;
-    /* 淺灰：次要背景、輸入框背景 */
-    --color-bg-input: #F9FAFB;
-    /* tailwind gray-50 */
+    /* Neutrals (灰色系) */
+    --p-gray-50: #F9FAFB;
+    --p-gray-100: #F3F4F6;
+    --p-gray-200: #E5E7EB;
+    --p-gray-300: #D1D5DB;
+    --p-gray-400: #9CA3AF;
+    --p-gray-500: #6B7280;
+    --p-gray-600: #4B5563;
+    --p-gray-700: #374151;
+    --p-gray-800: #1F2937;
+    --p-gray-900: #111827;
 
-    /* --- Text Colors (文字色) --- */
-    /* 主要文字 */
-    --color-text-main: #4A4A4A;
-    /* 次要文字 */
-    --color-text-secondary: #9CA3AF;
-    /* tailwind gray-400 */
-    /* 淺色文字 (placeholder) */
-    --color-text-light: #D1D5DB;
-    /* tailwind gray-300 */
+    /* Brand (品牌色系 - 暖色灰階步進) */
+    --p-brand-50: #F7F7F7;
+    --p-brand-100: #EBEBEB;
+    --p-brand-200: #D6D6D6;
+    --p-brand-300: #B3B3B3;
+    --p-brand-400: #8C8C8C;
+    --p-brand-500: #4A4A4A;
+    /* Primary */
+    --p-brand-600: #424242;
+    --p-brand-700: #333333;
+    --p-brand-800: #262626;
+    --p-brand-900: #1A1A1A;
 
-    /* --- Border Colors (邊框色) --- */
-    --color-border-light: #F9FAFB;
-    /* tailwind gray-50 */
-    --color-border-medium: #E5E7EB;
-    /* tailwind gray-200 */
+    /* Functional (功能色系) */
+    --p-success-100: #F0FDF4;
+    --p-success-500: #22C55E;
+    --p-success-700: #15803D;
 
-    /* --- Status Colors (狀態色) --- */
-    /* 紅色：刪除/危險操作 (text-red-300) */
-    --color-danger: #fca5a5;
+    --p-danger-100: #FEF2F2;
+    --p-danger-500: #EF4444;
+    --p-danger-700: #B91C1C;
 
-    /* 綠色：專用於 Google 試算表圖示 (text-green-600) */
-    --color-google-green: #16a34a;
+    --p-warn-100: #FFFBEB;
+    --p-warn-500: #F59E0B;
+    --p-warn-700: #B45309;
 
-    /* --- Chart Colors (圖表色系) --- */
-    --chart-color-1: #4A4A4A;
-    --chart-color-2: #7A7A7A;
-    --chart-color-3: #9A9A9A;
-    --chart-color-4: #BDBDBD;
-    --chart-color-5: #D1C7BD;
-    --chart-color-6: #E5E5E5;
+    --p-info-100: #EFF6FF;
+    --p-info-500: #3B82F6;
+    --p-info-700: #1D4ED8;
+
+    --p-white: #FFFFFF;
+
+    /* ==========================================================================
+       2. Semantic Tokens (功能語義) - 開發引用
+       ========================================================================== */
+
+    /* Core Roles (核心角色) */
+    --txt-primary: var(--p-gray-900);
+    --txt-secondary: var(--p-gray-500);
+    --txt-muted: var(--p-gray-400);
+    --txt-on-brand: var(--p-white);
+
+    --bg-main: #FDFCFB;
+    --bg-canvas: var(--p-white);
+    --bg-subtle: var(--p-gray-50);
+
+    --bdr-default: var(--p-gray-200);
+    --bdr-subtle: var(--p-gray-50);
+
+    /* Interaction Roles (互動狀態) */
+    --action-primary-bg: var(--p-brand-500);
+    --action-primary-hover: var(--p-brand-700);
+    --action-primary-text: var(--p-white);
+    --focus-ring: var(--p-info-500);
+
+    /* Legacy Mappings (保持相容性，後續逐步替換) */
+    --color-primary: var(--p-brand-500);
+    --color-bg-main: var(--bg-main);
+    --color-bg-card: var(--bg-canvas);
+    --color-text-main: var(--txt-primary);
+    --color-text-secondary: var(--txt-secondary);
+    --color-danger: var(--p-danger-100);
+
+    /* --- Chart Colors (圖表色系 - 依照明度從深到淺排列，確保視覺層級正確) --- */
+    --chart-color-1: var(--p-brand-600);
+    /* 最深品牌色 */
+    --chart-color-2: var(--p-brand-500);
+    /* 品牌色 */
+    --chart-color-3: var(--p-brand-400);
+    --chart-color-4: var(--p-brand-300);
+    --chart-color-5: var(--p-brand-200);
+    --chart-color-6: var(--p-gray-300);
+    /* 最淺備援色 */
+}
+
+/* data-theme='dark' (預留暗色模式) */
+[data-theme='dark'] {
+    --txt-primary: var(--p-gray-50);
+    --txt-secondary: var(--p-gray-400);
+    --bg-main: var(--p-gray-900);
+    --bg-canvas: var(--p-gray-800);
+    --bdr-default: var(--p-gray-700);
 }

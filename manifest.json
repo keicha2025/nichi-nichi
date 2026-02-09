@@ -4,8 +4,8 @@
   "description": "日本交換留學生專用極速記帳",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#FDFCFB",
-  "theme_color": "#4A4A4A",
+  "background_color": "var(--bg-main)",
+  "theme_color": "var(--action-primary-bg)",
   "orientation": "portrait",
   "icons": [
     {

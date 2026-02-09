@@ -77,10 +77,10 @@ export const StatsPage = {
         </div>
 
         <!-- 2. 圖表區域 -->
-        <div @click="resetChartSelection" class="bg-white p-8 rounded-[2rem] muji-shadow border border-gray-50 cursor-pointer">
-            <h3 class="text-[10px] text-gray-400 uppercase tracking-widest font-medium mb-8 text-center">Category Distribution</h3>
-            <div class="relative w-full aspect-square max-w-[260px] mx-auto">
-                <canvas ref="categoryChart"></canvas>
+        <div @click="resetChartSelection" class="bg-white p-8 rounded-[2rem] muji-shadow border border-bdr-subtle cursor-pointer min-h-[460px]">
+            <h3 class="text-[10px] text-txt-secondary uppercase tracking-widest font-medium mb-4 text-center">Category Distribution</h3>
+            <div class="relative w-full aspect-square max-w-[240px] mx-auto">
+                <canvas ref="categoryChart" style="min-height: 200px;"></canvas>
             </div>
         </div>
 
@@ -142,7 +142,7 @@ export const StatsPage = {
             startDate: now.toISOString().slice(0, 10),
             endDate: now.toISOString().slice(0, 10),
             isMyShareOnly: true,
-            chartInstance: null,
+            categoryChart: null,
             centerAmount: 0,
             centerLabel: 'TOTAL',
             filterMode: 'normal', // normal, project
@@ -279,7 +279,7 @@ export const StatsPage = {
         },
         formatNumber(num) { return new Intl.NumberFormat().format(Math.round(num || 0)); },
         getIntPercentage(val, total) { return total > 0 ? Math.round((val / total) * 100) : 0; },
-        resetChartSelection() { this.centerLabel = 'TOTAL'; this.updateCenterFromVisible(this.chartInstance); },
+        resetChartSelection() { this.centerLabel = 'TOTAL'; this.updateCenterFromVisible(this.categoryChart); },
         updateCenterFromVisible(chart) {
             if (!chart) return;
             const datasets = chart.data.datasets[0];
@@ -288,57 +288,70 @@ export const StatsPage = {
             this.centerAmount = visibleTotal;
         },
         renderChart() {
-            const ctx = this.$refs.categoryChart?.getContext('2d');
-            if (!ctx) return;
-            if (this.chartInstance) this.chartInstance.destroy();
-            const data = this.sortedCategoryData;
-            this.centerAmount = this.totalPeriodAmount;
-            this.centerLabel = 'TOTAL';
-            this.chartInstance = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: data.map(d => d.name),
-                    datasets: [{
-                        data: data.map(d => d.total),
-                        backgroundColor: Theme.colors.chart,
-                        borderWidth: 0, hoverOffset: 15
-                    }]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false, cutout: '80%',
-                    plugins: {
-                        legend: {
-                            position: 'bottom', labels: { boxWidth: 12, padding: 20, font: { size: 10, weight: '300' } },
-                            onClick: (e, legendItem, legend) => {
-                                legend.chart.toggleDataVisibility(legendItem.index);
-                                legend.chart.update();
-                                this.resetChartSelection();
-                            }
-                        }, tooltip: { enabled: false }
+            this.$nextTick(() => {
+                if (!this.$refs.categoryChart) return;
+                const ctx = this.$refs.categoryChart.getContext('2d');
+                if (this.categoryChart) this.categoryChart.destroy();
+                const data = this.sortedCategoryData;
+                if (!data || data.length === 0) return;
+
+                this.centerAmount = this.totalPeriodAmount;
+                this.centerLabel = 'TOTAL';
+
+                this.categoryChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: data.map(d => d.name),
+                        datasets: [{
+                            data: data.map(d => d.total),
+                            backgroundColor: Theme.getChartPalette(),
+                            borderWidth: 0, hoverOffset: 15
+                        }]
                     },
-                    onClick: (evt, elements) => {
-                        if (elements.length > 0) {
-                            if (evt.native) evt.native.stopPropagation();
-                            const idx = elements[0].index;
-                            this.centerAmount = data[idx].total;
-                            this.centerLabel = data[idx].name;
-                        } else { this.resetChartSelection(); }
-                    }
-                },
-                plugins: [{
-                    id: 'centerText',
-                    beforeDraw: (chart) => {
-                        const { ctx } = chart; const meta = chart.getDatasetMeta(0);
-                        if (!meta.data[0]) return;
-                        const x = meta.data[0].x; const y = meta.data[0].y;
-                        ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                        ctx.font = '300 10px Noto Sans TC'; ctx.fillStyle = Theme.colors.textSecondary;
-                        ctx.fillText(this.centerLabel, x, y - 12);
-                        ctx.font = '400 18px Noto Sans TC'; ctx.fillStyle = Theme.colors.primary;
-                        ctx.fillText(this.getCurrencySymbol + ' ' + this.formatNumber(this.centerAmount), x, y + 8);
-                        ctx.restore();
-                    }
-                }]
+                    options: {
+                        responsive: true, maintainAspectRatio: false, cutout: '80%',
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'bottom',
+                                labels: {
+                                    boxWidth: 8,
+                                    padding: 15,
+                                    font: { size: 10, weight: '300' },
+                                    color: '#666'
+                                },
+                                onClick: (e, legendItem, legend) => {
+                                    legend.chart.toggleDataVisibility(legendItem.index);
+                                    legend.chart.update();
+                                    this.resetChartSelection();
+                                }
+                            },
+                            tooltip: { enabled: false }
+                        },
+                        onClick: (evt, elements) => {
+                            if (elements.length > 0) {
+                                if (evt.native) evt.native.stopPropagation();
+                                const idx = elements[0].index;
+                                this.centerAmount = data[idx].total;
+                                this.centerLabel = data[idx].name;
+                            } else { this.resetChartSelection(); }
+                        }
+                    },
+                    plugins: [{
+                        id: 'centerText',
+                        beforeDraw: (chart) => {
+                            const { ctx } = chart; const meta = chart.getDatasetMeta(0);
+                            if (!meta.data || !meta.data[0]) return;
+                            const x = meta.data[0].x; const y = meta.data[0].y;
+                            ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                            ctx.font = '300 10px Noto Sans TC'; ctx.fillStyle = '#9CA3AF';
+                            ctx.fillText(this.centerLabel, x, y - 12);
+                            ctx.font = '400 18px Noto Sans TC'; ctx.fillStyle = '#4A4A4A';
+                            ctx.fillText(this.getCurrencySymbol + ' ' + this.formatNumber(this.centerAmount), x, y + 8);
+                            ctx.restore();
+                        }
+                    }]
+                });
             });
         }
     },
@@ -353,6 +366,7 @@ export const StatsPage = {
         filterMode() { this.$nextTick(() => this.renderChart()); },
         excludeProjects() { this.$nextTick(() => this.renderChart()); },
         selectedProjectId() { this.$nextTick(() => this.renderChart()); },
-        transactions: { handler() { this.$nextTick(() => this.renderChart()); }, deep: true }
+        transactions: { handler() { this.$nextTick(() => this.renderChart()); }, deep: true },
+        categories: { handler() { this.$nextTick(() => this.renderChart()); }, deep: true }
     }
 };

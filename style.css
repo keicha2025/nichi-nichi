@@ -10,8 +10,8 @@ html {
 }
 
 body {
-    background-color: var(--color-bg-main);
-    color: var(--color-text-main);
+    background-color: var(--bg-main);
+    color: var(--txt-primary);
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -57,8 +57,8 @@ body {
 }
 
 .add-btn {
-    background: var(--color-primary);
-    color: white;
+    background: var(--action-primary-bg);
+    color: var(--action-primary-text);
     width: 60px;
     height: 60px;
     border-radius: 50%;
@@ -87,4 +87,22 @@ body {
 
 .animate-in {
     animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes amount-flash {
+    0% {
+        opacity: 1;
+    }
+
+    30% {
+        opacity: 0.9;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+.amount-update {
+    animation: amount-flash 0.4s linear;
 }
