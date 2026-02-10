@@ -141,6 +141,16 @@ export const GoogleSheetsService = {
     // --- High Level Functions ---
 
     /**
+     * Generate YYMMDDHHMM timestamp string
+     */
+    _getTimestamp() {
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        const yy = String(now.getFullYear()).slice(-2);
+        return `${yy}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}`;
+    },
+
+    /**
      * Backup Full Data to JSON in '/日日記' folder
      * @param {object} data 
      * @param {string} token 
@@ -148,10 +158,8 @@ export const GoogleSheetsService = {
      */
     async backupFullData(data, token, onTokenExpired) {
         const folder = await this.ensureFolder('日日記', token, onTokenExpired);
-        const now = new Date();
-        const pad = (n) => String(n).padStart(2, '0');
-        const dateStr = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
-        const fileName = `backup_${dateStr}.json`;
+        const ts = this._getTimestamp();
+        const fileName = `系統還原用備份檔_${ts}.json`;
 
         await this.saveJsonFile(folder.id, fileName, data, token, onTokenExpired);
         return { folder: folder.name, file: fileName };
@@ -165,11 +173,8 @@ export const GoogleSheetsService = {
      */
     async exportReadableSheet(data, token, onTokenExpired) {
         const folder = await this.ensureFolder('日日記', token, onTokenExpired);
-        const now = new Date();
-        const pad = (n) => String(n).padStart(2, '0');
-        // dateStr for Export Title: 記帳匯出_20240208123045
-        const dateStr = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
-        const title = `記帳匯出_${dateStr}`;
+        const ts = this._getTimestamp();
+        const title = `瀏覽用記帳匯出_${ts}`;
 
         // 1. Create Sheet (Root)
         const ss = await this.createSpreadsheet(title, token, onTokenExpired);
@@ -233,5 +238,42 @@ export const GoogleSheetsService = {
             ]);
         });
         return rows;
+    },
+
+    /**
+     * Cloud Save: Save both JSON backup + Spreadsheet to Google Drive '日日記' folder
+     * @param {object} data
+     * @param {string} token
+     * @param {function} onTokenExpired
+     */
+    async cloudSave(data, token, onTokenExpired) {
+        const [backupResult, sheetResult] = await Promise.all([
+            this.backupFullData(data, token, onTokenExpired),
+            this.exportReadableSheet(data, token, onTokenExpired)
+        ]);
+        return {
+            folder: backupResult.folder,
+            backupFile: backupResult.file,
+            sheetUrl: sheetResult.url
+        };
+    },
+
+    /**
+     * Generate CSV content string from transaction data (for local export)
+     * @param {object} data
+     * @returns {string} CSV string
+     */
+    generateCsvContent(data) {
+        const rows = this.prepareReadableRows(data);
+        return rows.map(row =>
+            row.map(cell => {
+                const str = String(cell ?? '');
+                // Escape cells containing commas, quotes, or newlines
+                if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                    return `"${str.replace(/"/g, '""')}"`;
+                }
+                return str;
+            }).join(',')
+        ).join('\n');
     }
 };

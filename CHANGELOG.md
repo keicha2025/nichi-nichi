@@ -430,3 +430,50 @@ Added comprehensive debug logging throughout the category save flow for easier t
 - 為所有 5 個開關組件的背景軌道元素加入 `shadow-sm` class，與頁面背景形成視覺層次。
 
 ---
+
+---
+
+
+## [2026-02-10T12:19:00Z] Cloud Save & Export Refactor
+
+### Feature Changes
+
+#### 「雲端存檔」(Cloud Save) - Previously "備份"
+- **Icon**: Changed from `cloud_sync` to `cloud_upload`
+- **Label**: Changed from "備份" to "雲端存檔"
+- **Behavior**: Now saves **both** a JSON backup (`系統還原用備份檔_YYMMDDHHMM.json`) **and** a Google Spreadsheet (`瀏覽用記帳匯出_YYMMDDHHMM`) to the Google Drive "日日記" folder simultaneously using `Promise.all`.
+- 雲端存檔功能：同時儲存 JSON 備份檔與 Google 試算表至雲端「日日記」資料夾。
+
+#### 「匯出檔案」(Export) - Previously "匯出"
+- **Icon**: Changed from `ios_share` to `download`
+- **Label**: Changed from "匯出" to "匯出檔案"
+- **Behavior**: Now generates a local ZIP file (`日日記備份_YYMMDDHHMM.zip`) containing:
+  - `系統還原用備份檔_YYMMDDHHMM.json` (full data backup)
+  - `瀏覽用記帳匯出_YYMMDDHHMM.csv` (readable transaction export with BOM for Excel CJK support)
+- No longer requires Google API authentication; purely local operation.
+- Uses JSZip library (loaded via CDN).
+- 匯出功能改為本地 ZIP 下載，包含 JSON 備份檔與 CSV 記帳匯出。
+
+#### Auto Backup Enhancement
+- `autoBackupIfNeeded` upgraded to use `cloudSave` (saves both JSON + Spreadsheet) instead of JSON-only backup.
+- Daily check logic unchanged: runs once per day on first login when auto backup is enabled.
+- 自動備份升級為同時存 JSON + 試算表。
+
+### UI Changes
+- Section title: "Google Spreadsheet Services" → "Google 雲端服務"
+- Description: "將儲存於 Google 雲端硬碟「日日記」資料夾" → "檔案將儲存至「日日記」備份資料夾"
+- UI 文案全面更新。
+
+### Technical Details
+
+#### Modified Files
+- **`js/services/google-sheets-service.js`**: Added `_getTimestamp()`, `cloudSave()`, `generateCsvContent()` methods. Renamed filenames to use YYMMDDHHMM format.
+- **`js/pages/settings-page.js`**: Updated UI labels, icons, and both handler methods.
+- **`index.html`**: Added JSZip CDN (`jszip@3.10.1`).
+- **`js/app.js`**: Updated `autoBackupIfNeeded` to call `cloudSave`.
+
+#### New Dependency
+- JSZip 3.10.1 via CDN: `https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js`
+- 新增 JSZip 函式庫用於本地 ZIP 打包。
+
+---

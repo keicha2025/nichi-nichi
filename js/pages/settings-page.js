@@ -262,22 +262,22 @@ export const SettingsPage = {
                       <div class="bg-bg-subtle p-4 rounded-xl space-y-4">
                           <div class="flex items-center space-x-2 px-1">
                              <span class="material-symbols-rounded text-base text-txt-secondary">cloud_sync</span>
-                             <span class="text-xs text-txt-primary font-medium">Google Spreadsheet Services</span>
+                             <span class="text-xs text-txt-primary font-medium">Google 雲端服務</span>
                           </div>
                           
                           <p class="text-[10px] text-txt-secondary px-1 pb-2">
-                              將儲存於 Google 雲端硬碟「日日記」資料夾
+                              檔案將儲存至「日日記」備份資料夾
                           </p>
                           <div class="grid grid-cols-2 gap-3">
                               <button @click="handleBackup" :disabled="backingUp" class="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-bdr-subtle active:scale-95 transition-all disabled:opacity-50 hover:bg-bg-subtle">
                                   <span v-if="backingUp" class="w-4 h-4 border-2 border-bdr-default border-t-gray-700 rounded-full animate-spin"></span>
-                                  <span v-else class="material-symbols-rounded text-xl text-txt-secondary">cloud_sync</span>
-                                  <span class="text-[10px] text-txt-secondary mt-2 font-medium tracking-wide">備份</span>
+                                  <span v-else class="material-symbols-rounded text-xl text-txt-secondary">cloud_upload</span>
+                                  <span class="text-[10px] text-txt-secondary mt-2 font-medium tracking-wide">雲端存檔</span>
                               </button>
                               <button @click="handleExport" :disabled="exporting" class="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-bdr-subtle active:scale-95 transition-all disabled:opacity-50 hover:bg-bg-subtle">
                                   <span v-if="exporting" class="w-4 h-4 border-2 border-bdr-default border-t-gray-700 rounded-full animate-spin"></span>
-                                  <span v-else class="material-symbols-rounded text-xl text-txt-secondary">ios_share</span>
-                                  <span class="text-[10px] text-txt-secondary mt-2 font-medium tracking-wide">匯出</span>
+                                  <span v-else class="material-symbols-rounded text-xl text-txt-secondary">download</span>
+                                  <span class="text-[10px] text-txt-secondary mt-2 font-medium tracking-wide">匯出檔案</span>
                               </button>
                           </div>                <div class="flex items-center justify-between px-1">
                               <div class="flex flex-col">
@@ -663,11 +663,6 @@ export const SettingsPage = {
             if (this.exporting) return;
             this.exporting = true;
             try {
-                let token = API.getGoogleToken();
-                // Initial check: if no token, request one.
-                if (!token) token = await API.requestIncrementalScope();
-                if (!token) throw new Error("尚未獲得授權");
-
                 const data = {
                     transactions: this.transactions,
                     categories: this.categories,
@@ -677,14 +672,36 @@ export const SettingsPage = {
                     config: this.config
                 };
 
-                // Pass token AND the retry callback (API.requestIncrementalScope)
-                const result = await GoogleSheetsService.exportReadableSheet(data, token, API.requestIncrementalScope);
+                // Generate timestamp
+                const ts = GoogleSheetsService._getTimestamp();
 
-                this.dialog.alert(`匯出成功！\n檔案已儲存於「${result.folder}」資料夾。`, { title: '匯出完成' });
-                window.open(result.url, '_blank');
+                // Generate file contents
+                const jsonContent = JSON.stringify(data, null, 2);
+                const csvContent = GoogleSheetsService.generateCsvContent(data);
+
+                // Create ZIP using JSZip
+                if (typeof JSZip === 'undefined') {
+                    throw new Error('縮檔工具載入失敗，請重新整理頁面');
+                }
+                const zip = new JSZip();
+                zip.file(`系統還原用備份檔_${ts}.json`, jsonContent);
+                zip.file(`瀏覽用記帳匯出_${ts}.csv`, '\uFEFF' + csvContent); // BOM for Excel CJK support
+
+                const blob = await zip.generateAsync({ type: 'blob' });
+
+                // Trigger download
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `日日記備份_${ts}.zip`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(a.href);
+
+                this.dialog.alert(`匯出完成！\n檔案：日日記備份_${ts}.zip`, { title: '匯出檔案' });
             } catch (e) {
                 console.error(e);
-                this.dialog.alert("匯出失敗: " + e.message);
+                this.dialog.alert('匯出失敗: ' + e.message);
             } finally {
                 this.exporting = false;
             }
@@ -695,7 +712,7 @@ export const SettingsPage = {
             try {
                 let token = API.getGoogleToken();
                 if (!token) token = await API.requestIncrementalScope();
-                if (!token) throw new Error("尚未獲得授權");
+                if (!token) throw new Error('尚未獲得授權');
 
                 const data = {
                     transactions: this.transactions,
@@ -706,13 +723,13 @@ export const SettingsPage = {
                     config: this.config
                 };
 
-                // Pass token AND retry callback
-                const result = await GoogleSheetsService.backupFullData(data, token, API.requestIncrementalScope);
+                // Cloud Save: JSON + Spreadsheet simultaneously
+                const result = await GoogleSheetsService.cloudSave(data, token, API.requestIncrementalScope);
 
-                this.dialog.alert(`備份成功！\n檔案：${result.file}\n已儲存於「${result.folder}」資料夾。`, { title: '備份完成' });
+                this.dialog.alert(`雲端存檔完成！\n備份檔：${result.backupFile}\n記帳表已同步至「${result.folder}」資料夾。`, { title: '雲端存檔' });
             } catch (e) {
                 console.error(e);
-                this.dialog.alert("備份失敗: " + e.message);
+                this.dialog.alert('雲端存檔失敗: ' + e.message);
             } finally {
                 this.backingUp = false;
             }

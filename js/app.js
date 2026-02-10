@@ -1027,14 +1027,8 @@ createApp({
                 const lastBackup = localStorage.getItem('last_backup_date');
                 if (lastBackup === today) return;
 
-                // Removed hour check to ensure backup runs on first visit of the day
-                // if (currentHour < 23 && lastBackup) return;
-
                 try {
                     const token = API.getGoogleToken();
-                    // Auto-backup should verify token validity or try to refresh silently?
-                    // if (!token) ... we can try requestIncrementalScope but that might pop up.
-                    // If no token, we can't backup silently.
                     if (!token) return;
 
                     const data = {
@@ -1046,11 +1040,12 @@ createApp({
                         config: systemConfig.value
                     };
 
-                    await GoogleSheetsService.backupFullData(data, token, API.requestIncrementalScope);
+                    // Cloud Save: JSON + Spreadsheet simultaneously
+                    await GoogleSheetsService.cloudSave(data, token, API.requestIncrementalScope);
                     localStorage.setItem('last_backup_date', today);
-                    console.log("Auto-backup completed.");
+                    console.log("Auto cloud save completed (JSON + Spreadsheet).");
                 } catch (e) {
-                    console.error("Auto-backup failed", e);
+                    console.error("Auto cloud save failed", e);
                 }
             }
         };
