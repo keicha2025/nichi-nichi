@@ -401,3 +401,32 @@ Added comprehensive debug logging throughout the category save flow for easier t
 
 ---
 
+
+---
+
+
+## [2026-02-10T11:45:00Z] Toggle Switch Shadow Enhancement
+
+### UI Improvements
+- **Toggle Switch Visibility**: Added `shadow-sm` styling to all toggle switch components throughout the application to improve visibility when in the off state. The shadow style matches the existing button shadows (e.g., edit button in Shared Links section) for visual consistency.
+  - 開關組件視覺優化：為所有開關組件統一加入陰影樣式，提升關閉狀態時的辨識度，陰影強度與「編輯」按鈕一致。
+
+### Modified Components
+- **Settings Page** (`js/pages/settings-page.js`):
+  - Auto Backup toggle switch (每日自動備份)
+  - 自動備份開關
+- **Add Page** (`js/pages/add-page.js`):
+  - Split Bill toggle switch (幫朋友代墊 / 需分帳)
+  - Project Mode toggle switch (旅行計畫模式)
+  - 分帳開關、計畫模式開關
+- **Edit Page** (`js/pages/edit-page.js`):
+  - Split Bill toggle switch (幫朋友代墊 / 需分帳)
+  - Project Mode toggle switch (旅行計畫模式)
+  - 分帳開關、計畫模式開關
+
+### Technical Details
+- Applied `shadow-sm` class to the toggle track background element (`<div>` with `rounded-full` class) for all 5 toggle switches in the application.
+- The shadow helps differentiate the toggle from the page background, especially when using the subtle gray background color (`bg-bg-subtle`).
+- 為所有 5 個開關組件的背景軌道元素加入 `shadow-sm` class，與頁面背景形成視覺層次。
+
+---

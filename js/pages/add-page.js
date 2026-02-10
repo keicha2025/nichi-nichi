@@ -82,7 +82,7 @@ export const AddPage = {
                 <div v-if="form.type === '支出'" class="pt-4 border-t border-bdr-subtle space-y-4">
                     <div class="flex items-center justify-between" @click.stop="form.isSplit = !form.isSplit">
                         <span class="text-xs text-txt-secondary font-light">幫朋友代墊 / 需分帳</span>
-                        <div class="w-10 h-5 rounded-full relative transition-colors" :class="form.isSplit ? 'bg-[var(--action-primary-bg)]' : 'bg-bg-subtle'">
+                        <div class="w-10 h-5 rounded-full shadow-sm relative transition-colors" :class="form.isSplit ? 'bg-[var(--action-primary-bg)]' : 'bg-bg-subtle'">
                             <div class="absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform" :class="{'translate-x-5': form.isSplit}"></div>
                         </div>
                     </div>
@@ -121,7 +121,7 @@ export const AddPage = {
                 <div class="flex items-center justify-between">
                     <span class="text-xs text-txt-secondary font-light">旅行計畫模式</span>
                     <!-- Toggle Switch -->
-                    <div class="w-10 h-5 rounded-full relative transition-colors cursor-pointer" 
+                    <div class="w-10 h-5 rounded-full shadow-sm relative transition-colors cursor-pointer" 
                          :class="form.projectId ? 'bg-[var(--action-primary-bg)]' : 'bg-bg-subtle'"
                          @click="toggleProjectMode">
                         <div class="absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform" 

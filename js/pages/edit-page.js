@@ -110,7 +110,7 @@ export const EditPage = {
                 <div v-if="form.type === '支出'" class="pt-4 border-t border-bdr-subtle space-y-4">
                     <div class="flex items-center justify-between px-2">
                         <span class="text-xs text-txt-secondary">幫朋友代墊 / 需分帳</span>
-                        <div v-if="!isReadOnly" class="w-10 h-5 rounded-full relative transition-colors" :class="form.isSplit ? 'bg-gray-400' : 'bg-bg-subtle'" @click="form.isSplit = !form.isSplit">
+                        <div v-if="!isReadOnly" class="w-10 h-5 rounded-full shadow-sm relative transition-colors" :class="form.isSplit ? 'bg-gray-400' : 'bg-bg-subtle'" @click="form.isSplit = !form.isSplit">
                             <div class="absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform" :class="{'translate-x-5': form.isSplit}"></div>
                         </div>
                         <div v-else class="text-xs text-txt-secondary">{{ form.isSplit ? '有' : '無' }}</div>
@@ -153,7 +153,7 @@ export const EditPage = {
                 <div v-if="!isReadOnly" class="pt-4 border-t border-bdr-subtle space-y-4 px-2">
                     <div class="flex items-center justify-between">
                         <span class="text-xs text-txt-secondary font-light">旅行計畫模式</span>
-                        <div class="w-10 h-5 rounded-full relative transition-colors cursor-pointer" 
+                        <div class="w-10 h-5 rounded-full shadow-sm relative transition-colors cursor-pointer" 
                              :class="form.projectId ? 'bg-[var(--action-primary-bg)]' : 'bg-bg-subtle'"
                              @click="toggleProjectMode">
                             <div class="absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform" 
