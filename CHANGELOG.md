@@ -680,3 +680,19 @@ Added comprehensive debug logging throughout the category save flow for easier t
 - **Social Sharing**: Updated Open Graph and Twitter Card image to GitHub raw URL for better reliability and reachability across platforms.
 
 *首頁 SEO 優化：加入 Google 驗證標籤、優化 Meta 描述與關鍵字，並新增 JSON-LD 結構化資料。社交分享預覽圖已更新為 GitHub 直鏈以確保抓取穩定。*
+
+---
+
+## [2026-02-11T21:35:00Z] PWA Support for Guide Pages
+
+### Features & Improvements
+- **Universal PWA Installation**: Added PWA manifest links and Service Worker registration to `guide.html` and `guide-en.html`. Users can now install the application directly from the "User Guide" page.
+- **Launch Strategy Consistency**: Configured the PWA to always launch to `index.html` (Home Page) regardless of which page it was installed from, maintaining a consistent entry point for the application.
+- **iOS Optimization**: Added meta tags for `mobile-web-app-capable` and `apple-mobile-web-app-status-bar-style` to ensure a premium app-like experience on iOS devices for both guide versions.
+
+- **全域 PWA 支援**：為中文與英文版使用指南頁面補齊 PWA 核心設定（manifest.json 與 Service Worker），現在用戶可從指南頁面直接將 App 下載至主畫面。安裝後啟動點一律回到首頁，確保一致的使用者體驗。
+
+### Technical Details
+- Updated `<head>` in `guide.html` and `guide-en.html` to include manifest link and iOS app tags.
+- Injected Service Worker registration script before `</body>`.
+- Confirmed `manifest.json` defines `start_url` as `./index.html`.
