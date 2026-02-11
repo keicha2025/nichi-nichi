@@ -5,6 +5,13 @@
     letter-spacing: 0.02em;
 }
 
+.markdown-body .icon-inline {
+    vertical-align: middle;
+    font-size: 1.2em;
+    margin: 0 0.2rem;
+    color: var(--txt-secondary);
+}
+
 /* Headers */
 .markdown-body h1,
 .markdown-body h2,

@@ -33,36 +33,91 @@ export const MarkdownRenderer = {
             }
         };
 
+        // Helper to generate IDs for headers
+        const slugify = (text) => {
+            if (!text || typeof text !== 'string') return '';
+            return text.toLowerCase()
+                .trim()
+                // Remove material icons markup completely: <span ...>icon_name</span>
+                .replace(/<span[^>]*material-symbols-rounded[^>]*>[^<]*<\/span>/g, '')
+                .replace(/<[^>]+>/g, '') // Remove HTML tags
+                .replace(/[\s_]+/g, '-') // Replace spaces/underscores with hyphens
+                .replace(/[^\p{L}\p{N}-]/gu, '') // Keep Unicode letters, numbers, and hyphens. Remove punctuation.
+                .replace(/^-+|-+$/g, '');
+        };
+
+        // Custom Extension for Material Icons: :icon_name:
+        const iconExtension = {
+            name: 'icon',
+            level: 'inline',
+            start(src) { return src.indexOf(':'); },
+            tokenizer(src) {
+                const rule = /^:([a-z0-9_]+):/;
+                const match = rule.exec(src);
+                if (match) {
+                    return {
+                        type: 'icon',
+                        raw: match[0],
+                        name: match[1]
+                    };
+                }
+            },
+            renderer(token) {
+                return `<span class="material-symbols-rounded icon-inline">${token.name}</span>`;
+            }
+        };
+
+        // Initialize marked only once
+        let markedInitialized = false;
+        const initMarked = () => {
+            if (markedInitialized || typeof window.marked === 'undefined') return;
+
+            const renderer = new window.marked.Renderer();
+
+            // marked v12+ uses an object for arguments
+            renderer.heading = (arg1, arg2, arg3) => {
+                let text, level, raw;
+                if (typeof arg1 === 'object') {
+                    text = arg1.text;
+                    level = arg1.depth;
+                    raw = arg1.raw;
+                } else {
+                    text = arg1;
+                    level = arg2;
+                    raw = arg3;
+                }
+                const id = slugify(raw || text || '');
+                return `<h${level} id="${id}">${text}</h${level}>\n`;
+            };
+
+            window.marked.use({
+                extensions: [customContainerExtension, iconExtension],
+                renderer: renderer,
+                gfm: true,
+                breaks: true,
+                headerIds: false // We handle this manually via custom renderer
+            });
+            markedInitialized = true;
+        };
+
         const renderedHtml = computed(() => {
             if (!props.content) return '';
 
-            // Setup marked options
-            // Expecting window.marked, window.hljs, window.DOMPurify to be available
             if (typeof window.marked === 'undefined') {
                 console.error("Marked.js is not loaded");
                 return props.content;
             }
 
-            // Configure Marked with custom extensions and highlight.js
-            window.marked.use({
-                extensions: [customContainerExtension],
-                gfm: true,
-                breaks: true,
-                highlight: (code, lang) => {
-                    if (window.hljs && lang && window.hljs.getLanguage(lang)) {
-                        return window.hljs.highlight(code, { language: lang }).value;
-                    }
-                    return code;
-                }
-            });
+            initMarked();
 
             const html = window.marked.parse(props.content);
 
-            // Sanitize if DOMPurify is available
+            // Sanitize
             if (window.DOMPurify) {
                 return window.DOMPurify.sanitize(html, {
-                    ADD_TAGS: ['details', 'summary', 'kbd'],
-                    ADD_ATTR: ['target']
+                    ADD_TAGS: ['details', 'summary', 'kbd', 'span'],
+                    ADD_ATTR: ['target', 'class', 'id'],
+                    FORBID_ATTR: ['style', 'onerror', 'onclick']
                 });
             }
             return html;

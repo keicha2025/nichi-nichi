@@ -1,4 +1,14 @@
-# Changelog - 2026-02-06 Update (Guest & View Mode Refinement)
+# Changelog
+
+## [2026-02-11] 19:15
+### Added
+- Created a comprehensive English User Guide (`guide-en.html`) using Simplified Technical English (STE).
+- Implemented Markdown rendering logic compatible with the project's design system and `MarkdownRenderer` component.
+- Added documentation for Quick Start, Feature Explanations, and Troubleshooting.
+
+*建立了完整的英文使用指南 (`guide-en.html`)，採用簡化技術英文 (STE) 並相容於專案的 Markdown 渲染系統。*
+
+ - 2026-02-06 Update (Guest & View Mode Refinement)
 
 ## 🌟 Guest Mode (體驗模式) Refinements
 - **Data Logic Overhaul**:
@@ -605,3 +615,59 @@ Added comprehensive debug logging throughout the category save flow for easier t
 - **UX Optimization**:
     - Forced the "Close" button in the User Guide to always return to the **Settings** page by implementing a URL `tab` parameter in `app.js`.
     - **中文說明：修正使用指南關閉按鈕，確保按下後會精確地回到「設定」分頁。**
+
+## [2026-02-11] 19:25
+### Refined
+- Replaced "Admin Mode" with "**User Mode**" to better describe logged-in users.
+- Added a dedicated section for **PWA (Progressive Web App)** with mobile installation instructions for iOS/Android and offline usage benefits.
+- Added a **Data Management** section explaining the use of `.json` (system restore) and `.csv` (data analysis) files.
+- Expanded feature documentation to cover **Split Billing**, **Custom Shared Links**, and **Project Tracking**.
+- Improved readability and clarity following **Simplified Technical English (STE)** principles.
+- **Fixed Style Consistency**: Restored `guide-en.html` styling to strictly match `guide.html`, ensuring consistent use of design tokens, CSS variables, and the standard `AppHeader` component.
+
+*精煉英文使用指南內容：將「管理員模式」更名為「使用者模式」，新增 PWA 行動端安裝教學、離線使用說明以及備份檔案 (.json/.csv) 的具體用途資訊，並完整覆蓋所有核心功能說明。同時修正樣式使其與中文版完全一致。*
+
+## [2026-02-11] 19:30
+### Added
+- **Navigation (TOC)**: Implemented a Table of Contents in the User Guide with smooth-scrolling anchor links.
+- **Deep Dive Content**: Added advanced technical explanations for:
+    - **Split Billing & Settlement**: Clarified Debt vs. Expense and how to use the "Collection" type.
+    - **Data Sovereignty**: Explained the migration from Guest to User and the different roles of JSON/CSV.
+    - **Privacy & Sharing**: Detailed the scope of Shared Links and name masking.
+    - **Overview Logic**: Documented how Today's Expense, Budget, and Net Debt are calculated.
+- **Markdown Enhancement**: Enabled `headerIds` in the Markdown renderer to allow internal document linking.
+
+*為英文版指南新增目錄與導覽功能，並加入進階章節：詳細解說分帳邏輯與結清、資料主權與遷移、分享權限控制以及總覽頁面運算邏輯。同時優化渲染器支援標題錨點跳轉。*
+
+## [2026-02-11] 19:40
+### Refined
+- **Emoji-Free Policy**: Successfully removed all visual emojis and replaced them with a custom `:icon:` syntax powered by **Material Symbols Rounded**.
+- **Enhanced Content**: 
+    - Added documentation on **Original Currency Recording** vs. display conversion.
+    - Highlighted **Timezone Offset** tracking for travel consistency.
+    - Explained **Advanced Stats Filtering** logic (Excluding Projects and Individual Share calculation).
+- **Technical Fixes**: Corrected Table of Contents anchor links for perfect scroll navigation and added smooth-scrolling behavior. Optimized the Markdown renderer to support custom `id` generation (auto-stripping icons from slugs) and fixed `:icon:` parsing.
+- **Visual Fixes**: Formally integrated **Material Symbols Rounded** into the guide page with proper CSS class definitions to ensure iconography renders correctly. Replaced custom markdown extensions with standard HTML spans for maximum compatibility.
+- **New Section**: Added a detailed comparison between **Delete Bookkeeping Data** (clearing history) and **Delete Account** (full closure).
+- **SEO & Content**: Rewrote the introduction to emphasize key differentiators: **True Dual-Currency Recording**, **Timezone-Aware Tracking**, **Data Sovereignty** (Exportable CSV/JSON), and **Offline PWA** capabilities. Added standard SEO meta tags.
+
+*全面移除 Emoji 並改用標準 HTML Icon 標籤以確保跨瀏覽器顯示；新增原始幣別選擇、時區記錄優勢、以及統計頁面篩選邏輯（不含專案、個人份額）的詳細說明。全站 SEO 文案優化。*
+
+## [2026-02-11] 20:00
+### Synchronization
+- **Chinese Guide Updated**: Fully synchronized `guide.md` and `guide.html` with the English version.
+    - **SEO**: Updated meta description and introduction to matching quality.
+    - **Visuals**: Implemented **Material Symbols** and smooth scrolling.
+    - **Content**: Translated all new sections including **Deep Dive** (Split Billing, Data Sovereignty, Privacy) and **Account Security).
+    - **PWA Highlight**: Added a new section emphasizing the **Web × App Hybrid** advantage (No download needed, Offline support).
+    - **Refinement**: User manually refined Chinese copy for better flow. This version (20:25) is locked for preservation.
+    - **Fix**: Resolved `slugify` logic to strip icon HTML tags, ensuring **all TOC items** (not just sub-items) scroll correctly.
+
+*修正目錄跳轉問題：現在所有帶有 Icon 的章節標題都能正確連結。收錄並鎖定用戶手動校潤的中文版文案。*
+
+## [2026-02-11] 20:35
+### Final Documentation Polish
+- **Content**: Manual refinement of `guide.md` (Chinese) to enhance "Dual-Currency" and "PWA Advantages" descriptions.
+- **Ready**: Confirmed all guide page enhancements (TOC, Icons, SEO, Copy) are verified and ready for deployment.
+
+*整合用戶最終潤飾的指南文案（雙幣管理與 PWA 優勢），確認所有導覽與視覺修正皆已也就緒，準備發布。*
