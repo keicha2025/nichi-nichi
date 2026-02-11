@@ -11,12 +11,12 @@ import { ProjectDetailPage } from './pages/project-detail-page.js';
 import { ImportPage } from './pages/import-page.js';
 import { SharedLinksPage } from './pages/shared-links-page.js?v=1.4';
 import { EditSharedLinksPage } from './pages/edit-shared-links-page.js?v=1.4';
-
 import { ViewDashboard } from './pages/view-dashboard.js';
 import { SystemModal } from './components/system-modal.js';
 import { AppHeader } from './components/app-header.js';
 import { AppFooter } from './components/app-footer.js';
 import { IconEditPage } from './pages/icon-edit-page.js';
+import { InviteLanding } from './components/invite-landing.js';
 import { IconPicker } from './components/icon-picker.js';
 import { AppSelect } from './components/app-select.js';
 
@@ -38,10 +38,10 @@ createApp({
         'app-footer': AppFooter,
         'icon-picker': IconPicker,
         'icon-edit-page': IconEditPage,
-        'icon-edit-page': IconEditPage,
         'app-select': AppSelect,
         'shared-links-page': SharedLinksPage,
-        'edit-shared-links-page': EditSharedLinksPage
+        'edit-shared-links-page': EditSharedLinksPage,
+        'invite-landing': InviteLanding
     },
     setup() {
         const getLocalISOString = () => {
@@ -53,6 +53,16 @@ createApp({
         const currentTab = ref(params.get('tab') || 'add');
         const loading = ref(false);
         const currentUser = ref(null); // Firebase User
+
+        // --- Invitation Handling ---
+        const inviteCode = params.get('invite_code') || sessionStorage.getItem('pending_invite_code');
+        const inviterName = params.get('name') || sessionStorage.getItem('pending_invite_name');
+        const showInviteLanding = ref(!!inviteCode && !currentUser.value);
+
+        if (inviteCode) {
+            sessionStorage.setItem('pending_invite_code', inviteCode);
+            if (inviterName) sessionStorage.setItem('pending_invite_name', inviterName);
+        }
 
         // Scroll to top on tab change
         watch(currentTab, () => {
@@ -408,46 +418,51 @@ createApp({
                 // POST-LOGIN MERGE CHECK
                 if (appMode.value === 'ADMIN' && localStorage.getItem('merge_guest_data') === 'true') {
                     localStorage.removeItem('merge_guest_data'); // Consume flag
-
                     try {
                         const guestData = JSON.parse(localStorage.getItem('guest_data') || '{"transactions":[]}');
                         const guestProjects = JSON.parse(localStorage.getItem('guest_projects') || '[]');
-                        // We might want to merge categories/friends/payments too, but let's stick to transactions/projects for now to avoid overwriting user prefs?
-                        // Or we can import everything. API.importData handles it.
-                        // Let's prepare a full import object.
-
                         const importPayload = {
                             transactions: guestData.transactions || [],
                             projects: guestProjects,
-                            // specific logic: do we merge categories? maybe just transactiosn for now to be safe?
-                            // User request: "save current data". Usually implies transactions.
-                            // Let's include everything that ImportPage does.
                         };
 
                         if (importPayload.transactions.length > 0 || importPayload.projects.length > 0) {
                             loading.value = true;
-                            // We reuse API.importData logic but need to be careful about 'overwrite' vs 'merge'
-                            // API.importData does batch writes. It generates new IDs if needed or uses existing.
-                            // Guest transactions have 'tx_...' IDs. They should be unique enough.
-
-                            // We need to pass the data structure expected by importData (JSON export format)
-                            // which is { transactions: [], projects: [], ... }
-
                             await API.importData(importPayload, (msg) => console.log(msg));
-
                             dialog.alert("訪客資料已成功合併至您的帳戶！", "success");
-                            // Clear guest data? Maybe keep it as backup or clear it?
-                            // "Clear Guest Data" button exists. Better to clear it to avoid confusion?
-                            // Or leave it. Let's leave it for safety.
-
-                            // Reload data to reflect merged changes
                             await loadData(true);
                         }
                     } catch (e) {
                         console.error("Merge Guest Data Failed", e);
                         dialog.alert("合併訪客資料失敗，請手動匯入", "error");
-                    } finally {
-                        if (!isSilent) loading.value = false;
+                    }
+                }
+
+                // --- Discover Mutual Friends (Pending Connections) ---
+                if (currentUser.value) {
+                    try {
+                        const pending = await API.checkPendingConnections();
+                        if (pending.length > 0) {
+                            console.log(`[Discovery] Found ${pending.length} pending connections`);
+                            let updated = false;
+                            for (const conn of pending) {
+                                // Double check against latest friends list to avoid duplicates
+                                if (!friends.value.includes(conn.fromName)) {
+                                    friends.value.push(conn.fromName);
+                                    updated = true;
+                                    console.log("[Discovery] Adding mutual friend:", conn.fromName);
+                                    dialog.alert(`您已接受 ${conn.fromName} 的鏈結，對方已自動加入好友！`, "success", "好友連動");
+                                }
+                                await API.clearConnection(conn.id);
+                            }
+                            if (updated) {
+                                // Use JSON methods to ensure we have a clean array without Proxy weirdness for Firestore
+                                await API.updateUserData({ friends: JSON.parse(JSON.stringify(friends.value)) });
+                                console.log("[Discovery] User data updated with new friends.");
+                            }
+                        }
+                    } catch (e) {
+                        console.error("[Discovery] Failed", e);
                     }
                 }
             }
@@ -717,9 +732,35 @@ createApp({
         // SETUP AUTH LISTENER
         onMounted(() => {
             // Wait for Auth init
-            API.onAuthStateChanged((user) => {
+            API.onAuthStateChanged(async (user) => {
                 const prevUser = currentUser.value;
                 currentUser.value = user;
+
+                // --- Handle Invite Logic ---
+                if (user && !prevUser) {
+                    const code = sessionStorage.getItem('pending_invite_code');
+                    const name = sessionStorage.getItem('pending_invite_name');
+                    if (code && code !== user.uid) {
+                        try {
+                            await API.processInvite(code, name);
+                            sessionStorage.removeItem('pending_invite_code');
+                            sessionStorage.removeItem('pending_invite_name');
+                            showInviteLanding.value = false;
+                            dialog.alert("已成功與邀請人連結！", "success", "好友邀請");
+                        } catch (e) {
+                            console.error("Invite Process Failed", e);
+                        }
+                    } else if (code === user.uid) {
+                        // User trying to invite themselves
+                        sessionStorage.removeItem('pending_invite_code');
+                        sessionStorage.removeItem('pending_invite_name');
+                        showInviteLanding.value = false;
+                    }
+                }
+
+                if (user) {
+                    showInviteLanding.value = false;
+                }
 
                 // If user changed (e.g. login or logout), reload data
                 // Also first load
@@ -769,8 +810,11 @@ createApp({
         };
 
         const methods = {
-            currentTab, handleTabChange, loading, categories, friends, paymentMethods, projects, transactions, filteredTransactions, historyFilter, form, editForm, stats, systemConfig, fxRate, selectedProject, isSettingsDirty,
-            appMode, syncStatus, currentUser, hasMultipleCurrencies,
+            currentTab, handleTabChange, loading, currentUser, categories, friends, paymentMethods, projects,
+            transactions, filteredTransactions, systemConfig, form, editForm, selectedProject, fxRate, historyFilter,
+            stats, modalState, baseCurrency, appMode, isSettingsDirty,
+            showInviteLanding, inviterName,
+            syncStatus, hasMultipleCurrencies,
             handleSubmit, handleDelete, handleDeleteMultiple, handleEditItem,
             formatNumber: (n) => new Intl.NumberFormat().format(Math.round(n || 0)),
             getTabIcon,

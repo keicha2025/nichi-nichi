@@ -31,9 +31,12 @@ service cloud.firestore {
       }
     }
 
-    // Collection Group for Shared Links (Optional, if we switch query strategy)
-    match /{path=**}/shared_links/{linkId} {
-      allow read: if true;
+    // Friend Connections (Mutual Linking Signal)
+    match /friend_connections/{connId} {
+      // Any logged-in user can create a connection signal
+      allow create: if request.auth != null;
+      // Only the target user (inviter) can read or delete the signal
+      allow read, delete: if request.auth != null && resource.data.toUid == request.auth.uid;
     }
   }
 }

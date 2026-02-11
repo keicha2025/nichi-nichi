@@ -262,6 +262,10 @@
         <system-modal :visible="modalState.visible" :config="modalState.config" @confirm="handleModalConfirm"
             @cancel="handleModalCancel">
         </system-modal>
+
+        <!-- 好友邀請落地頁面 -->
+        <invite-landing v-if="showInviteLanding" :inviter-name="inviterName" @login="handleGoogleLogin">
+        </invite-landing>
     </div>
 
     <!-- 註冊 Service Worker -->

@@ -282,6 +282,19 @@ export const SettingsPage = {
                      </div>
                  </div>
 
+                 <!-- INVITE FRIEND -->
+                 <div class="bg-bg-subtle p-4 rounded-xl space-y-3">
+                      <div class="flex items-center space-x-2 px-1">
+                         <span class="material-symbols-rounded text-base text-txt-secondary">person_add</span>
+                         <span class="text-xs text-txt-primary font-medium">邀請好友</span>
+                      </div>
+                      <p class="text-[9px] text-txt-secondary px-1 leading-relaxed">分享連結給朋友，登入後即可自動建立聯動好友，方便直接選擇分帳對象。</p>
+                      <button @click="copyInviteLink" class="w-full bg-white border border-bdr-subtle text-txt-primary py-3 rounded-xl flex items-center justify-center space-x-2 active:scale-95 transition-all shadow-sm hover:bg-bg-subtle">
+                          <span class="material-symbols-rounded text-sm">{{ inviteCopied ? 'check' : 'link' }}</span>
+                          <span class="text-[10px] font-medium tracking-wide">{{ inviteCopied ? '已複製連結' : '複製專屬邀請連結' }}</span>
+                      </button>
+                 </div>
+
                  <!-- GOOGLE SERVICES (New) -->
                  <div class="bg-bg-subtle p-4 rounded-xl space-y-4">
                      <div class="flex items-center space-x-2 px-1">
@@ -380,7 +393,8 @@ export const SettingsPage = {
             localPaymentMethods: [],
             debouncedTimeout: null,
             exporting: false,
-            backingUp: false
+            backingUp: false,
+            inviteCopied: false
         };
     },
     computed: {
@@ -748,6 +762,56 @@ export const SettingsPage = {
                 this.dialog.alert('雲端存檔失敗: ' + e.message);
             } finally {
                 this.backingUp = false;
+            }
+        },
+        async copyInviteLink() {
+            const baseUrl = window.location.origin + window.location.pathname;
+            const inviteUrl = `${baseUrl}?invite_code=${this.currentUser.uid}&name=${encodeURIComponent(this.config.user_name || '朋友')}`;
+            const shareTitle = "日日記 | 帳務邀請";
+            const shareText = `日日記 | 帳務邀請\n邀請你一起記錄開銷與分帳\n${inviteUrl}`;
+
+            // 1. Try Native Share if available (Usually mobile)
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: shareTitle,
+                        text: "邀請你一起記錄開銷與分帳",
+                        url: inviteUrl
+                    });
+                    this.inviteCopied = true;
+                    setTimeout(() => this.inviteCopied = false, 2500);
+                    return; // Success
+                } catch (e) {
+                    // Fallthrough to clipboard if cancelled or failed
+                    console.log("Native share result:", e.name);
+                }
+            }
+
+            // 2. Fallback to Clipboard with robust check
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(shareText);
+                } else {
+                    // Ultimate fallback: traditional textarea method for insecure contexts
+                    const textArea = document.createElement("textarea");
+                    textArea.value = shareText;
+                    textArea.style.position = "fixed";
+                    textArea.style.left = "-9999px";
+                    textArea.style.top = "0";
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    const successful = document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    if (!successful) throw new Error('execCommand failed');
+                }
+
+                this.inviteCopied = true;
+                if (navigator.vibrate) navigator.vibrate(10);
+                setTimeout(() => this.inviteCopied = false, 2500);
+            } catch (err) {
+                console.error('Final fallback copy failed:', err);
+                this.dialog.alert('複製失敗，可能是瀏覽器限制。請手動複製連結：' + inviteUrl);
             }
         },
         navigateToGuide() {

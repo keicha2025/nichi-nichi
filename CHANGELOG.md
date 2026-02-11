@@ -1,5 +1,33 @@
 # Changelog
 
+## [2026-02-12] 01:40
+### Added
+- **Mutual Friend Signaling Mechanism**:
+  - Implemented a robust "Discovery" mechanism to establish mutual friend links. New users now send a join signal to the `friend_connections` collection upon accepting an invite.
+  - Added auto-discovery logic to `app.js` that scans for incoming signals and automatically updates the inviter's friend list upon login or refresh.
+  - Developed `API.checkPendingConnections` and `API.clearConnection` to manage the signaling lifecycle.
+- **Improved New User Onboarding**:
+  - Enhanced `API.processInvite` to automatically initialize Firestore documents for first-time users, ensuring the invitation flow never breaks for newcomers.
+- **Web Share API & Robust Clipboard Support**:
+  - Upgraded the "Copy Invite Link" feature to prioritize the native **Web Share API** (System Share) on mobile devices for a more integrated experience.
+  - Implemented a triple-fallback clipboard mechanism (Share API -> Clipboard API -> Legacy Textarea) to fix `TypeError: undefined` errors in insecure contexts (HTTP).
+- **Security Hardening**:
+  - Updated `firestore.rules` to include granular permissions for the `friend_connections` collection, enabling secure mutual linking signals.
+
+*實作「好友雙向自動連動」機制，透過 Firestore 信號系統解決權限限制，讓邀請者能自動發現並加入新好友。同時修復剪貼簿複製錯誤，並整合原生分享介面提升行動端體驗。*
+
+## [2026-02-12] 01:15
+### Added
+- **Friend Invite & Landing Page**:
+  - Implemented a new "Invite Friend" feature allowing users to generate and share personalized invitation links.
+  - Created a high-aesthetic "Invite Landing" page for new users, featuring a Muji-inspired design with core benefit explanations.
+  - Developed `API.processInvite` to establish initial friend links in Firestore upon login.
+  - Added URL parameter detection (`invite_code` and `name`) to trigger the landing experience.
+  - Formatted invitation text for better clarity when shared.
+
+*新增「邀請好友」與「邀請落地頁」，支援產生個人化連結。*
+
+
 ## [2026-02-11] 19:15
 ### Added
 - Created a comprehensive English User Guide (`guide-en.html`) using Simplified Technical English (STE).

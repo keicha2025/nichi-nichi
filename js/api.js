@@ -1,7 +1,7 @@
 import {
     db, auth, googleProvider, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider,
     collection, doc, setDoc, addDoc, getDocs, updateDoc, deleteDoc, query, orderBy, where, getDoc, writeBatch, arrayUnion, arrayRemove, collectionGroup,
-    reauthenticateWithPopup
+    reauthenticateWithPopup, serverTimestamp
 } from './firebase-config.js';
 
 import { CONFIG } from './config.js?v=1.3';
@@ -603,5 +603,80 @@ export const API = {
         // 3. Delete Auth User
         // This requires recent login. If it fails, we catch it in UI and ask for re-login.
         await user.delete();
+    },
+
+    async processInvite(inviteCode, inviterName) {
+        // inviteCode is the UID of the inviter
+        // inviterName is passed from URL params (optional)
+
+        const user = auth.currentUser;
+        if (!user) throw new Error("Not logged in");
+        if (user.uid === inviteCode) throw new Error("不能邀請自己");
+
+        // 1. Add Inviter to My Friends list
+        const userRef = doc(db, 'users', user.uid);
+        let userSnap = await getDoc(userRef);
+
+        // If doc doesn't exist (new user), we should initialize it using defaults
+        if (!userSnap.exists()) {
+            const initialUserData = {
+                config: { user_name: user.displayName || 'User', fx_rate: DEFAULTS.config.fx_rate },
+                categories: DEFAULTS.categories,
+                paymentMethods: DEFAULTS.paymentMethods,
+                friends: DEFAULTS.friends,
+                projects: []
+            };
+            await setDoc(userRef, initialUserData);
+            userSnap = await getDoc(userRef);
+        }
+
+        const userData = userSnap.data();
+        let friends = userData.friends || [];
+        const finalName = inviterName || "分享人";
+
+        if (!friends.includes(finalName)) {
+            friends.push(finalName);
+            await updateDoc(userRef, { friends });
+            console.log("Inviter added to my friends list:", finalName);
+        }
+
+        // 2. Signal the inviter that I've joined (Discoverability)
+        try {
+            const myName = user.displayName || "新朋友";
+            const connRef = doc(db, 'friend_connections', `${inviteCode}_${user.uid}`);
+            console.log(`[API] Sending mutual signal to inviter ${inviteCode} from ${user.uid} (${myName})`);
+            await setDoc(connRef, {
+                toUid: inviteCode,
+                fromUid: user.uid,
+                fromName: myName,
+                timestamp: serverTimestamp()
+            });
+            console.log("[API] Friend acceptance signal sent successfully.");
+        } catch (e) {
+            console.warn("[API] Mutual signal failed (Check Firestore Rules):", e);
+        }
+
+        return { uid: inviteCode, name: finalName };
+    },
+
+    async checkPendingConnections() {
+        const user = auth.currentUser;
+        if (!user) return [];
+        try {
+            const q = query(collection(db, 'friend_connections'), where('toUid', '==', user.uid));
+            const snap = await getDocs(q);
+            return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        } catch (e) {
+            console.warn("Failed to check pending connections:", e);
+            return [];
+        }
+    },
+
+    async clearConnection(connId) {
+        try {
+            await deleteDoc(doc(db, 'friend_connections', connId));
+        } catch (e) {
+            console.warn("Failed to clear connection:", e);
+        }
     }
 };
