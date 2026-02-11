@@ -671,3 +671,12 @@ Added comprehensive debug logging throughout the category save flow for easier t
 - **Ready**: Confirmed all guide page enhancements (TOC, Icons, SEO, Copy) are verified and ready for deployment.
 
 *整合用戶最終潤飾的指南文案（雙幣管理與 PWA 優勢），確認所有導覽與視覺修正皆已也就緒，準備發布。*
+
+## [2026-02-11] 20:41
+### SEO Optimization
+- **Home Page**: Updated `index.html` with Google Site Verification (`google-site-verification`).
+- **Metadata**: Enhanced meta description and keywords based on `guide.md` content ("Dual-Currency", "Travel to Japan", "Data Sovereignty").
+- **Rich Snippets**: Added JSON-LD Structured Data for `SoftwareApplication` and `FAQPage` to improve search engine visibility and rich result presentation.
+- **Social Sharing**: Updated Open Graph and Twitter Card image to `OGImage.png` for better visual presentation when shared on social media.
+
+*首頁 SEO 優化：加入 Google 驗證標籤、優化 Meta 描述與關鍵字，並新增 JSON-LD 結構化資料。社交分享預覽圖已更新為專用設計圖 `OGImage.png`。*
