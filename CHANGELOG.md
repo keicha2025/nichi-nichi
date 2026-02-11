@@ -477,3 +477,49 @@ Added comprehensive debug logging throughout the category save flow for easier t
 - 新增 JSZip 函式庫用於本地 ZIP 打包。
 
 ---
+
+## [2026-02-11T14:48:00Z] Local Development Environment Setup
+
+### Features & Improvements
+- **Vite Integration**: Initialized `package.json` and installed Vite to provide a modern local development environment.
+  - 導入 Vite 開發環境：建立 `package.json` 並安裝 Vite，提供現代化的前端開發體驗。
+- **External Network Access**: Configured `npm run dev` with the `--host` flag, allowing mobile devices on the same network to access the preview server.
+  - 開放區域網路存取：設定開發伺服器允許外部連線，方便手機直接進行 UI 測試。
+- **Persistent Server Config**: Added `vite.config.js` to fix the port to `5173` and ensure host access is always enabled by default.
+  - 固定伺服器設定：新增 `vite.config.js` 將埠號固定為 `5173` 並預設啟動對外連線，確保手機連結始終不變。
+
+### Technical Details
+- Created `package.json` with `vite` dependency.
+- Added `dev` script: `vite --host`.
+- Created `vite.config.js` with `server.host: true` and `server.port: 5173`.
+- 建立 package.json 與 vite.config.js 並設定開發指令。
+
+---
+
+---
+
+## [2026-02-11T15:58:00Z] Visual Identity System & Repository Migration
+
+### Features & Improvements
+- **New Visual Identity (Logo Type)**:
+    - Designed a new brand identity "日日記/NICHI-NICHI" using Concept B (Stacked Records).
+    - **Symbol**: A minimalist 3-layer book stack icon, representing daily accumulation.
+    - **Typography**: Combined the classic elegance of "Zen Old Mincho" (Full-width CJK) with the modern clarity of "Helvetica Neue" (Latin).
+    - **Color Palette**: Transitioned to a premium charcoal gray (`#4A4A4A`) on a warm paper-white background (`#FDFCFB`).
+    - 視覺識別系統更新：實作全新品牌 Logo (日日記 / NICHI-NICHI)，結合經典宋體與現代無襯線體，建立高品質的品牌視覺。
+- **SVG Branding Assets**:
+    - Exported high-precision SVG assets for `logo-icon.svg`, `logo-full-horizontal.svg`, and `logo-full-vertical.svg`.
+    - 輸出高畫質 SVG 資源檔案，支援不同排版情境。
+- **Header Integration & Fallback**:
+    - Replaced the text-based header in `AppHeader` with the new horizontal SVG logo.
+    - Implemented a robust fallback mechanism that reverts to high-quality text logotype if the SVG image fails to load.
+    - 頁首整合與防錯機制：將 Logo 整合至 AppHeader 並實作破圖自動修復，確保品牌持續可見。
+- **Repository Migration**:
+    - Updated the remote origin to `https://github.com/keicha2025/nichi-nichi.git`.
+    - 儲存庫遷移：更新遠端位置至新的專案儲存庫。
+
+### Technical Details
+- Updated `js/components/app-header.js` with `logoError` state and `@error` handling.
+- Created `logo-preview.html` (and historical versions) for identity preview.
+- Finalized SVG files in the root directory.
+- 建立 Logo 預覽頁面並在組件中加入錯誤處理邏輯。

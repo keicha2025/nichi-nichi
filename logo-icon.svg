@@ -1,0 +1,6 @@
+<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+    <!-- Concept B: Stacked Books Icon -->
+    <rect x="5" y="5" width="50" height="12" rx="2" fill="none" stroke="#4A4A4A" stroke-width="2" />
+    <rect x="10" y="21" width="50" height="12" rx="2" fill="#4A4A4A" stroke="#4A4A4A" stroke-width="2" />
+    <rect x="5" y="37" width="50" height="12" rx="2" fill="none" stroke="#4A4A4A" stroke-width="2" />
+</svg>

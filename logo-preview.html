@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日日記 NICHI-NICHI Logo Identity</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #FDFCFB;
+            --primary-color: #4A4A4A;
+        }
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--primary-color);
+            margin: 0;
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        h1 {
+            font-weight: 300;
+            letter-spacing: 2px;
+            margin-bottom: 80px;
+            font-size: 14px;
+            color: #999;
+            text-transform: uppercase;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+        }
+
+        .showcase-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 80px;
+            margin-bottom: 100px;
+        }
+
+        .showcase-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+            background: #fff;
+            border: 1px solid #f0f0f0;
+            border-radius: 4px;
+            min-height: 200px;
+            transition: box-shadow 0.3s ease;
+        }
+        
+        .showcase-item:hover {
+            box-shadow: 0 10px 40px rgba(0,0,0,0.03);
+            border-color: #eaeaea;
+        }
+
+        .label {
+            margin-top: 40px;
+            font-size: 11px;
+            color: #ccc;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* --- LOGO DEFINITIONS --- */
+
+        /* Core Variables */
+        .logo-root {
+            --logo-color: #4A4A4A;
+        }
+
+        /* 1. The Icon (Book Stack) */
+        .logo-icon {
+            width: 50px;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+        .logo-icon .stack-rect {
+            width: 100%;
+            height: 12px;
+            border: 2px solid var(--logo-color);
+            margin-bottom: 4px;
+            border-radius: 2px;
+            box-sizing: border-box;
+        }
+        .logo-icon .stack-rect:nth-child(2) {
+            margin-left: 5px; /* Offset for dynamic feel */
+            background-color: var(--logo-color); /* Filled middle */
+        }
+
+        /* 2. Chinese Type (Zen Old Mincho) */
+        .logo-zh {
+            font-family: 'Zen Old Mincho', serif;
+            font-weight: 500;
+            font-size: 28px;
+            letter-spacing: 0.15em;
+            color: var(--logo-color);
+            line-height: 1.2;
+            margin-left: 0.15em; /* Optical alignment due to letter-spacing */
+        }
+
+        /* 3. English Type (Helvetica Neue) */
+        .logo-en {
+            font-family: 'Helvetica Neue', sans-serif;
+            font-weight: 400;
+            font-size: 11px;
+            letter-spacing: 0.25em;
+            color: var(--logo-color);
+            text-transform: uppercase;
+            margin-top: 8px;
+            margin-left: 0.25em; /* Optical alignment */
+        }
+
+        /* --- VARIATION LAYOUTS --- */
+
+        /* Full Lockup (Vertical) */
+        .lockup-vertical {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Full Lockup (Horizontal) */
+        .lockup-horizontal {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 20px;
+        }
+        .lockup-horizontal .logo-icon {
+            margin-bottom: 0;
+            width: 40px;
+        }
+        .lockup-horizontal .logo-icon .stack-rect {
+            height: 10px;
+        }
+        .lockup-horizontal .text-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .lockup-horizontal .logo-zh {
+            font-size: 24px;
+            margin-left: 0;
+        }
+        .lockup-horizontal .logo-en {
+            margin-top: 4px;
+            font-size: 9px;
+            margin-left: 0;
+            letter-spacing: 0.3em;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Identity System: Concent B Refined</h1>
+
+        <div class="showcase-grid">
+            
+            <!-- 1. Full Lockup (Primary) -->
+            <div class="showcase-item">
+                <div class="logo-root lockup-vertical">
+                    <div class="logo-icon">
+                        <div class="stack-rect"></div>
+                        <div class="stack-rect"></div>
+                        <div class="stack-rect"></div>
+                    </div>
+                    <div class="logo-zh">日日記</div>
+                    <div class="logo-en">NICHI-NICHI</div>
+                </div>
+                <div class="label">Primary Lockup</div>
+            </div>
+
+            <!-- 2. Icon Only -->
+            <div class="showcase-item">
+                <div class="logo-root">
+                    <div class="logo-icon" style="margin-bottom: 0; transform: scale(1.5);">
+                        <div class="stack-rect"></div>
+                        <div class="stack-rect"></div>
+                        <div class="stack-rect"></div>
+                    </div>
+                </div>
+                <div class="label">Symbol / Icon</div>
+            </div>
+
+             <!-- 3. Chinese Logotype -->
+             <div class="showcase-item">
+                <div class="logo-root">
+                    <div class="logo-zh" style="font-size: 42px;">日日記</div>
+                </div>
+                <div class="label">Logotype (Chinese)</div>
+            </div>
+
+            <!-- 4. English Logotype -->
+            <div class="showcase-item">
+                <div class="logo-root">
+                    <div class="logo-en" style="font-size: 14px; letter-spacing: 0.4em;">NICHI-NICHI</div>
+                </div>
+                <div class="label">Logotype (English)</div>
+            </div>
+
+             <!-- 5. Horizontal Lockup (For weak vertical space) -->
+             <div class="showcase-item" style="grid-column: span 2;">
+                <div class="logo-root lockup-horizontal">
+                    <div class="logo-icon">
+                        <div class="stack-rect"></div>
+                        <div class="stack-rect"></div>
+                        <div class="stack-rect"></div>
+                    </div>
+                    <div class="text-group">
+                        <div class="logo-zh">日日記</div>
+                        <div class="logo-en">NICHI-NICHI</div>
+                    </div>
+                </div>
+                <div class="label">Secondary Lockup (Horizontal)</div>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>

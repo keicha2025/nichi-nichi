@@ -3,11 +3,16 @@ export const AppHeader = {
     setup() {
         const baseCurrency = window.Vue.inject('baseCurrency');
         const toggleBaseCurrency = window.Vue.inject('toggleBaseCurrency');
-        return { baseCurrency, toggleBaseCurrency };
+        const logoError = window.Vue.ref(false);
+        return { baseCurrency, toggleBaseCurrency, logoError };
     },
     template: `
-    <header class="w-full max-w-md mx-auto px-4 pt-6 pb-2 flex justify-between items-end border-b border-bdr-subtle/50">
-        <h1 class="text-lg font-light tracking-[0.3em] text-txt-muted uppercase">Nichi-Nichi</h1>
+    <header class="w-full max-w-md mx-auto px-4 pt-6 pb-3 flex justify-between items-center border-b border-bdr-subtle/50">
+        <div class="h-8 flex items-center">
+            <img v-show="!logoError" src="./logo-full-horizontal.svg" alt="Nichi-Nichi" class="h-full" @error="logoError = true">
+            <h1 v-show="logoError" class="text-sm font-normal tracking-[0.25em] text-txt-primary uppercase font-sans">NICHI-NICHI</h1>
+        </div>
+        
         <div class="flex items-center space-x-2">
             <!-- Currency Toggle (Overview & Stats) -->
             <div v-if="['overview', 'stats'].includes(currentTab) && showCurrencySwitcher" @click="toggleBaseCurrency" 
