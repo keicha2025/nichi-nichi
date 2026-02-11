@@ -677,6 +677,6 @@ Added comprehensive debug logging throughout the category save flow for easier t
 - **Home Page**: Updated `index.html` with Google Site Verification (`google-site-verification`).
 - **Metadata**: Enhanced meta description and keywords based on `guide.md` content ("Dual-Currency", "Travel to Japan", "Data Sovereignty").
 - **Rich Snippets**: Added JSON-LD Structured Data for `SoftwareApplication` and `FAQPage` to improve search engine visibility and rich result presentation.
-- **Social Sharing**: Updated Open Graph and Twitter Card image to `OGImage.png` for better visual presentation when shared on social media.
+- **Social Sharing**: Updated Open Graph and Twitter Card image to GitHub raw URL for better reliability and reachability across platforms.
 
-*首頁 SEO 優化：加入 Google 驗證標籤、優化 Meta 描述與關鍵字，並新增 JSON-LD 結構化資料。社交分享預覽圖已更新為專用設計圖 `OGImage.png`。*
+*首頁 SEO 優化：加入 Google 驗證標籤、優化 Meta 描述與關鍵字，並新增 JSON-LD 結構化資料。社交分享預覽圖已更新為 GitHub 直鏈以確保抓取穩定。*
