@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Guide | Nichi-Nichi</title>
+
+    <!-- External Resources -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        txt: {
+                            primary: 'var(--txt-primary)',
+                            secondary: 'var(--txt-secondary)',
+                            muted: 'var(--txt-muted)',
+                            onbrand: 'var(--txt-on-brand)'
+                        },
+                        bg: {
+                            main: 'var(--bg-main)',
+                            canvas: 'var(--bg-canvas)',
+                            subtle: 'var(--bg-subtle)',
+                            default: 'var(--bg-main)'
+                        },
+                        bdr: {
+                            default: 'var(--bdr-default)',
+                            subtle: 'var(--bdr-subtle)'
+                        },
+                        action: {
+                            primary: {
+                                bg: 'var(--action-primary-bg)',
+                                hover: 'var(--action-primary-hover)',
+                                text: 'var(--action-primary-text)'
+                            }
+                        },
+                        chart: {
+                            1: 'var(--chart-color-1)',
+                            2: 'var(--chart-color-2)',
+                            3: 'var(--chart-color-3)',
+                            4: 'var(--chart-color-4)',
+                            5: 'var(--chart-color-5)',
+                            6: 'var(--chart-color-6)'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Markdown Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+
+    <!-- Project Styles -->
+    <link rel="stylesheet" href="css/design-tokens.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/markdown-body.css">
+
+    <style>
+        body {
+            background-color: var(--color-bg-main);
+        }
+
+        .guide-container {
+            background: var(--color-bg-card);
+            padding: 24px;
+            border-radius: 2rem;
+            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--color-border-light);
+            margin-bottom: 80px;
+        }
+
+        .guide-content-header {
+            margin-bottom: 32px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--color-border-medium);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" class="max-w-md mx-auto min-h-screen relative px-4 pt-4" v-cloak>
+        <!-- App Header -->
+        <app-header :app-mode="'GUEST'" :sync-status="'idle'" :current-tab="'guide'" :show-currency-switcher="false"
+            @close="handleClose">
+        </app-header>
+
+        <div class="guide-container animate-in fade-in mt-6">
+            <header class="guide-content-header">
+                <div>
+                    <h1 class="text-sm font-medium tracking-[0.2em] text-txt-primary uppercase">User Guide</h1>
+                    <p class="text-[9px] text-txt-secondary tracking-widest mt-1">Manual and instructions</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="guide.html"
+                        class="text-[10px] text-txt-muted hover:text-txt-secondary transition-all font-medium uppercase tracking-[0.2em] no-underline">
+                        繁體中文
+                    </a>
+                    <button @click="handleClose"
+                        class="text-[9px] bg-bg-subtle text-txt-secondary px-4 py-2 rounded-full border border-bdr-subtle hover:bg-bg-subtle transition-all font-medium uppercase tracking-widest">
+                        CLOSE
+                    </button>
+                </div>
+            </header>
+
+            <div v-if="loading" class="flex flex-col items-center py-20">
+                <div class="w-8 h-8 border-2 border-bdr-subtle border-t-gray-400 rounded-full animate-spin mb-4"></div>
+                <p class="text-[9px] tracking-[0.2em] text-txt-muted uppercase">Loading Guide...</p>
+            </div>
+
+            <!-- Markdown Renderer -->
+            <markdown-renderer v-else :content="markdownContent"></markdown-renderer>
+
+            <footer class="mt-16 pt-8 border-t border-bdr-subtle text-center">
+                <p class="text-[9px] text-txt-muted tracking-[0.3em] font-light uppercase">Nichi-Nichi Log</p>
+            </footer>
+        </div>
+    </div>
+
+    <script type="module">
+        import { MarkdownRenderer } from './js/components/markdown-renderer.js';
+        import { AppHeader } from './js/components/app-header.js';
+
+        const { createApp, ref, onMounted, provide } = window.Vue;
+
+        createApp({
+            components: {
+                'markdown-renderer': MarkdownRenderer,
+                'app-header': AppHeader
+            },
+            setup() {
+                const markdownContent = ref('');
+                const loading = ref(true);
+
+                // Mock global state required by AppHeader
+                const baseCurrency = ref('JPY');
+                provide('baseCurrency', baseCurrency);
+                provide('toggleBaseCurrency', () => {
+                    baseCurrency.value = baseCurrency.value === 'JPY' ? 'TWD' : 'JPY';
+                });
+
+                const fetchMarkdown = async () => {
+                    try {
+                        const response = await fetch('guide-en.md');
+                        markdownContent.value = await response.text();
+                    } catch (e) {
+                        console.error("Failed to load markdown", e);
+                        markdownContent.value = "# Error\nFailed to load `guide-en.md`. Please ensure the file exists.";
+                    } finally {
+                        loading.value = false;
+                    }
+                };
+
+                const handleClose = () => {
+                    window.location.href = 'index.html?tab=settings';
+                };
+
+                onMounted(fetchMarkdown);
+
+                return { markdownContent, loading, handleClose };
+            }
+        }).mount('#app');
+    </script>
+</body>
+
+</html>

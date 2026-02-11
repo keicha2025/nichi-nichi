@@ -49,7 +49,8 @@ createApp({
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             return now.toISOString().slice(0, 16);
         };
-        const currentTab = ref('add');
+        const params = new URLSearchParams(window.location.search);
+        const currentTab = ref(params.get('tab') || 'add');
         const loading = ref(false);
         const currentUser = ref(null); // Firebase User
 
@@ -146,7 +147,6 @@ createApp({
         provide('dialog', dialog);
 
         // Global Currency State
-        const params = new URLSearchParams(window.location.search);
         const urlCurrency = params.get('currency');
         const baseCurrency = ref(urlCurrency === 'TWD' ? 'TWD' : 'JPY');
         const toggleBaseCurrency = () => { baseCurrency.value = baseCurrency.value === 'JPY' ? 'TWD' : 'JPY'; };

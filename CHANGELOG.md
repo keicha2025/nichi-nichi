@@ -579,4 +579,29 @@ Added comprehensive debug logging throughout the category save flow for easier t
 - **Global Branding Update**:
     - Replaced the legacy app icon (`kakei.png`) with the new visual identity (`appicon.png` and `appicon.ico`).
     - Updated `index.html` (favicon & Apple Touch Icon) and `manifest.json` (PWA icons) to ensure cross-platform consistency.
-  - 全局品牌更新：將舊有的 App 圖示更換為全新的設計（appicon.png/ico），並同步更新網頁與 PWA 設定。
+
+---
+
+## [2026-02-13T11:15:00Z] Settings Page Layout Optimization & User Guide Entry
+
+### Features & Improvements
+- **GUEST Mode Layout Optimization**: Moved the "Account" section to the very top in Guest Mode to prioritize login/auth actions for new users.
+
+- **User Guide Entry Points**:
+    - Added a prominent "User Guide" button (map icon) in the Guest Account section.
+    - Added a subtle "User Guide" text link at the very bottom of the Settings page for logged-in users (aligned left, no underline).
+- **New Documentation Infrastructure**:
+    - Created `guide.html` and `guide.md` as the foundation for the application's user manual.
+    - **Language Support**: Implemented a language switcher (English/繁體中文) on guide pages.
+    - Created `guide-en.html` and `guide-en.md` for English users.
+- **UX Consistency**: The new navigation ensures that both guests and members can easily find help resources according to their current context.
+
+### Technical Details
+- Modified `js/pages/settings-page.js` to implement conditional rendering based on `appMode` and refined the link style.
+- Added `navigateToGuide()` method to handle internal link redirection.
+- Created `guide.html` and `guide-en.html` using the standard Vue + Tailwind + Markdown renderer stack.
+- Implemented language switching logic using direct HTML links between guide versions.
+
+- **UX Optimization**:
+    - Forced the "Close" button in the User Guide to always return to the **Settings** page by implementing a URL `tab` parameter in `app.js`.
+    - **中文說明：修正使用指南關閉按鈕，確保按下後會精確地回到「設定」分頁。**
