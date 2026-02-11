@@ -605,19 +605,11 @@ createApp({
 
         const handleDelete = async (row) => {
             if (appMode.value === 'VIEWER') return;
-            // NOTE: row is legacy, we need ID.
-            // Old data might not have ID? We should have migrated or handle gracefully.
-            // Assumption: transactions loaded from Firestore HAVE IDs.
-            // Guest data might use row? 
-            // Only Firestore data has ID guaranteed.
-
-            // Let's find the ID.
             let idToDelete = null;
             let item = null;
 
-            // Try matching by row or id
             if (typeof row === 'string' && row.startsWith('tx_')) {
-                idToDelete = row; // passed ID directly
+                idToDelete = row;
                 item = transactions.value.find(t => t.id === row);
             } else {
                 item = transactions.value.find(t => t.row === row);
@@ -639,12 +631,10 @@ createApp({
 
             if (!await dialog.confirm("確定要永久刪除此筆資料嗎？")) return;
 
-            // Optimistic Delete
             if (item) {
                 transactions.value = transactions.value.filter(t => t.id !== item.id);
             }
 
-            // [UX] IMMEDIATE FEEDBACK
             const goHistory = () => { currentTab.value = 'history'; editForm.value = null; };
             if (item) {
                 dialog.showTransactionSuccess(item, goHistory, {
@@ -655,7 +645,6 @@ createApp({
                 });
             }
 
-            // BACKGROUND SYNC
             if (appMode.value === 'ADMIN' && idToDelete) {
                 (async () => {
                     try {
@@ -663,23 +652,34 @@ createApp({
                         console.log("[Background Sync] Delete success", idToDelete);
                     } catch (e) {
                         console.error("[Background Sync] Delete failed", e);
-                        // dialog.alert("刪除失敗"); // Optional
                     }
                 })();
-            } else if (!idToDelete) {
-                // Keep this check for sanity, though inconsistent with optimistic if we don't alert
-                console.warn("無法刪除：找不到 ID");
+            }
+        };
+
+        const handleDeleteMultiple = async (ids) => {
+            if (appMode.value === 'VIEWER') return;
+            if (ids.length === 0) return;
+
+            transactions.value = transactions.value.filter(t => !ids.includes(t.id));
+
+            if (appMode.value === 'GUEST') {
+                const localOnly = transactions.value.filter(t => !t.isRemote);
+                localStorage.setItem('guest_data', JSON.stringify({ transactions: localOnly }));
+                dialog.alert(`已刪除 ${ids.length} 筆訪客資料 (Guest)`, 'success');
+                return;
             }
 
-            if (item) {
-                const goHistory = () => { currentTab.value = 'history'; editForm.value = null; };
-                dialog.showTransactionSuccess(item, goHistory, {
-                    title: '已刪除',
-                    confirmText: '返回明細',
-                    secondaryText: '',
-                    onConfirm: goHistory
-                });
-            }
+            (async () => {
+                try {
+                    await API.deleteMultipleTransactions(ids);
+                    console.log("[Background Sync] Multiple delete success", ids.length);
+                } catch (e) {
+                    console.error("[Background Sync] Multiple delete failed", e);
+                }
+            })();
+
+            dialog.alert(`已成功刪除 ${ids.length} 筆資料`, 'success');
         };
 
         const resetForm = () => {
@@ -771,7 +771,7 @@ createApp({
         const methods = {
             currentTab, handleTabChange, loading, categories, friends, paymentMethods, projects, transactions, filteredTransactions, historyFilter, form, editForm, stats, systemConfig, fxRate, selectedProject, isSettingsDirty,
             appMode, syncStatus, currentUser, hasMultipleCurrencies,
-            handleSubmit, handleDelete, handleEditItem,
+            handleSubmit, handleDelete, handleDeleteMultiple, handleEditItem,
             formatNumber: (n) => new Intl.NumberFormat().format(Math.round(n || 0)),
             getTabIcon,
             toggleCurrency: () => form.value.currency = (form.value.currency === 'JPY' ? 'TWD' : 'JPY'),

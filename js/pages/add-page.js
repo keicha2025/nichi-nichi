@@ -14,7 +14,7 @@ export const AddPage = {
             <!-- 2. 金額 -->
             <div class="text-center py-6 border-b border-bdr-subtle">
                 <div class="flex items-center justify-center space-x-3">
-                    <span @click.stop="$emit('toggle-currency')" class="text-xs font-medium text-txt-muted border border-bdr-subtle px-3 py-1 rounded-full cursor-pointer">{{ form.currency }}</span>
+                    <span @click.stop="$emit('toggle-currency')" class="text-xs font-medium text-txt-secondary border border-bdr-subtle px-3 py-1 rounded-full cursor-pointer">{{ form.currency }}</span>
                     <input type="number" v-model="form.amount" class="text-5xl font-light w-48 text-center bg-transparent outline-none" placeholder="0" inputmode="decimal">
                 </div>
             </div>
@@ -56,7 +56,7 @@ export const AddPage = {
                 </label>
 
                 <div v-if="form.type !== '收款'" class="grid grid-cols-4 gap-4 py-2">
-                    <div v-for="cat in filteredCategories" :key="cat.id" @click.stop="form.categoryId = cat.id" :class="form.categoryId === cat.id ? 'bg-[var(--action-primary-bg)] text-white shadow-lg' : 'bg-bg-subtle text-txt-muted'" class="flex flex-col items-center p-3 rounded-2xl transition-all">
+                    <div v-for="cat in filteredCategories" :key="cat.id" @click.stop="form.categoryId = cat.id" :class="form.categoryId === cat.id ? 'bg-[var(--action-primary-bg)] text-white shadow-lg' : 'bg-bg-subtle text-txt-secondary'" class="flex flex-col items-center p-3 rounded-2xl transition-all">
                         <span class="material-symbols-rounded text-xl">{{ cat.icon }}</span>
                         <span class="text-[9px] mt-1 font-medium">{{ cat.name }}</span>
                     </div>
@@ -100,8 +100,8 @@ export const AddPage = {
                         </div>
 
                         <div class="flex bg-white rounded-lg p-1 text-[9px] uppercase tracking-widest">
-                            <button @click="splitMode = 'auto'" :class="splitMode === 'auto' ? 'bg-bg-subtle text-txt-primary' : 'text-txt-muted'" class="flex-1 py-1 rounded">自動平分</button>
-                            <button @click="splitMode = 'manual'" :class="splitMode === 'manual' ? 'bg-bg-subtle text-txt-primary' : 'text-txt-muted'" class="flex-1 py-1 rounded">手動份額</button>
+                            <button @click="splitMode = 'auto'" :class="splitMode === 'auto' ? 'bg-bg-subtle text-txt-primary' : 'text-txt-secondary'" class="flex-1 py-1 rounded">自動平分</button>
+                            <button @click="splitMode = 'manual'" :class="splitMode === 'manual' ? 'bg-bg-subtle text-txt-primary' : 'text-txt-secondary'" class="flex-1 py-1 rounded">手動份額</button>
                         </div>
                         <div class="flex justify-between items-center pt-3 border-t border-bdr-subtle">
                             <span class="text-[10px] text-txt-secondary uppercase">My Share</span>
@@ -110,7 +110,7 @@ export const AddPage = {
                         </div>
                         <div class="flex items-center justify-between border-t border-bdr-subtle pt-3">
                             <span class="text-[10px] text-txt-secondary">對方已當場付清 (不計入欠款)</span>
-                            <input type="checkbox" v-model="form.isAlreadyPaid" class="accent-gray-600">
+                            <input type="checkbox" v-model="form.isAlreadyPaid" class="accent-txt-primary">
                         </div>
                     </div>
                 </div>

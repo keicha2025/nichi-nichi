@@ -1,5 +1,5 @@
 .markdown-body {
-    color: var(--color-text-main);
+    color: var(--txt-primary);
     line-height: 1.8;
     font-size: 15px;
     letter-spacing: 0.02em;
@@ -12,7 +12,7 @@
 .markdown-body h4,
 .markdown-body h5,
 .markdown-body h6 {
-    color: var(--color-primary);
+    color: var(--action-primary-bg);
     font-weight: 500;
     margin-top: 2.5rem;
     margin-bottom: 1.25rem;
@@ -22,13 +22,13 @@
 
 .markdown-body h1 {
     font-size: 1.75rem;
-    border-bottom: 1px solid var(--color-border-medium);
+    border-bottom: 1px solid var(--bdr-main);
     padding-bottom: 0.5rem;
 }
 
 .markdown-body h2 {
     font-size: 1.5rem;
-    border-bottom: 1px solid var(--color-border-medium);
+    border-bottom: 1px solid var(--bdr-main);
     padding-bottom: 0.4rem;
 }
 
@@ -46,7 +46,7 @@
 
 .markdown-body h6 {
     font-size: 0.9rem;
-    color: var(--color-text-secondary);
+    color: var(--txt-secondary);
 }
 
 /* Paragraphs & Spacing */
@@ -61,7 +61,7 @@
 
 /* Links */
 .markdown-body a {
-    color: var(--color-primary);
+    color: var(--action-primary-bg);
     text-decoration: underline;
     text-underline-offset: 4px;
     transition: opacity 0.2s;
@@ -101,8 +101,8 @@
 
 /* Code Blocks */
 .markdown-body pre {
-    background: var(--color-bg-input);
-    border: 1px solid var(--color-border-medium);
+    background: var(--bg-main);
+    border: 1px solid var(--bdr-main);
     border-radius: 1rem;
     padding: 1.25rem;
     overflow-x: auto;
@@ -111,11 +111,11 @@
 }
 
 .markdown-body code {
-    background: var(--color-bg-input);
+    background: var(--bg-main);
     padding: 0.2rem 0.4rem;
     border-radius: 0.4rem;
     font-size: 0.9em;
-    color: var(--color-primary);
+    color: var(--action-primary-bg);
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
@@ -128,9 +128,9 @@
 
 /* Blockquotes */
 .markdown-body blockquote {
-    border-left: 3px solid var(--color-border-medium);
+    border-left: 3px solid var(--bdr-main);
     padding-left: 1rem;
-    color: var(--color-text-secondary);
+    color: var(--txt-secondary);
     font-style: italic;
 }
 
@@ -145,11 +145,11 @@
 .markdown-body th,
 .markdown-body td {
     padding: 0.75rem 1rem;
-    border: 1px solid var(--color-border-medium);
+    border: 1px solid var(--bdr-main);
 }
 
 .markdown-body th {
-    background: var(--color-bg-input);
+    background: var(--bg-main);
     font-weight: 500;
     text-align: left;
 }
@@ -170,9 +170,9 @@
 }
 
 .markdown-body .container-block.tip {
-    background-color: var(--color-bg-input);
-    border-color: var(--color-border-medium);
-    color: var(--color-text-main);
+    background-color: var(--bg-main);
+    border-color: var(--bdr-main);
+    color: var(--txt-primary);
 }
 
 .markdown-body .container-block.warning {
@@ -198,13 +198,13 @@
 /* Misc */
 .markdown-body hr {
     border: 0;
-    border-top: 1px solid var(--color-border-medium);
+    border-top: 1px solid var(--bdr-main);
     margin: 3rem 0;
 }
 
 .markdown-body kbd {
-    background: var(--color-bg-input);
-    border: 1px solid var(--color-border-medium);
+    background: var(--bg-main);
+    border: 1px solid var(--bdr-main);
     border-bottom-width: 3px;
     border-radius: 0.4rem;
     padding: 0.1rem 0.4rem;
@@ -213,8 +213,8 @@
 }
 
 .markdown-body details {
-    background: var(--color-bg-input);
-    border: 1px solid var(--color-border-medium);
+    background: var(--bg-main);
+    border: 1px solid var(--bdr-main);
     border-radius: 1rem;
     padding: 1rem;
 }

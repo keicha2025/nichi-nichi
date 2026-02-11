@@ -15,12 +15,20 @@ body {
     -webkit-tap-highlight-color: transparent;
 }
 
+/* 全域 Checkbox 樣式優化 */
+input[type="checkbox"] {
+    accent-color: var(--action-primary-bg);
+    border: 1px solid var(--color-outline) !important;
+    border-radius: 4px;
+}
+
 .muji-shadow {
-    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.03);
+    box-shadow: 0 10px 30px -5px var(--shadow-color);
 }
 
 .loading-overlay {
-    background: rgba(253, 252, 251, 0.95);
+    background: var(--bg-main);
+    opacity: 0.95;
     backdrop-filter: blur(10px);
 }
 
@@ -39,7 +47,7 @@ body {
 }
 
 .subtle-scrollbar::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: var(--scrollbar-thumb);
     border-radius: 4px;
 }
 
@@ -65,7 +73,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 10px 20px var(--shadow-heavy);
     transition: transform 0.2s active;
 }
 

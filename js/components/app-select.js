@@ -5,10 +5,10 @@ export const AppSelect = {
         <div @click="isOpen = !isOpen" 
              class="w-full bg-bg-subtle px-3 h-9 rounded-xl flex items-center justify-between cursor-pointer border border-transparent transition-all hover:bg-bg-subtle"
              :class="{'bg-white border-bdr-subtle shadow-sm': isOpen}">
-            <span class="text-xs" :class="selectedLabel ? 'text-txt-primary' : 'text-txt-muted'">
+            <span class="text-xs" :class="selectedLabel ? 'text-txt-primary' : 'text-txt-secondary'">
                 {{ selectedLabel || placeholder || '請選擇' }}
             </span>
-            <span class="material-symbols-rounded text-txt-muted text-sm transition-transform duration-300" :class="{'rotate-180': isOpen}">
+            <span class="material-symbols-rounded text-txt-secondary text-sm transition-transform duration-300" :class="{'rotate-180': isOpen}">
                 expand_more
             </span>
         </div>
@@ -21,7 +21,7 @@ export const AppSelect = {
             </div>
             <div v-if="isOpen" 
                  :style="dropdownStyle"
-                 class="fixed z-[70] min-w-[160px] bg-white/80 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20 p-2 animate-spring-up overflow-hidden">
+                 class="fixed z-[70] min-w-[160px] bg-white/80 backdrop-blur-md rounded-2xl shadow-2xl border border-bdr-default p-2 animate-spring-up overflow-hidden">
                 <div class="max-h-[240px] overflow-y-auto no-scrollbar">
                     <div v-for="opt in options" :key="opt.value"
                          @click="selectOption(opt)"

@@ -6,17 +6,17 @@ export const SearchBar = {
     },
     template: `
     <!-- Transaction Filter Bar -->
-    <div class="sticky top-0 z-40 bg-[var(--bg-main)]/95 backdrop-blur-sm py-2">
+    <div class="py-2">
         <div class="flex space-x-2">
             <!-- Search Input -->
             <div class="flex-1 bg-white rounded-xl flex items-center px-3 h-9 shadow-sm border border-bdr-subtle transition-shadow focus-within:shadow-md">
-                <span class="material-symbols-rounded text-txt-muted text-lg">search</span>
+                <span class="material-symbols-rounded text-txt-secondary text-lg">search</span>
                 <input 
                     type="text" 
                     :value="modelValue.keyword"
                     @input="$emit('update:modelValue', { ...modelValue, keyword: $event.target.value })"
                     placeholder="搜尋..." 
-                    class="w-full text-xs ml-2 outline-none text-txt-primary placeholder-gray-300 bg-transparent"
+                    class="w-full text-xs ml-2 outline-none text-txt-primary placeholder-txt-muted bg-transparent"
                 >
             </div>
             

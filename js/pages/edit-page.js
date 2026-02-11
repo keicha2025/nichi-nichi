@@ -186,7 +186,7 @@ export const EditPage = {
                 <button v-if="isReadOnly" @click="isReadOnly = false" class="w-full bg-[var(--action-primary-bg)] text-white py-5 rounded-2xl text-[10px] font-medium tracking-[0.4em] uppercase shadow-lg">開始編輯</button>
                 <template v-else>
                     <button @click="prepareAndSubmit" :disabled="loading" class="w-full bg-[var(--action-primary-bg)] text-white py-5 rounded-2xl text-[10px] font-medium tracking-[0.4em] uppercase shadow-lg active:scale-95 transition-all">更新紀錄</button>
-                    <button @click="$emit('delete-item', form.row)" :disabled="loading" class="w-full text-red-300 py-2 text-[10px] font-medium tracking-[0.4em] uppercase">刪除此筆資料</button>
+                    <button @click="$emit('delete-item', form.row)" :disabled="loading" class="w-full border border-bdr-outline text-danger py-3 rounded-2xl text-[10px] font-medium tracking-[0.4em] uppercase active:bg-bg-subtle transition-all">刪除此筆資料</button>
                 </template>
             </div>
         </div>

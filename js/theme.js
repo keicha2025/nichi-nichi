@@ -19,15 +19,8 @@ export const Theme = {
         warning: 'var(--p-warn-500)',
         info: 'var(--p-info-500)',
 
-        // Chart Palette (Original remote colors - first color is brand for highest amount)
-        chart: [
-            '#4A4A4A', // Brand color for highest amount
-            '#7A7A7A',
-            '#9A9A9A',
-            '#BDBDBD',
-            '#D1C7BD',
-            '#E5E5E5'
-        ]
+        // Chart Palette (動態由 CSS 變數生成的 8 色調色板)
+        chart: Array.from({ length: 8 }, (_, i) => `var(--chart-color-${i + 1})`)
     },
     fonts: {
         main: '"Noto Sans TC", sans-serif'
@@ -88,9 +81,9 @@ export const Theme = {
     },
 
     /**
-     * 獲取解析後的圖表配色陣列
+     * 獲取解析後的圖表配色陣列 (8 色)
      */
     getChartPalette() {
-        return this.colors.chart;
+        return this.colors.chart.map(c => this.resolveColor(c));
     }
 };

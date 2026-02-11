@@ -52,7 +52,7 @@ export const EditSharedLinksPage = {
                     <span class="text-xs text-txt-primary">排除所有專案花費</span>
                     <!-- Custom Checkbox (Stats Page Style) -->
                     <div class="w-4 h-4 rounded border flex items-center justify-center transition-colors shadow-sm"
-                         :class="form.excludeProjectExpenses ? 'bg-gray-700 border-gray-700' : 'bg-white border-bdr-default'">
+                         :class="form.excludeProjectExpenses ? 'bg-gray-700 border-gray-700' : 'bg-white border-bdr-outline'">
                         <span v-if="form.excludeProjectExpenses" class="material-symbols-rounded text-white text-[10px]">check</span>
                     </div>
                 </div>
@@ -66,7 +66,7 @@ export const EditSharedLinksPage = {
                  <div class="flex items-center justify-between p-2 rounded-xl hover:bg-bg-subtle transition-colors cursor-pointer" @click="form.hideFriendNames = !form.hideFriendNames">
                     <span class="text-xs text-txt-primary">隱藏朋友名稱 (顯示為 "友")</span>
                     <div class="w-4 h-4 rounded border flex items-center justify-center transition-colors shadow-sm"
-                         :class="form.hideFriendNames ? 'bg-gray-700 border-gray-700' : 'bg-white border-bdr-default'">
+                         :class="form.hideFriendNames ? 'bg-gray-700 border-gray-700' : 'bg-white border-bdr-outline'">
                         <span v-if="form.hideFriendNames" class="material-symbols-rounded text-white text-[10px]">check</span>
                     </div>
                 </div>
@@ -76,7 +76,7 @@ export const EditSharedLinksPage = {
                      @click="form.hideProjectNames = !form.hideProjectNames">
                     <span class="text-xs text-txt-primary">隱藏專案名稱 (顯示為 "專案 代號")</span>
                     <div class="w-4 h-4 rounded border flex items-center justify-center transition-colors shadow-sm"
-                         :class="form.hideProjectNames ? 'bg-gray-700 border-gray-700' : 'bg-white border-bdr-default'">
+                         :class="form.hideProjectNames ? 'bg-gray-700 border-gray-700' : 'bg-white border-bdr-outline'">
                         <span v-if="form.hideProjectNames" class="material-symbols-rounded text-white text-[10px]">check</span>
                     </div>
                 </div>

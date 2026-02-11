@@ -5,14 +5,14 @@ export const OverviewPage = {
     <section class="space-y-6 py-4 animate-in fade-in pb-10">
         <!-- 1. 本日支出 (混合總額邏輯，統一為 JPY) -->
         <!-- 1. 本日支出 (混合總額邏輯) -->
-        <div class="bg-white p-6 rounded-[2rem] muji-shadow border border-gray-50 space-y-4">
+        <div class="bg-white p-6 rounded-[2rem] muji-shadow border border-bdr-default space-y-4">
 
             <div class="flex justify-between items-center px-2">
                 <div class="flex flex-col">
-                    <p class="text-[10px] text-gray-400 uppercase tracking-widest">{{ selectedDateLabel }} 支出 ({{ baseCurrency }})</p>
-                    <h2 class="text-3xl font-light text-gray-700 mt-1">{{ getCurrencySymbol }} {{ formatNumber(displayAmount) }}</h2>
+                    <p class="text-[10px] text-txt-secondary uppercase tracking-widest">{{ selectedDateLabel }} 支出 ({{ baseCurrency }})</p>
+                    <h2 class="text-3xl font-light text-txt-primary mt-1">{{ getCurrencySymbol }} {{ formatNumber(displayAmount) }}</h2>
                 </div>
-                <button @click="isMyShareOnly = !isMyShareOnly" class="text-[9px] px-3 py-1.5 rounded-full bg-gray-50 text-gray-400 border border-gray-100 active:bg-gray-200 transition-all uppercase tracking-widest">
+                <button @click="isMyShareOnly = !isMyShareOnly" class="text-[9px] px-3 py-1.5 rounded-full bg-bg-subtle text-txt-secondary border border-bdr-default active:bg-bg-main transition-all uppercase tracking-widest">
                     {{ isMyShareOnly ? '我的份額' : '混合總額' }}
                 </button>
             </div>
@@ -23,35 +23,35 @@ export const OverviewPage = {
 
         <!-- 2. 月度與總統計 -->
         <div class="grid grid-cols-2 gap-3">
-            <div class="bg-white p-5 rounded-[2rem] muji-shadow border border-gray-50 flex flex-col justify-center space-y-1">
-                <span class="text-[9px] text-gray-400 font-medium uppercase tracking-widest">本月日幣支出</span>
-                <span class="text-lg font-light text-gray-700">¥ {{ formatNumber(monthlyJPYTotal) }}</span>
+            <div class="bg-white p-5 rounded-[2rem] muji-shadow border border-bdr-default flex flex-col justify-center space-y-1">
+                <span class="text-[9px] text-txt-secondary font-medium uppercase tracking-widest">本月日幣支出</span>
+                <span class="text-lg font-light text-txt-secondary">¥ {{ formatNumber(monthlyJPYTotal) }}</span>
             </div>
-            <div class="bg-white p-5 rounded-[2rem] muji-shadow border border-gray-50 flex flex-col justify-center space-y-1">
-                <span class="text-[9px] text-gray-400 font-medium uppercase tracking-widest">本月台幣支出</span>
-                <span class="text-lg font-light text-gray-700">$ {{ formatNumber(monthlyTWDTotal) }}</span>
+            <div class="bg-white p-5 rounded-[2rem] muji-shadow border border-bdr-default flex flex-col justify-center space-y-1">
+                <span class="text-[9px] text-txt-secondary font-medium uppercase tracking-widest">本月台幣支出</span>
+                <span class="text-lg font-light text-txt-secondary">$ {{ formatNumber(monthlyTWDTotal) }}</span>
             </div>
-            <div class="bg-white p-5 rounded-[2rem] muji-shadow border border-gray-50 flex flex-col justify-center space-y-1">
-                <span class="text-[9px] text-gray-400 font-medium uppercase tracking-widest">總支出 (全期間)</span>
-                <span class="text-lg font-light text-gray-700">{{ getCurrencySymbol }} {{ formatNumber(totalOutflowCombined) }}</span>
-                <span class="text-[8px] text-gray-300 font-bold">{{ baseCurrency }}</span>
+            <div class="bg-white p-5 rounded-[2rem] muji-shadow border border-bdr-default flex flex-col justify-center space-y-1">
+                <span class="text-[9px] text-txt-secondary font-medium uppercase tracking-widest">總支出 (全期間)</span>
+                <span class="text-lg font-light text-txt-secondary">{{ getCurrencySymbol }} {{ formatNumber(totalOutflowCombined) }}</span>
+                <span class="text-[8px] text-txt-muted font-bold">{{ baseCurrency }}</span>
             </div>
-             <div class="bg-white p-5 rounded-[2rem] muji-shadow border border-gray-50 flex flex-col justify-center space-y-1">
-                <span class="text-[9px] text-gray-400 font-medium uppercase tracking-widest">總收入 (全期間)</span>
-                <span class="text-lg font-light text-gray-700">{{ getCurrencySymbol }} {{ formatNumber(totalIncome) }}</span>
-                <span class="text-[8px] text-gray-300 font-bold">{{ baseCurrency }}</span>
+             <div class="bg-white p-5 rounded-[2rem] muji-shadow border border-bdr-default flex flex-col justify-center space-y-1">
+                <span class="text-[9px] text-txt-secondary font-medium uppercase tracking-widest">總收入 (全期間)</span>
+                <span class="text-lg font-light text-txt-secondary">{{ getCurrencySymbol }} {{ formatNumber(totalIncome) }}</span>
+                <span class="text-[8px] text-txt-muted font-bold">{{ baseCurrency }}</span>
             </div>
         </div>
 
         <!-- 4. 淨欠款狀態 -->
-        <div class="bg-white p-6 rounded-2xl muji-shadow border border-gray-50 flex justify-between items-center active:scale-[0.98] transition-all" @click="$emit('go-to-history', { mode: 'debt' })">
+        <div class="bg-white p-6 rounded-2xl muji-shadow border border-bdr-default flex justify-between items-center active:scale-[0.98] transition-all" @click="$emit('go-to-history', { mode: 'debt' })">
                 <div>
-                    <p class="text-[10px] text-gray-400 font-medium uppercase tracking-widest">債務資料 ({{ baseCurrency }})</p>
-                    <p class="text-xl font-light mt-1 text-gray-700">
+                    <p class="text-[10px] text-txt-secondary font-medium uppercase tracking-widest">債務資料 ({{ baseCurrency }})</p>
+                    <p class="text-xl font-light mt-1 text-txt-secondary">
                         {{ getCurrencySymbol }} {{ formatNumber(debtDisplayValue) }}
                     </p>
                 </div>
-            <span class="material-symbols-rounded text-gray-200">arrow_forward_ios</span>
+            <span class="material-symbols-rounded text-txt-muted">arrow_forward_ios</span>
         </div>
     </section>
     `,
@@ -200,7 +200,7 @@ export const OverviewPage = {
             }
 
             const primaryColor = Theme.resolveColor('--action-primary-bg', '#424242');
-            const secondaryColor = Theme.resolveColor('--p-brand-200', '#D6D6D6');
+            const secondaryColor = Theme.resolveColor('--chart-color-6', '#E5E5E5');
 
             this.barChart = new Chart(ctx, {
                 type: 'bar',
@@ -220,7 +220,7 @@ export const OverviewPage = {
                         x: {
                             grid: { display: false },
                             border: { display: false },
-                            ticks: { font: { size: 10 }, padding: 4, color: '#666' }
+                            ticks: { font: { size: 10 }, padding: 4, color: Theme.resolveColor('--chart-legend-text') }
                         }
                     },
                     layout: { padding: { bottom: 0, left: 10, right: 10, top: 5 } },

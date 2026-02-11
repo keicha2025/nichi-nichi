@@ -1,110 +1,60 @@
 /* 
- * Design Tokens
- * 定義網站的全域設計變數，包含顏色、字體等。
- */
-
-/* 
- * Design Tokens v1.0
- * 定義網站的設計系統，包含 Primitive (基礎) 與 Semantic (語義) 層級。
+ * Design Tokens - Default Theme
+ * 此檔案僅定義預設主題的核心語義變數。
  */
 
 :root {
-    /* ==========================================================================
-       1. Primitive Tokens (基礎色階) - 單一數據源
-       ========================================================================== */
-
-    /* Neutrals (灰色系) */
-    --p-gray-50: #F9FAFB;
-    --p-gray-100: #F3F4F6;
-    --p-gray-200: #E5E7EB;
-    --p-gray-300: #D1D5DB;
-    --p-gray-400: #9CA3AF;
-    --p-gray-500: #6B7280;
-    --p-gray-600: #4B5563;
-    --p-gray-700: #374151;
-    --p-gray-800: #1F2937;
-    --p-gray-900: #111827;
-
-    /* Brand (品牌色系 - 暖色灰階步進) */
-    --p-brand-50: #F7F7F7;
-    --p-brand-100: #EBEBEB;
-    --p-brand-200: #D6D6D6;
-    --p-brand-300: #B3B3B3;
-    --p-brand-400: #8C8C8C;
-    --p-brand-500: #4A4A4A;
-    /* Primary */
-    --p-brand-600: #424242;
-    --p-brand-700: #333333;
-    --p-brand-800: #262626;
-    --p-brand-900: #1A1A1A;
-
-    /* Functional (功能色系) */
-    --p-success-100: #F0FDF4;
-    --p-success-500: #22C55E;
-    --p-success-700: #15803D;
-
-    --p-danger-100: #FEF2F2;
-    --p-danger-500: #EF4444;
-    --p-danger-700: #B91C1C;
-
-    --p-warn-100: #FFFBEB;
-    --p-warn-500: #F59E0B;
-    --p-warn-700: #B45309;
-
-    --p-info-100: #EFF6FF;
-    --p-info-500: #3B82F6;
-    --p-info-700: #1D4ED8;
-
-    --p-white: #FFFFFF;
-
-    /* ==========================================================================
-       2. Semantic Tokens (功能語義) - 開發引用
-       ========================================================================== */
-
-    /* Core Roles (核心角色) */
-    --txt-primary: var(--p-gray-900);
-    --txt-secondary: var(--p-gray-500);
-    --txt-muted: var(--p-gray-400);
-    --txt-on-brand: var(--p-white);
-
+    /* 1. 核心環境色 */
     --bg-main: #FDFCFB;
-    --bg-canvas: var(--p-white);
-    --bg-subtle: var(--p-gray-50);
+    /* 全域主背景色 */
+    --bg-subtle: #F9FAFB;
+    /* 微妙背景色 (用於輸入框、按鈕底色) */
+    --bg-canvas: #FFFFFF;
+    /* 卡片、畫布背景 */
 
-    --bdr-default: var(--p-gray-200);
-    --bdr-subtle: var(--p-gray-50);
+    /* 2. 核心文字色 */
+    --txt-primary: #424242;
+    --txt-secondary: #6B7280;
+    /* 次要文字、描述 */
 
-    /* Interaction Roles (互動狀態) */
-    --action-primary-bg: var(--p-brand-500);
-    --action-primary-hover: var(--p-brand-700);
-    --action-primary-text: var(--p-white);
-    --focus-ring: var(--p-info-500);
+    /* 3. 品牌色 (主動作) */
+    --action-primary-bg: #424242;
+    /* 品牌色 (主按鈕) (對應原本 p-brand-600) */
+    --action-primary-text: #FFFFFF;
+    --action-primary-hover: #333333;
 
-    /* Legacy Mappings (保持相容性，後續逐步替換) */
-    --color-primary: var(--p-brand-500);
-    --color-bg-main: var(--bg-main);
-    --color-bg-card: var(--bg-canvas);
-    --color-text-main: var(--txt-primary);
-    --color-text-secondary: var(--txt-secondary);
-    --color-danger: var(--p-danger-100);
+    /* 4. 裝飾與特效 (由 style.css 提取) */
+    --shadow-color: rgba(0, 0, 0, 0.03);
+    /* 陰影色 */
+    --shadow-heavy: rgba(0, 0, 0, 0.15);
+    /* 按鈕/疊加物陰影 */
+    --scrollbar-thumb: rgba(0, 0, 0, 0.1);
+    /* 捲軸軌道顏色 */
 
-    /* --- Chart Colors (圖表色系 - 依照明度從深到淺排列，確保視覺層級正確) --- */
-    --chart-color-1: var(--p-brand-600);
-    /* 最深品牌色 */
-    --chart-color-2: var(--p-brand-500);
-    /* 品牌色 */
-    --chart-color-3: var(--p-brand-400);
-    --chart-color-4: var(--p-brand-300);
-    --chart-color-5: var(--p-brand-200);
-    --chart-color-6: var(--p-gray-300);
-    /* 最淺備援色 */
-}
+    /* 5. 統計圖表 8 色 (由深至淺，連動品牌色) */
+    --chart-color-1: #424242;
+    /* 主品牌色 */
+    --chart-color-2: #7a7a7a;
+    --chart-color-3: #9a9a9a;
+    --chart-color-4: #B3B3B3;
+    --chart-color-5: #bdbdbd;
+    --chart-color-6: #e5e5e5;
+    --chart-color-7: #d3c8bc;
+    --chart-color-8: #ecdfd1;
 
-/* data-theme='dark' (預留暗色模式) */
-[data-theme='dark'] {
-    --txt-primary: var(--p-gray-50);
-    --txt-secondary: var(--p-gray-400);
-    --bg-main: var(--p-gray-900);
-    --bg-canvas: var(--p-gray-800);
-    --bdr-default: var(--p-gray-700);
+    /* 6. 狀態語義 (強制連動基礎色，不定義獨立功能色) */
+    --color-danger: var(--action-primary-bg);
+    /* 用品牌深色顯示錯誤，維持風格一致 */
+    --color-success: var(--txt-secondary);
+    --color-border: #FFFFFF;
+    /* 主要是卡片邊框 */
+    --bdr-main: #EEEEEE;
+    /* 分割線、表單邊框 */
+    --color-outline: #e9eaeb;
+    /* 空心按鈕、Checkbox 邊框色 */
+
+    /* 圖表 UI 輔助 (連動核心色) */
+    --chart-txt-label: var(--txt-secondary);
+    --chart-txt-value: var(--action-primary-bg);
+    --chart-legend-text: var(--txt-secondary);
 }

@@ -15,7 +15,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="日日記">
-    <link rel="apple-touch-icon" href="./kakei.png">
+    <link rel="apple-touch-icon" href="./appicon.png">
 
     <!-- 外部資源 -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
@@ -28,18 +28,19 @@
                         txt: {
                             primary: 'var(--txt-primary)',
                             secondary: 'var(--txt-secondary)',
-                            muted: 'var(--txt-muted)',
-                            onbrand: 'var(--txt-on-brand)'
+                            muted: 'var(--txt-secondary)',
+                            onbrand: 'var(--action-primary-text)'
                         },
                         bg: {
                             main: 'var(--bg-main)',
                             canvas: 'var(--bg-canvas)',
                             subtle: 'var(--bg-subtle)',
-                            default: 'var(--bg-main)' // For backward compatibility
+                            default: 'var(--bg-main)'
                         },
                         bdr: {
-                            default: 'var(--bdr-default)',
-                            subtle: 'var(--bdr-subtle)'
+                            default: 'var(--color-border)',
+                            subtle: 'var(--shadow-color)',
+                            outline: 'var(--color-outline)'
                         },
                         action: {
                             primary: {
@@ -54,8 +55,14 @@
                             3: 'var(--chart-color-3)',
                             4: 'var(--chart-color-4)',
                             5: 'var(--chart-color-5)',
-                            6: 'var(--chart-color-6)'
-                        }
+                            6: 'var(--chart-color-6)',
+                            7: 'var(--chart-color-7)',
+                            8: 'var(--chart-color-8)'
+                        },
+                        danger: 'var(--color-danger)',
+                        success: 'var(--color-success)',
+                        warning: 'var(--color-warning)',
+                        info: 'var(--color-info)'
                     }
                 }
             }
@@ -95,13 +102,13 @@
             display: none;
         }
     </style>
-    <link rel="icon" href="kakei.png" type="image/png">
+    <link rel="icon" href="appicon.ico" type="image/x-icon">
 </head>
 
 <body>
     <div id="app" class="max-w-md mx-auto min-h-screen relative" v-cloak>
         <div v-if="loading" class="fixed inset-0 z-[100] loading-overlay flex flex-col items-center justify-center">
-            <div class="w-8 h-8 border-2 border-bdr-subtle border-t-gray-500 rounded-full animate-spin mb-4"></div>
+            <div class="w-8 h-8 border-2 border-bdr-subtle border-t-txt-primary rounded-full animate-spin mb-4"></div>
             <p class="text-[10px] tracking-[0.2em] text-txt-secondary uppercase font-light">Syncing...</p>
         </div>
 
@@ -123,7 +130,8 @@
 
             <history-page v-if="currentTab === 'history'" :transactions="filteredTransactions" :categories="categories"
                 :payment-methods="paymentMethods" :projects="projects" :fx-rate="fxRate" @edit-item="handleEditItem"
-                @update-filter="Object.assign(historyFilter, $event)"></history-page>
+                @update-filter="Object.assign(historyFilter, $event)"
+                @delete-multiple="handleDeleteMultiple"></history-page>
 
             <add-page v-if="currentTab === 'add'" :form="form" :categories="categories"
                 :payment-methods="paymentMethods" :friends="friends" :projects="projects" :loading="loading"

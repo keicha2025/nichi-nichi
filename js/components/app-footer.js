@@ -5,7 +5,7 @@ export const AppFooter = {
         <div class="max-w-md mx-auto flex items-center justify-between">
             <button v-for="tab in tabs" :key="tab" @click="$emit('update:currentTab', tab)"
                     v-show="shouldShowTab(tab)"
-                    :class="[currentTab === tab ? 'text-txt-primary' : 'text-txt-muted', tab === 'add' ? 'add-btn-wrap' : 'nav-item']"
+                    :class="[currentTab === tab ? 'text-txt-primary' : 'text-txt-secondary', tab === 'add' ? 'add-btn-wrap' : 'nav-item']"
                     class="transition-colors duration-200">
                 <div v-if="tab === 'add'" class="add-btn active:scale-90 transition-transform shadow-md">
                     <span class="material-symbols-rounded !text-3xl">add</span>

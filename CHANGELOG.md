@@ -522,4 +522,61 @@ Added comprehensive debug logging throughout the category save flow for easier t
 - Updated `js/components/app-header.js` with `logoError` state and `@error` handling.
 - Created `logo-preview.html` (and historical versions) for identity preview.
 - Finalized SVG files in the root directory.
-- 建立 Logo 預覽頁面並在組件中加入錯誤處理邏輯。
+---
+
+## [2026-02-13T10:45:00Z] Semantic Color System Re-integration & Design Consistency
+
+### Features & Improvements
+- **100% Semantic Color Linking**: Fully refactored the application's UI to remove all hard-coded Tailwind gray/accent classes. Every page now strictly adheres to the semantic tokens defined in `design-tokens.css`.
+    - **Overview Page**: Standardized statistics cards, chart navigation buttons, and net debt displays. Updated bar charts to fetch colors directly from CSS variables.
+    - **History Page**: Standardized transaction list typography, payment/project icons, and group headers.
+    - **Add & Edit Pages**: Updated input backgrounds, currency toggles, multi-payer buttons, and selection states to use the centralized color palette.
+    - **Settings Page**: Fully standardized the management interface including category/payment editors, project management, and backup/import UI.
+    - **Component Library**: Standardized `AppHeader`, `AppFooter`, `SearchBar`, and the newly created `AppSelect` component.
+  - 全面語義化色彩重構：全站 100% 移除硬編碼顏色類名，所有頁面與組件現已完全連動至 `design-tokens.css`。
+
+- **Enhanced Design Tokens**: Introduced `--bdr-main` to `design-tokens.css` for standardized divider and input border styling. Defined `--chart-color-X` series for consistent data visualization.
+  - 擴展設計標記：新增 `--bdr-main` 通用邊框標記，並定義標準圖表配色序列。
+
+- **Markdown Theme Alignment**: Updated `css/markdown-body.css` to use the same semantic tokens as the rest of the application, ensuring documentation and logs match the "Muji-style" aesthetic.
+  - Markdown 樣式同步：將文檔渲染樣式完全連動至系統語義色彩，確保一致的高質感視覺風格。
+
+- **Loading & Performance UI**: Standardized the application loading spinner and sync status indicators to follow the brand identity.
+  - 載入介面標準化：更新全站載入動畫與同步狀態提示，使其與品牌識別一致。
+
+### Technical Details
+- Refactored `js/pages/*.js` for standardized Tailwind class usage.
+- Updated `js/components/*.js` (Header, Footer, SearchBar, AppSelect).
+- Modified `css/design-tokens.css` and `css/markdown-body.css`.
+- Updated `index.html` spinner and Tailwind configuration.
+- 核心技術更新：重構全站 Page 與 Component 組件，並優化 CSS 標記系統。
+
+- **Typography & UI Accessibility Tweak**: 
+    - Reverted `txt-primary` to `#424242` for better contrast on titles, while keeping `txt-secondary` for descriptions.
+    - Adjusted Payment Method items in Settings to use `txt-secondary` and normal font weight for a more balanced look.
+    - Defined `--color-outline` and `bdr-outline` for hollow UI elements.
+    - Fixed invisible borders on "Delete", "Import", "Logout", and "Google Login" buttons.
+    - Restored visibility for all Checkboxes (Stats Page and Shared Links) by linking them to the new outline color.
+    - Added a global CSS rule to ensure native checkboxes always have a visible border.
+  - 文字與介面易用性優化：將支付方式管理文字改為次要顏色與一般字重，並修復空心元件與核取方塊的邊框顯性，確保視覺一致性。
+
+- **Overview Hierarchy Enhancement**: 
+    - Optimized color hierarchy on the Overview page: only Today's Expense remains in `txt-primary` to draw focus, while all other statistics (Monthly, All-time, Debt) are changed to `txt-secondary`.
+  - 總覽頁面層次優化：優化金額顯示顏色層級，僅保留頂部「本日支出」為主色，其餘數據（本月、總額、債務）均改為次要顏色以強化視覺導向。
+
+- **History Page UI Tweak**: Removed sticky positioning from the search bar on the History page to provide a more natural scrolling experience.
+  - 明細頁面優化：取消搜尋列的固定（sticky）定位，使其隨頁面自然滾動。
+
+- **History Batch Editing & Interaction Fixes**:
+    - Implemented a long-press interaction to trigger multi-selection with a protection flag to prevent accidental de-selection.
+    - Added a "Select All / Clear All" toggle logic for faster data management.
+    - Updated UI: Replaced the cancel icon with a "取消" text button and improved spacing.
+    - Fixed layout issues: Added `overflow-x-hidden` and optimized animations to prevent horizontal scrolling on mobile.
+    - Adjusted Floating Action Bar (Approach A) position to `bottom-28` for better visibility above the app footer.
+    - Optimized database performance using Firestore batch writes for multi-deletion.
+  - 明細頁面批次操作與交互修復：新增長按多選保護機制，防止手放開時誤觸取消；加入「全選/取消全選」切換；優化行動裝置排版防止溢出，並將刪除按鈕上移避免被遮擋。
+
+- **Global Branding Update**:
+    - Replaced the legacy app icon (`kakei.png`) with the new visual identity (`appicon.png` and `appicon.ico`).
+    - Updated `index.html` (favicon & Apple Touch Icon) and `manifest.json` (PWA icons) to ensure cross-platform consistency.
+  - 全局品牌更新：將舊有的 App 圖示更換為全新的設計（appicon.png/ico），並同步更新網頁與 PWA 設定。

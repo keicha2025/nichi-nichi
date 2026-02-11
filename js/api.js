@@ -242,10 +242,6 @@ export const API = {
         }
 
         if (payload.action === 'delete') {
-            // Delete Transaction
-            // We need ID. The gas app used 'row'. We must use 'id'.
-            // If payload has no ID, we can't delete from Firestore reliably unless we passed it.
-            // modify app.js to pass ID.
             if (!payload.id) throw new Error("Missing ID for deletion");
             await deleteDoc(doc(db, 'users', uid, 'transactions', payload.id));
             return true;
@@ -293,6 +289,24 @@ export const API = {
         await updateDoc(userRef, updates);
 
         console.log('[DEBUG API] Firestore updateDoc completed successfully');
+        return true;
+    },
+
+    async deleteMultipleTransactions(ids) {
+        const user = auth.currentUser;
+        if (!user) throw new Error("Not logged in");
+        const uid = user.uid;
+
+        const chunkSize = 450;
+        for (let i = 0; i < ids.length; i += chunkSize) {
+            const batch = writeBatch(db);
+            const chunk = ids.slice(i, i + chunkSize);
+            chunk.forEach(id => {
+                const ref = doc(db, 'users', uid, 'transactions', id);
+                batch.delete(ref);
+            });
+            await batch.commit();
+        }
         return true;
     },
 

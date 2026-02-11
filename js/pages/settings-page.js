@@ -14,7 +14,7 @@ export const SettingsPage = {
                 <!-- 1. 使用者名稱 -->
                 <div class="flex items-center justify-between px-2">
                     <span class="text-xs text-txt-secondary">使用者名稱</span>
-                    <input type="text" v-model="localConfig.user_name" @change="debouncedUpdate" class="text-right text-xs bg-bg-subtle px-3 py-2 rounded-xl outline-none w-32 placeholder-gray-300">
+                    <input type="text" v-model="localConfig.user_name" @change="debouncedUpdate" class="text-right text-xs bg-bg-subtle px-3 py-2 rounded-xl outline-none w-32 placeholder-txt-muted">
                 </div>
 
                 <!-- 2. 當前匯率 -->
@@ -33,7 +33,7 @@ export const SettingsPage = {
 
              <!-- 清除訪客資料 -->
              <div v-if="appMode === 'GUEST'" class="pt-2 border-t border-bdr-subtle">
-                <button @click="$emit('clear-guest-data')" class="w-full text-red-400 text-[10px] tracking-widest py-2 rounded-lg transition-colors">
+                <button @click="$emit('clear-guest-data')" class="w-full text-danger text-[10px] tracking-widest py-2 rounded-lg transition-colors">
                     清除訪客資料
                 </button>
             </div>
@@ -52,7 +52,7 @@ export const SettingsPage = {
                         <button @click="cancelCategoryEdit" class="text-txt-muted hover:text-txt-secondary">
                             <span class="material-symbols-rounded text-lg">close</span>
                         </button>
-                        <button @click="saveCategoryEdit" class="text-txt-muted hover:text-slate-600 transition-colors">
+                        <button @click="saveCategoryEdit" class="text-txt-muted hover:text-txt-primary transition-colors">
                             <span class="material-symbols-rounded text-lg">check_circle</span>
                         </button>
                     </template>
@@ -72,7 +72,7 @@ export const SettingsPage = {
                              <span class="material-symbols-rounded text-xl">{{ cat.icon }}</span>
                         </button>
                         <input type="text" v-model="cat.name" class="bg-transparent text-xs font-medium text-txt-primary w-full outline-none">
-                        <button @click="deleteItem('categories', cat.id)" class="text-txt-muted hover:text-slate-600 px-2 transition-colors">
+                        <button @click="deleteItem('categories', cat.id)" class="text-txt-muted hover:text-txt-primary px-2 transition-colors">
                             <span class="material-symbols-rounded text-sm">remove_circle</span>
                         </button>
                     </div>
@@ -100,7 +100,7 @@ export const SettingsPage = {
                         <button @click="cancelCategoryEdit" class="text-txt-muted hover:text-txt-secondary">
                             <span class="material-symbols-rounded text-lg">close</span>
                         </button>
-                        <button @click="saveCategoryEdit" class="text-txt-muted hover:text-slate-600 transition-colors">
+                        <button @click="saveCategoryEdit" class="text-txt-muted hover:text-txt-primary transition-colors">
                             <span class="material-symbols-rounded text-lg">check_circle</span>
                         </button>
                     </template>
@@ -120,7 +120,7 @@ export const SettingsPage = {
                              <span class="material-symbols-rounded text-xl">{{ cat.icon }}</span>
                         </button>
                         <input type="text" v-model="cat.name" class="bg-transparent text-xs font-medium text-txt-primary w-full outline-none">
-                        <button @click="deleteItem('categories', cat.id)" class="text-txt-muted hover:text-slate-600 px-2 transition-colors">
+                        <button @click="deleteItem('categories', cat.id)" class="text-txt-muted hover:text-txt-primary px-2 transition-colors">
                             <span class="material-symbols-rounded text-sm">remove_circle</span>
                         </button>
                     </div>
@@ -148,9 +148,9 @@ export const SettingsPage = {
                         <button @click="cancelPaymentEdit" class="text-txt-muted hover:text-txt-secondary">
                             <span class="material-symbols-rounded text-lg">close</span>
                         </button>
-                        <button @click="savePaymentEdit" class="text-txt-muted hover:text-slate-600 transition-colors">
-                            <span class="material-symbols-rounded text-lg">check_circle</span>
-                        </button>
+                         <button @click="savePaymentEdit" class="text-txt-muted hover:text-txt-primary transition-colors">
+                             <span class="material-symbols-rounded text-lg">check_circle</span>
+                         </button>
                     </template>
                     <button v-else @click="togglePaymentEdit" class="text-txt-secondary hover:text-txt-primary transition-colors">
                         <span class="material-symbols-rounded text-lg">edit</span>
@@ -169,10 +169,10 @@ export const SettingsPage = {
                         <button @click="openIconPicker('payment', pm.id)" class="w-10 h-10 aspect-square bg-white rounded-xl flex items-center justify-center text-txt-secondary shadow-sm border border-bdr-subtle flex-shrink-0">
                              <span class="material-symbols-rounded text-xl">{{ pm.icon || 'payments' }}</span>
                         </button>
-                        <input type="text" v-model="pm.name" class="bg-transparent text-xs font-medium text-txt-primary w-full outline-none">
-                        <button @click="deleteItem('paymentMethods', pm.id)" class="text-txt-muted hover:text-slate-600 px-2 transition-colors">
-                            <span class="material-symbols-rounded text-sm">remove_circle</span>
-                        </button>
+                        <input type="text" v-model="pm.name" class="bg-transparent text-xs text-txt-secondary w-full outline-none">
+                         <button @click="deleteItem('paymentMethods', pm.id)" class="text-txt-muted hover:text-txt-primary px-2 transition-colors">
+                             <span class="material-symbols-rounded text-sm">remove_circle</span>
+                         </button>
                     </div>
                 </template>
                 <!-- 預覽模式 -->
@@ -180,7 +180,7 @@ export const SettingsPage = {
                     <div class="grid grid-cols-2 gap-2 px-2">
                          <div v-for="pm in sortedPaymentMethods" :key="'view-pm-'+pm.id" class="flex items-center space-x-3 p-3 rounded-xl bg-bg-subtle">
                              <span class="material-symbols-rounded text-base text-txt-secondary">{{ pm.icon || 'payments' }}</span>
-                             <span class="text-xs text-txt-primary font-medium">{{ pm.name }}</span>
+                             <span class="text-xs text-txt-secondary">{{ pm.name }}</span>
                          </div>
                     </div>
                 </template>
@@ -205,9 +205,9 @@ export const SettingsPage = {
                     <span class="text-txt-muted">~</span>
                     <input type="date" v-model="newProject.endDate" class="bg-white px-3 py-2 rounded-lg text-xs outline-none text-txt-secondary w-full">
                 </div>
-                <button @click="createProject" :disabled="projectSaving" class="w-full bg-gray-800 text-white py-2 rounded-lg text-[10px] tracking-widest uppercase">
-                    {{ projectSaving ? '新增中...' : '新增計畫' }}
-                </button>
+                 <button @click="createProject" :disabled="projectSaving" class="w-full bg-action-primary-bg text-white py-2 rounded-lg text-[10px] tracking-widest uppercase">
+                     {{ projectSaving ? '新增中...' : '新增計畫' }}
+                 </button>
             </div>
 
             <div class="space-y-3">
@@ -225,9 +225,9 @@ export const SettingsPage = {
         </div>
 
         <!-- 2. 朋友名單管理 -->
-        <div class="bg-white p-6 rounded-[2rem] muji-shadow border border-bdr-subtle space-y-4">
-            <h3 class="text-[10px] text-txt-secondary uppercase tracking-[0.2em] font-medium px-2">Friends List</h3>
-            <div class="grid grid-cols-1 divide-y divide-gray-50">
+         <div class="bg-white p-6 rounded-[2rem] muji-shadow border border-bdr-subtle space-y-4">
+             <h3 class="text-[10px] text-txt-secondary uppercase tracking-[0.2em] font-medium px-2">Friends List</h3>
+             <div class="grid grid-cols-1 divide-y divide-bdr-default">
                 <div v-for="f in friends" :key="f" @click="$emit('view-friend', f)" 
                      class="py-4 flex justify-between items-center active:bg-bg-subtle transition-colors px-2 cursor-pointer">
                     <div class="flex items-center space-x-3">
@@ -269,14 +269,14 @@ export const SettingsPage = {
                               檔案將儲存至「日日記」備份資料夾
                           </p>
                           <div class="grid grid-cols-2 gap-3">
-                              <button @click="handleBackup" :disabled="backingUp" class="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-bdr-subtle active:scale-95 transition-all disabled:opacity-50 hover:bg-bg-subtle">
-                                  <span v-if="backingUp" class="w-4 h-4 border-2 border-bdr-default border-t-gray-700 rounded-full animate-spin"></span>
-                                  <span v-else class="material-symbols-rounded text-xl text-txt-secondary">cloud_upload</span>
+                               <button @click="handleBackup" :disabled="backingUp" class="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-bdr-subtle active:scale-95 transition-all disabled:opacity-50 hover:bg-bg-subtle">
+                                   <span v-if="backingUp" class="w-4 h-4 border-2 border-bdr-default border-t-txt-primary rounded-full animate-spin"></span>
+                                   <span v-else class="material-symbols-rounded text-xl text-txt-secondary">cloud_upload</span>
                                   <span class="text-[10px] text-txt-secondary mt-2 font-medium tracking-wide">雲端存檔</span>
                               </button>
-                              <button @click="handleExport" :disabled="exporting" class="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-bdr-subtle active:scale-95 transition-all disabled:opacity-50 hover:bg-bg-subtle">
-                                  <span v-if="exporting" class="w-4 h-4 border-2 border-bdr-default border-t-gray-700 rounded-full animate-spin"></span>
-                                  <span v-else class="material-symbols-rounded text-xl text-txt-secondary">download</span>
+                               <button @click="handleExport" :disabled="exporting" class="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-bdr-subtle active:scale-95 transition-all disabled:opacity-50 hover:bg-bg-subtle">
+                                   <span v-if="exporting" class="w-4 h-4 border-2 border-bdr-default border-t-txt-primary rounded-full animate-spin"></span>
+                                   <span v-else class="material-symbols-rounded text-xl text-txt-secondary">download</span>
                                   <span class="text-[10px] text-txt-secondary mt-2 font-medium tracking-wide">匯出檔案</span>
                               </button>
                           </div>                <div class="flex items-center justify-between px-1">
@@ -304,10 +304,10 @@ export const SettingsPage = {
                           </div>
                       </div>
 
-                 <button @click="$emit('view-import')" class="w-full border border-bdr-default text-txt-secondary py-3 rounded-xl text-xs font-medium active:bg-bg-subtle">
+                 <button @click="$emit('view-import')" class="w-full border border-bdr-outline text-txt-secondary py-3 rounded-xl text-xs font-medium active:bg-bg-subtle">
                      匯入資料
                  </button>
-                 <button @click="$emit('logout')" class="w-full border border-bdr-default text-txt-secondary py-3 rounded-xl text-xs font-medium active:bg-bg-subtle">
+                 <button @click="$emit('logout')" class="w-full border border-bdr-outline text-txt-secondary py-3 rounded-xl text-xs font-medium active:bg-bg-subtle">
                      登出 Google 帳號
                  </button>
                  <button @click="confirmDeleteData" class="w-full py-2 text-[10px] text-txt-muted tracking-widest uppercase hover:text-txt-secondary transition-colors">
@@ -323,7 +323,7 @@ export const SettingsPage = {
                  <p class="text-[10px] text-txt-secondary px-2 leading-relaxed">
                     登入 Google 帳號以開啟雲端同步、多裝置存取與分享功能。
                  </p>
-                 <button @click="$emit('login')" class="w-full border border-bdr-default text-txt-primary py-3 rounded-xl flex items-center justify-center space-x-2 active:scale-95 transition-transform hover:bg-bg-subtle">
+                 <button @click="$emit('login')" class="w-full border border-bdr-outline text-txt-primary py-3 rounded-xl flex items-center justify-center space-x-2 active:scale-95 transition-transform hover:bg-bg-subtle">
                      <svg class="w-4 h-4 bg-white rounded-full p-0.5" viewBox="0 0 24 24">
                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                         <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
