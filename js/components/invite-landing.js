@@ -1,16 +1,11 @@
 export const InviteLanding = {
     template: `
-    <div class="fixed inset-0 z-[1000] bg-white flex flex-col items-center justify-center px-6 overflow-hidden">
+    <div class="fixed inset-0 z-[1000] bg-white flex flex-col items-center justify-center px-6 overflow-hidden touch-none select-none">
         <!-- Background Elements -->
         <div class="absolute top-[10%] left-[-10%] w-64 h-64 bg-bg-subtle rounded-full blur-3xl opacity-50"></div>
         <div class="absolute bottom-[10%] right-[-10%] w-72 h-72 bg-bg-subtle rounded-full blur-3xl opacity-50"></div>
 
-        <div class="w-full max-w-sm flex flex-col items-center space-y-12 animate-in fade-in zoom-in duration-700">
-            <!-- Logo Section -->
-            <div class="relative group">
-                <img src="./logo-full-vertical.svg" alt="Nichi-Nichi" class="h-32 drop-shadow-sm transition-transform duration-500 group-hover:scale-105">
-            </div>
-
+        <div class="w-full max-w-sm flex flex-col items-center space-y-8 animate-in fade-in zoom-in duration-1000">
             <!-- Content Card -->
             <div class="w-full bg-white/60 backdrop-blur-md rounded-[2.5rem] p-8 muji-shadow border border-bdr-subtle/50 text-center space-y-6">
                 <div class="space-y-2">
@@ -58,12 +53,15 @@ export const InviteLanding = {
                     </button>
                     
                     <button @click="openGuide" class="w-full bg-white text-txt-secondary py-3.5 rounded-2xl text-[10px] font-medium tracking-[0.1em] border border-bdr-subtle active:bg-bg-subtle transition-colors">
-                        稍後再說，先看看使用指南
+                        快速上手指南
                     </button>
                 </div>
             </div>
 
-            <p class="text-[9px] text-txt-muted tracking-widest font-sans">© 2025 NICHI-NICHI LOG</p>
+            <!-- Logo as Signature -->
+            <div class="flex flex-col items-center pt-4">
+                <img src="./logo-header.png" alt="Nichi-Nichi" class="h-9">
+            </div>
         </div>
     </div>
     `,

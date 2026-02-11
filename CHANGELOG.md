@@ -11,6 +11,12 @@
 - **Web Share API & Robust Clipboard Support**:
   - Upgraded the "Copy Invite Link" feature to prioritize the native **Web Share API** (System Share) on mobile devices for a more integrated experience.
   - Implemented a triple-fallback clipboard mechanism (Share API -> Clipboard API -> Legacy Textarea) to fix `TypeError: undefined` errors in insecure contexts (HTTP).
+- **Invite Landing Page UI Refinements**:
+  - Redesigned the "Invite Landing" page with a "Signature" branding approach, moving the logo to the bottom for a premium, content-first experience.
+  - Optimized layout hierarchy by centering the invitation card and adjusting vertical spacing.
+  - Enhanced app-like feel by disabling touch scrolling (`touch-none`) and text selection (`select-none`) on the landing overlay.
+  - Replaced temporary branding with the official `logo-header.png`.
+  - Updated CTA labels for better user guidance ("快速上手指南").
 - **Security Hardening**:
   - Updated `firestore.rules` to include granular permissions for the `friend_connections` collection, enabling secure mutual linking signals.
 
