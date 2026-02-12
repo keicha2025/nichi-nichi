@@ -25,7 +25,7 @@ export const AddPage = {
                     <label class="text-[10px] text-txt-secondary uppercase tracking-widest px-2 font-medium">付款人</label>
                     <div class="flex flex-wrap gap-2 px-2">
                         <button @click="form.payer = '我'" :class="form.payer === '我' ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-bg-subtle text-txt-secondary'" class="px-4 py-1.5 rounded-full text-[10px]">我</button>
-                        <button v-for="f in friends" :key="'p-'+f" @click="form.payer = f" :class="form.payer === f ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-bg-subtle text-txt-secondary'" class="px-4 py-1.5 rounded-full text-[10px]">{{ f }}</button>
+                        <button v-for="f in displayFriends" :key="'p-'+f.id" @click="form.payer = f.id" :class="form.payer === f.id ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-bg-subtle text-txt-secondary'" class="px-4 py-1.5 rounded-full text-[10px]">{{ f.name }}</button>
                         <button @click="triggerAddFriend('payer')" class="px-3 py-1.5 rounded-full bg-bg-subtle text-txt-secondary text-[10px]">+</button>
                     </div>
                     <!-- 本區塊新增輸入框 -->
@@ -39,7 +39,7 @@ export const AddPage = {
                 <div v-if="form.type === '收款'" class="space-y-2">
                     <label class="text-[10px] text-txt-secondary uppercase tracking-widest px-2 font-medium">收款對象</label>
                     <div class="flex flex-wrap gap-2 px-2">
-                        <button v-for="f in friends" :key="'r-'+f" @click="form.friendName = f" :class="form.friendName === f ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-bg-subtle text-txt-secondary'" class="px-4 py-1.5 rounded-full text-[10px]">{{ f }}</button>
+                        <button v-for="f in displayFriends" :key="'r-'+f.id" @click="form.friendName = f.id" :class="form.friendName === f.id ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-bg-subtle text-txt-secondary'" class="px-4 py-1.5 rounded-full text-[10px]">{{ f.name }}</button>
                         <button @click="triggerAddFriend('friendName')" class="px-3 py-1.5 rounded-full bg-bg-subtle text-txt-secondary text-[10px]">+</button>
                     </div>
                     <!-- 本區塊新增輸入框 -->
@@ -89,7 +89,7 @@ export const AddPage = {
 
                     <div v-if="form.isSplit" class="bg-bg-subtle p-6 rounded-3xl space-y-6">
                         <div class="flex flex-wrap gap-2">
-                            <button v-for="f in friends" :key="'s-'+f" @click="toggleFriendInSplit(f)" :class="selectedFriends.includes(f) ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-white text-txt-secondary border border-bdr-subtle'" class="px-4 py-1.5 rounded-full text-[10px]">{{ f }}</button>
+                            <button v-for="f in visibleFriends" :key="'s-'+f.id" @click="toggleFriendInSplit(f.id)" :class="selectedFriends.includes(f.id) ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-white text-txt-secondary border border-bdr-subtle'" class="px-4 py-1.5 rounded-full text-[10px]">{{ f.name }}</button>
                             <button @click="triggerAddFriend('split')" class="px-3 py-1.5 rounded-full bg-bg-subtle text-txt-secondary text-[10px]">+</button>
                         </div>
                         
@@ -174,6 +174,16 @@ export const AddPage = {
         activeProjects() {
             // 只顯示 Active 的專案
             return (this.projects || []).filter(p => p.status !== 'Archived' && p.status !== 'archived');
+        },
+        visibleFriends() {
+            return (this.friends || []).filter(f => f.visible !== false);
+        },
+        displayFriends() {
+            // In ADD page, displayFriends is essentially visibleFriends + currently selected (if any)
+            return (this.friends || []).filter(f => {
+                const isSelected = this.form.payer === f.id || this.form.friendName === f.id || this.selectedFriends.includes(f.id);
+                return (f.visible !== false) || isSelected;
+            });
         }
     },
     watch: {
@@ -256,21 +266,31 @@ export const AddPage = {
         },
         confirmAddFriend() {
             if (this.newFriendName) {
-                this.$emit('add-friend-to-list', this.newFriendName);
-                if (this.addFriendTarget === 'payer') this.form.payer = this.newFriendName;
-                else if (this.addFriendTarget === 'friendName') this.form.friendName = this.newFriendName;
-                else if (this.addFriendTarget === 'split') {
-                    if (!this.selectedFriends.includes(this.newFriendName)) {
-                        this.selectedFriends.push(this.newFriendName);
+                const name = this.newFriendName;
+                this.$emit('add-friend-to-list', name);
+
+                // We need to wait for the next tick to find the newly added friend's ID
+                window.setTimeout(() => {
+                    const newF = this.friends.find(f => f.name === name);
+                    if (newF) {
+                        if (this.addFriendTarget === 'payer') this.form.payer = newF.id;
+                        else if (this.addFriendTarget === 'friendName') this.form.friendName = newF.id;
+                        else if (this.addFriendTarget === 'split') {
+                            if (!this.selectedFriends.includes(newF.id)) {
+                                this.selectedFriends.push(newF.id);
+                            }
+                        }
                     }
-                }
-                this.newFriendName = ''; this.isAddingFriend = false;
+                }, 0);
+
+                this.newFriendName = '';
+                this.isAddingFriend = false;
             }
         },
-        toggleFriendInSplit(name) {
-            const idx = this.selectedFriends.indexOf(name);
+        toggleFriendInSplit(id) {
+            const idx = this.selectedFriends.indexOf(id);
             if (idx > -1) this.selectedFriends.splice(idx, 1);
-            else this.selectedFriends.push(name);
+            else this.selectedFriends.push(id);
         },
         prepareAndSubmit() {
             if (this.isSubmitting) return;
@@ -291,10 +311,14 @@ export const AddPage = {
                 if (!this.form.isAlreadyPaid) {
                     debt = (this.form.payer === '我') ? (this.form.amount - share) : -share;
                 }
-                this.form.friendName = this.selectedFriends.join(', ');
+                // Always include "我" in the friend list if it's a split, for compatibility
+                const list = [...this.selectedFriends];
+                if (this.form.isSplit && !list.includes('我')) list.push('我');
+                this.form.friendName = list.join(', ');
             } else if (this.form.type === '收款') {
                 debt = -this.form.amount;
                 this.form.personalShare = 0;
+                this.form.payer = this.form.friendName;
             } else {
                 debt = 0;
                 this.form.personalShare = this.form.amount;

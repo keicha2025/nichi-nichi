@@ -1,5 +1,60 @@
 # Changelog
 
+## [2026-02-12] 14:15
+### Fixed
+- **Friend Name Sync & Data Disconnect**:
+  - Implemented optimistic local update for transaction records when a friend is renamed. This prevents the "0 amount" display issue caused by name-to-ID transitions or renames.
+  - Upgraded `API.renameFriend` to support updating names within split strings (multi-friend transactions) using a refined search-and-replace strategy.
+  - *修復更名斷層：實作 Optimistic UI 同步更新本地交易紀錄，解決更名後金額顯示為 0 的問題，並優化分帳字串的自動更名邏輯。*
+- **Friend Detail Page Improvements**:
+  - Enhanced debt calculation logic to support both ID and Name matching simultaneously.
+  - Fixed 1-on-1 transaction debt calculation where "Split" mode was not explicitly enabled.
+  - Added a **Currency Switcher** component directly in the Net Debt section for quick JPY/TWD toggling.
+  - Implemented **+/- sign prefixes** for JPY/TWD net amounts to clearly indicate credit vs. debt status.
+  - *優化好友詳情頁：計算邏輯改採 ID 與名稱雙重比對；在淨債務區域新增幣別切換器；並為各幣別淨額加上 +/- 符號，方便一眼判斷欠款狀態。*
+- **Transaction Consistency**:
+  - Updated Add/Edit pages to explicitly include "Me" (我) in the `friendName` field for split transactions, ensuring backward compatibility with older calculation engines.
+  - *強化資料一致性：分帳交易現在會明確記錄「我」在參與名單中，提升舊版引擎的相容性。*
+
+## [2026-02-12] 12:30
+### Added
+- **Unique Friend IDs & Data Integrity Refactor**:
+  - Implemented a robust ID-based management system for friends. Every friend now has a unique ID (e.g., `f_1739500000000`) that serves as the primary key for data association.
+  - Developed an automatic migration script in `loadData` that assigns IDs to existing name-only friend records and persists them to Firestore.
+  - *實作「好友 ID 綁定」機制：為所有好友分配唯一識別碼，解決更名後歷史紀錄不連動的問題。*
+- **Synced Transaction Display**:
+  - Upgraded `HistoryPage` and `StatsPage` to resolve friend names from IDs in real-time. This ensures that when a friend is renamed, all historical transactions instantly reflect the new name across the entire application interface.
+  - *同步明細與統計顯示：更名後歷史紀錄會連動顯示新名稱。*
+- **Enhanced Friend Detail & Calculations**:
+  - Updated `FriendDetailPage` to use IDs for ultra-accurate debt calculations, supporting both legacy name matching and modern ID matching.
+  - Refined the "View History" navigation to filter by Friend ID, ensuring correct results even after renames.
+  - *優化好友詳情頁：使用 ID 進行精確債務運算與明細跳轉過濾。*
+- **Backend & API Hardening**:
+  - Upgraded `API.saveTransaction` and `renameFriend` actions to handle ID-based updates.
+  - Optimized `renameFriend` to perform thorough batch updates on both `friendName` and `payer` fields in Firestore.
+  - *後端 API 強化：全面支援 ID 式更新並自動同步 Firestore 中的多種關聯欄位。*
+- **UI/UX Consistency**:
+  - Updated Add/Edit pages to bind IDs to form fields while displaying human-readable names.
+  - Ensured that "Viewer Mode" (Shared Links) also benefits from the ID-to-Name resolution for consistent reporting.
+  - *介面一致性優化：記帳頁面與分享連結現已完全支援 ID 關聯顯示。*
+
+## [2026-02-13] 11:45
+### Fixed
+- **Friend Management Integrity**:
+  - Fully refactored `AddPage`, `EditPage`, `ViewDashboard`, and `ViewSettingsPage` to correctly handle the new Friend object structure (`{ name, visible }`).
+  - Resolved "JSON string display" bug in Payer and Split Bill sections.
+  - Fixed an issue where all friends (including hidden ones) appeared in Payer selection.
+  - Restored missing friend list in Split Bill section by implementing `visibleFriends` and `displayFriends` computed properties.
+- **Friend Detail Page Improvements**:
+  - Corrected Debt Calculation: Individual shares in multi-split scenarios are now accurately calculated by dividing the total lent amount by the number of friends involved.
+  - Fixed Javascript `SyntaxError` by escaping dollar signs in template literals.
+  - Fixed `ReferenceError` by ensuring `FriendDetailPage` is properly imported in `app.js`.
+- **Intelligent Navigation**:
+  - Upgraded `handleViewHistory` in `app.js` to intelligently infer if a filter string refers to a friend's name or a project keyword based on the current context.
+
+*全面修復好友管理邏輯，支援「隱藏好友」功能並解決 JSON 字樣顯示問題。修正分帳計算邏輯以支援多人分帳情形，並優化歷史紀錄跳轉後的自動過濾機制。*
+
+
 ## [2026-02-12] 01:40
 ### Added
 - **Mutual Friend Signaling Mechanism**:

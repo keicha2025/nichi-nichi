@@ -8,6 +8,7 @@ import { StatsPage } from './pages/stats-page.js';
 import { SettingsPage } from './pages/settings-page.js';
 import { OverviewPage } from "./pages/overview-page.js";
 import { ProjectDetailPage } from './pages/project-detail-page.js';
+import { FriendDetailPage } from './pages/friend-detail-page.js';
 import { ImportPage } from './pages/import-page.js';
 import { SharedLinksPage } from './pages/shared-links-page.js?v=1.4';
 import { EditSharedLinksPage } from './pages/edit-shared-links-page.js?v=1.4';
@@ -41,7 +42,8 @@ createApp({
         'app-select': AppSelect,
         'shared-links-page': SharedLinksPage,
         'edit-shared-links-page': EditSharedLinksPage,
-        'invite-landing': InviteLanding
+        'invite-landing': InviteLanding,
+        'friend-detail-page': FriendDetailPage
     },
     setup() {
         const getLocalISOString = () => {
@@ -49,6 +51,7 @@ createApp({
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             return now.toISOString().slice(0, 16);
         };
+        const generateId = (prefix = 'f') => `${prefix}_${Math.random().toString(36).substr(2, 9)}`;
         const params = new URLSearchParams(window.location.search);
         const currentTab = ref(params.get('tab') || 'add');
         const loading = ref(false);
@@ -88,6 +91,7 @@ createApp({
 
         const editForm = ref(null);
         const selectedProject = ref(null);
+        const selectedFriend = ref(null);
         const iconEditContext = ref(null);
         const editingLink = ref(null);
         const isSettingsDirty = ref(false);
@@ -221,10 +225,20 @@ createApp({
 
             if (filter.categoryId) list = list.filter(t => t.categoryId === filter.categoryId);
             if (filter.friendName) {
-                list = list.filter(t =>
-                    (t.friendName && t.friendName.includes(filter.friendName)) ||
-                    (t.payer && t.payer === filter.friendName)
-                );
+                const targetRef = filter.friendName; // could be ID or Name
+                list = list.filter(t => {
+                    // Try to match by name or by ID
+                    const matchName = (t.friendName && t.friendName.includes(targetRef)) || (t.payer && t.payer === targetRef);
+                    if (matchName) return true;
+
+                    // If not matched, try to lookup friend by targetRef and check their alternative identity
+                    const friendObj = friends.value.find(f => f.id === targetRef || f.name === targetRef);
+                    if (friendObj) {
+                        return (t.friendName && (t.friendName.includes(friendObj.id) || t.friendName.includes(friendObj.name))) ||
+                            (t.payer && (t.payer === friendObj.id || t.payer === friendObj.name));
+                    }
+                    return false;
+                });
             }
             if (filter.currency) list = list.filter(t => t.originalCurrency === filter.currency);
 
@@ -261,8 +275,30 @@ createApp({
             return currencies.has('JPY') && currencies.has('TWD');
         });
 
-        const handleViewHistory = (keyword) => {
-            historyFilter.value = { mode: 'all', categoryId: null, friendName: null, currency: null, keyword: keyword };
+        const handleViewHistory = (filter) => {
+            // Default filter
+            const newFilter = { mode: 'all', categoryId: null, friendName: null, currency: null, keyword: '' };
+
+            if (typeof filter === 'string') {
+                // Heuristic mapping
+                if (currentTab.value === 'friend-detail' && selectedFriend.value) {
+                    newFilter.friendName = filter;
+                } else if (currentTab.value === 'project-detail' || filter.startsWith('p_')) {
+                    newFilter.keyword = filter;
+                } else {
+                    newFilter.keyword = filter;
+                }
+            } else if (filter && typeof filter === 'object') {
+                // Support both types of object keys
+                if (filter.id && filter.type === 'friend') {
+                    newFilter.friendName = filter.id;
+                    newFilter.mode = 'friend';
+                } else {
+                    Object.assign(newFilter, filter);
+                }
+            }
+
+            historyFilter.value = newFilter;
             currentTab.value = 'history';
         };
 
@@ -359,7 +395,22 @@ createApp({
                 }
 
                 categories.value = data.categories || [];
-                friends.value = data.friends || [];
+
+                let friendsNeedUpdate = false;
+                friends.value = (data.friends || []).map(f => {
+                    let obj = typeof f === 'string' ? { name: f, visible: true } : { ...f };
+                    if (!obj.id) {
+                        obj.id = generateId('f');
+                        friendsNeedUpdate = true;
+                    }
+                    return obj;
+                });
+
+                if (friendsNeedUpdate && appMode.value === 'ADMIN' && !isSilent) {
+                    console.log("[Migration] Assigned IDs to friends, updating Firestore...");
+                    API.updateUserData({ friends: JSON.parse(JSON.stringify(friends.value)) });
+                }
+
                 paymentMethods.value = data.paymentMethods || [];
                 projects.value = data.projects || [];
                 transactions.value = data.transactions || [];
@@ -801,17 +852,17 @@ createApp({
         };
 
         const handleAddFriendToList = async (n) => {
-            if (!friends.value.includes(n)) {
-                friends.value.push(n);
-                pendingUpdates.value.friends.push(n);
-                // Defer sync to handleSubmit
-                // handleUpdateUserData({ friends: friends.value }, true);
+            const exists = friends.value.some(f => f.name === n);
+            if (!exists) {
+                const newFriend = { id: generateId('f'), name: n, visible: true };
+                friends.value.push(newFriend);
+                pendingUpdates.value.friends.push(newFriend);
             }
         };
 
         const methods = {
             currentTab, handleTabChange, loading, currentUser, categories, friends, paymentMethods, projects,
-            transactions, filteredTransactions, systemConfig, form, editForm, selectedProject, fxRate, historyFilter,
+            transactions, filteredTransactions, systemConfig, form, editForm, selectedProject, selectedFriend, fxRate, historyFilter,
             stats, modalState, baseCurrency, appMode, isSettingsDirty,
             showInviteLanding, inviterName,
             syncStatus, hasMultipleCurrencies,
@@ -840,7 +891,67 @@ createApp({
                 await loadData();
             },
             handleUpdateUserData,
-            handleViewFriend: (n) => { historyFilter.value = { mode: 'all', categoryId: null, friendName: n, currency: null, keyword: '' }; currentTab.value = 'history'; },
+            handleViewFriend: (f) => { selectedFriend.value = f; currentTab.value = 'friend-detail'; },
+            handleUpdateFriend: async (data) => {
+                const { id, newName, visible } = data;
+
+                const idx = friends.value.findIndex(f => f.id === id);
+                if (idx !== -1) {
+                    const oldName = friends.value[idx].name;
+                    const oldVisible = friends.value[idx].visible;
+
+                    // 1. OPTIMISTIC LOCAL UPDATE
+                    friends.value[idx] = { ...friends.value[idx], name: newName, visible: visible };
+
+                    if (selectedFriend.value && (selectedFriend.value.id === id || selectedFriend.value.name === oldName)) {
+                        selectedFriend.value = { ...friends.value[idx] };
+                    }
+
+                    // [NEW] OPTIMISTIC LOCAL UPDATE (Transactions)
+                    // Update all transaction references to the old name to keep them linked
+                    if (oldName !== newName) {
+                        transactions.value.forEach(t => {
+                            if (t.payer === oldName) t.payer = newName;
+                            if (t.friendName) {
+                                if (t.friendName === oldName) {
+                                    t.friendName = newName;
+                                } else if (t.friendName.includes(oldName)) {
+                                    // Replace only whole words to avoid partial matching (e.g. "Bob" vs "Bobby")
+                                    const regex = new RegExp('\\b' + oldName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'g');
+                                    t.friendName = t.friendName.replace(regex, newName);
+                                }
+                            }
+                        });
+                    }
+
+                    // 2. BACKGROUND SYNC
+                    if (appMode.value === 'ADMIN') {
+                        (async () => {
+                            try {
+                                // Background sync friends list
+                                await API.updateUserData({ friends: JSON.parse(JSON.stringify(friends.value)) });
+
+                                // If name changed, trigger legacy rename for transactions
+                                if (oldName !== newName) {
+                                    await API.saveTransaction({ action: 'renameFriend', oldName, newName, id });
+                                }
+
+                                // Silent reload to stay in sync
+                                await loadData(true);
+                                console.log("[Background Sync] Friend update success", id);
+                            } catch (e) {
+                                console.error("[Background Sync] Friend update failed", e);
+                                // Rollback local state on failure (optional, but good for robustness)
+                                // friends.value[idx] = { ...friends.value[idx], name: oldName, visible: oldVisible };
+                            }
+                        })();
+                    } else {
+                        // Guest mode: just save and reload
+                        localStorage.setItem('guest_friends', JSON.stringify(friends.value));
+                        await loadData(true);
+                    }
+                }
+            },
             handleViewProject: (p) => { selectedProject.value = p; currentTab.value = 'project-detail'; },
             handleViewHistory,
             handleUpdateProject: async () => { await loadData(); },

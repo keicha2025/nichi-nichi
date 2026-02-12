@@ -62,8 +62,8 @@ export const HistoryPage = {
                                 <span class="material-symbols-rounded text-[10px]">{{ getPaymentIcon(item.paymentMethod) }}</span>
                                 {{ getPaymentName(item.paymentMethod) }}
                             </span>
-                            <span v-if="item.payer !== '我' && item.type === '支出'" class="bg-bg-subtle text-txt-secondary px-1.5 rounded whitespace-nowrap">{{ item.payer }} 付款</span>
-                            <span v-if="item.type === '收款'" class="bg-bg-subtle text-txt-secondary px-1.5 rounded whitespace-nowrap">{{ item.friendName }} 還款</span>
+                            <span v-if="item.payer !== '我' && item.type === '支出'" class="bg-bg-subtle text-txt-secondary px-1.5 rounded whitespace-nowrap">{{ getFriendName(item.payer) }} 付款</span>
+                            <span v-if="item.type === '收款'" class="bg-bg-subtle text-txt-secondary px-1.5 rounded whitespace-nowrap">{{ getFriendName(item.friendName) }} 還款</span>
                             <span v-if="item.projectId" class="text-txt-secondary truncate max-w-[80px]">{{ getProjectName(item.projectId) }}</span>
                         </div>
                     </div>
@@ -90,7 +90,7 @@ export const HistoryPage = {
         </div>
     </section>
     `,
-    props: ['transactions', 'categories', 'paymentMethods', 'projects', 'fxRate'],
+    props: ['transactions', 'categories', 'paymentMethods', 'projects', 'fxRate', 'friends'],
     emits: ['edit-item', 'update-filter', 'delete-multiple'],
     inject: ['dialog'],
     data() {
@@ -213,6 +213,13 @@ export const HistoryPage = {
             if (!this.projects) return '';
             const p = this.projects.find(proj => proj.id === id);
             return p ? p.name : '';
+        },
+        getFriendName(idOrName) {
+            if (idOrName === '我') return '我';
+            if (!idOrName) return '';
+            const list = (this.friends || []);
+            const f = list.find(x => x.id === idOrName || x.name === idOrName);
+            return f ? f.name : idOrName;
         },
         getIcon(id) {
             const cat = this.categories.find(c => c.id === id);

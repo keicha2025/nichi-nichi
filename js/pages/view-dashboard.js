@@ -49,9 +49,9 @@ export const ViewDashboard = {
                 <div v-if="friends && friends.length > 0" class="space-y-2 border-b border-bdr-subtle pb-3 last:border-0 last:pb-0">
                     <p class="text-[10px] text-txt-muted uppercase tracking-widest">往來對象</p>
                     <div class="flex flex-wrap gap-2">
-                        <span v-for="friend in friends" :key="friend" 
+                        <span v-for="friend in friends" :key="friend.name || friend" 
                               class="px-3 py-1 bg-bg-subtle text-txt-secondary rounded-full text-[10px] tracking-wider border border-bdr-subtle">
-                            {{ friend }}
+                            {{ friend.name || friend }}
                         </span>
                     </div>
                 </div>

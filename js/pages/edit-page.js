@@ -33,18 +33,18 @@ export const EditPage = {
                         {{ form.type === '收款' ? '收款對象' : '付款人' }}
                     </label>
                     <div v-if="isReadOnly" class="text-sm text-txt-primary">
-                        {{ form.type === '收款' ? form.friendName : form.payer }}
+                        {{ form.type === '收款' ? getFriendName(form.friendName) : getFriendName(form.payer) }}
                     </div>
                     <!-- 編輯模式：同步新增頁面的加好友功能 -->
                     <div v-else>
                          <div class="flex flex-wrap gap-2">
                             <template v-if="form.type === '收款'">
-                                <button v-for="f in friends" :key="'e-r-'+f" @click="form.friendName = f" :class="form.friendName === f ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-bg-subtle text-txt-secondary'" class="px-4 py-1.5 rounded-full text-[10px] transition-all">{{ f }}</button>
+                                <button v-for="f in displayFriends" :key="'e-r-'+f.id" @click="form.friendName = f.id" :class="form.friendName === f.id ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-bg-subtle text-txt-secondary'" class="px-4 py-1.5 rounded-full text-[10px] transition-all">{{ f.name }}</button>
                                 <button @click="triggerAddFriend('friendName')" class="px-3 py-1.5 rounded-full bg-bg-subtle text-txt-secondary text-[10px]">+</button>
                             </template>
                             <template v-else>
                                 <button @click="form.payer = '我'" :class="form.payer === '我' ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-bg-subtle text-txt-secondary'" class="px-4 py-1.5 rounded-full text-[10px]">我</button>
-                                <button v-for="f in friends" :key="'e-p-'+f" @click="form.payer = f" :class="form.payer === f ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-bg-subtle text-txt-secondary'" class="px-4 py-1.5 rounded-full text-[10px]">{{ f }}</button>
+                                <button v-for="f in displayFriends" :key="'e-p-'+f.id" @click="form.payer = f.id" :class="form.payer === f.id ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-bg-subtle text-txt-secondary'" class="px-4 py-1.5 rounded-full text-[10px]">{{ f.name }}</button>
                                 <button @click="triggerAddFriend('payer')" class="px-3 py-1.5 rounded-full bg-bg-subtle text-txt-secondary text-[10px]">+</button>
                             </template>
                         </div>
@@ -118,7 +118,7 @@ export const EditPage = {
                     <div v-if="form.isSplit" class="bg-bg-subtle p-6 rounded-3xl space-y-6 mx-2">
                         <div v-if="!isReadOnly">
                              <div class="flex flex-wrap gap-2">
-                                <button v-for="f in friends" :key="'e-s-'+f" @click="toggleFriendInSplit(f)" :class="selectedFriends.includes(f) ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-white text-txt-secondary'" class="px-4 py-1.5 rounded-full text-[10px]">{{ f }}</button>
+                                <button v-for="f in visibleFriends" :key="'e-s-'+f.id" @click="toggleFriendInSplit(f.id)" :class="selectedFriends.includes(f.id) ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-white text-txt-secondary'" class="px-4 py-1.5 rounded-full text-[10px]">{{ f.name }}</button>
                                 <button @click="triggerAddFriend('split')" class="px-3 py-1.5 rounded-full bg-bg-subtle text-txt-secondary text-[10px]">+</button>
                              </div>
                              <!-- 新增好友輸入框 -->
@@ -132,7 +132,7 @@ export const EditPage = {
                                 <button @click="splitMode = 'manual'" :class="splitMode === 'manual' ? 'bg-bg-subtle text-txt-primary' : 'text-txt-muted'" class="flex-1 py-1 rounded">手動份額</button>
                             </div>
                         </div>
-                        <div v-else class="text-xs text-txt-primary">{{ form.friendName }}</div>
+                        <div v-else class="text-xs text-txt-primary">{{ getFriendNamesFromList(selectedFriends) }}</div>
                         
                         <div class="flex justify-between items-center pt-2 border-t border-bdr-subtle">
                             <span class="text-[10px] text-txt-secondary">我的份額</span>
@@ -213,6 +213,13 @@ export const EditPage = {
             const totalPeople = (this.selectedFriends ? this.selectedFriends.length : 0) + 1;
             return Math.round(this.form.amount / totalPeople);
         },
+        displayFriends() {
+            // Show visible friends, OR any friend that is currently selected in this item
+            return (this.friends || []).filter(f => {
+                const isSelected = this.form.payer === f.id || this.form.friendName === f.id || this.selectedFriends.includes(f.id);
+                return (f.visible !== false) || isSelected;
+            });
+        },
         activeProjects() {
             const currentId = this.form.projectId;
             return (this.projects || []).filter(p =>
@@ -248,10 +255,20 @@ export const EditPage = {
         getCategoryIcon(id) { return this.categories.find(c => c.id === id)?.icon || 'sell'; },
         getPaymentName(id) { const pm = this.paymentMethods.find(p => p.id === id); return pm ? pm.name : id; },
 
-        toggleFriendInSplit(name) {
-            const idx = this.selectedFriends.indexOf(name);
+        toggleFriendInSplit(id) {
+            const idx = this.selectedFriends.indexOf(id);
             if (idx > -1) this.selectedFriends.splice(idx, 1);
-            else this.selectedFriends.push(name);
+            else this.selectedFriends.push(id);
+        },
+        getFriendName(idOrName) {
+            if (idOrName === '我') return '我';
+            const f = this.friends.find(x => x.id === idOrName || x.name === idOrName);
+            return f ? f.name : idOrName;
+        },
+        getFriendNamesFromList(idsOrNames) {
+            if (!idsOrNames || idsOrNames.length === 0) return '';
+            const list = Array.isArray(idsOrNames) ? idsOrNames : idsOrNames.split(', ').filter(Boolean);
+            return list.map(id => this.getFriendName(id)).join(', ');
         },
 
         // Sync Methods from Add Page
@@ -264,23 +281,19 @@ export const EditPage = {
             }
         },
         confirmAddFriend() {
-            // Note: In EditPage, we might not have direct access to emit 'add-friend-to-list' payload format exactly like AddPage unless handled by parent
-            // But 'friends' prop is reactive. The AddPage emits 'add-friend-to-list' (name).
-            // We should do the same.
             if (this.newFriendName) {
-                // Since this component might not have the listener wired up in Index.html for 'add-friend-to-list' (Wait, let's check index.html)
-                // Index.html: <edit-page ... @create-project>... NO @add-friend-to-list!
-                // We need to fix Index.html too if we strictly want this to work.
-                // But for now, let's emit it and assume I will fix index.html in next step.
-                this.$emit('add-friend-to-list', this.newFriendName); // Need to wire this in index.html!
-
-                if (this.addFriendTarget === 'payer') this.form.payer = this.newFriendName;
-                else if (this.addFriendTarget === 'friendName') this.form.friendName = this.newFriendName;
-                else if (this.addFriendTarget === 'split') {
-                    if (!this.selectedFriends.includes(this.newFriendName)) {
-                        this.selectedFriends.push(this.newFriendName);
+                const name = this.newFriendName;
+                this.$emit('add-friend-to-list', name);
+                window.setTimeout(() => {
+                    const newF = this.friends.find(f => f.name === name);
+                    if (newF) {
+                        if (this.addFriendTarget === 'payer') this.form.payer = newF.id;
+                        else if (this.addFriendTarget === 'friendName') this.form.friendName = newF.id;
+                        else if (this.addFriendTarget === 'split') {
+                            if (!this.selectedFriends.includes(newF.id)) this.selectedFriends.push(newF.id);
+                        }
                     }
-                }
+                }, 0);
                 this.newFriendName = ''; this.isAddingFriend = false;
             }
         },
@@ -293,7 +306,10 @@ export const EditPage = {
                 if (!this.form.isAlreadyPaid) {
                     debt = (this.form.payer === '我') ? (this.form.amount - share) : -share;
                 }
-                this.form.friendName = this.selectedFriends.join(', ');
+                // Always include "我" in the friend list if it's a split, for compatibility
+                const list = [...this.selectedFriends];
+                if (this.form.isSplit && !list.includes('我')) list.push('我');
+                this.form.friendName = list.join(', ');
             } else if (this.form.type === '收款') {
                 debt = -this.form.amount;
                 this.form.payer = this.form.friendName;

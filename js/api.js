@@ -206,6 +206,74 @@ export const API = {
             return true;
         }
 
+        if (payload.action === 'renameFriend') {
+            const { oldName, newName, id } = payload;
+            if (!newName) return false;
+
+            // 1. Update friends list
+            const userSnap = await getDoc(userRef);
+            let friends = userSnap.data().friends || [];
+            const idx = friends.findIndex(f => (id && f.id === id) || (typeof f === 'string' ? f : f.name) === oldName);
+
+            if (idx !== -1) {
+                if (typeof friends[idx] === 'string') {
+                    friends[idx] = { id: id || ("f_" + Date.now()), name: newName, visible: true };
+                } else {
+                    friends[idx].name = newName;
+                    if (id) friends[idx].id = id;
+                }
+                await updateDoc(userRef, { friends });
+            }
+
+            // 2. Robust update transactions
+            // We need to find all transactions where oldName appears in 'friendName' or 'payer'
+            // Since Firestore doesn't support "contains" for strings well, we fetch 
+            // the user's transactions and filter. In a real large-scale app, we'd use a different schema.
+            // But for this app's scale, fetching the user's transactions is acceptable.
+
+            const transactionsSnap = await getDocs(collection(userRef, 'transactions'));
+            const batch = writeBatch(db);
+            let count = 0;
+
+            transactionsSnap.docs.forEach(doc => {
+                const t = doc.data();
+                let needsUpdate = false;
+                const updateData = {};
+
+                // Check Payer
+                if (t.payer === oldName) {
+                    updateData.payer = newName;
+                    needsUpdate = true;
+                }
+
+                // Check FriendName (could be "Bob, 我")
+                if (t.friendName) {
+                    if (t.friendName === oldName) {
+                        updateData.friendName = newName;
+                        needsUpdate = true;
+                    } else if (t.friendName.includes(oldName)) {
+                        // Word-boundary check to avoid partial replacements
+                        const regex = new RegExp('\\b' + oldName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'g');
+                        if (regex.test(t.friendName)) {
+                            updateData.friendName = t.friendName.replace(regex, newName);
+                            needsUpdate = true;
+                        }
+                    }
+                }
+
+                if (needsUpdate) {
+                    batch.update(doc.ref, updateData);
+                    count++;
+                }
+            });
+
+            if (count > 0) {
+                await batch.commit();
+                console.log(`[API] Renamed ${count} transaction references`);
+            }
+            return true;
+        }
+
         if (payload.action === 'updateProject') {
             // Projects are stored in an array in userDoc? Or subcollection?
             // User doc is better for small lists.

@@ -40,13 +40,13 @@ export const ViewSettingsPage = {
         <div class="bg-white p-6 rounded-[2rem] muji-shadow border border-bdr-subtle space-y-4">
             <h3 class="text-[10px] text-txt-secondary uppercase tracking-[0.2em] font-medium px-2">Friends List</h3>
             <div class="grid grid-cols-1 divide-y divide-gray-50">
-                <div v-for="f in friends" :key="f" @click="$emit('view-friend', f)" 
+                <div v-for="f in friends" :key="f.name || f" @click="$emit('view-friend', f)" 
                      class="py-4 flex justify-between items-center active:bg-bg-subtle transition-colors px-2 cursor-pointer">
                     <div class="flex items-center space-x-3">
                         <div class="w-8 h-8 bg-bg-subtle rounded-full flex items-center justify-center">
                             <span class="material-symbols-rounded text-txt-secondary text-sm">person</span>
                         </div>
-                        <span class="text-xs text-txt-primary font-medium">{{ f }}</span>
+                        <span class="text-xs text-txt-primary font-medium">{{ f.name || f }}</span>
                     </div>
                     <span class="material-symbols-rounded text-txt-muted text-sm">arrow_forward_ios</span>
                 </div>

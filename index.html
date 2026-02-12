@@ -202,8 +202,8 @@
                 @go-to-history="historyFilter = { mode: $event.mode, categoryId: null, friendName: null, currency: $event.currency }; handleTabChange('history')"></overview-page>
 
             <history-page v-if="currentTab === 'history'" :transactions="filteredTransactions" :categories="categories"
-                :payment-methods="paymentMethods" :projects="projects" :fx-rate="fxRate" @edit-item="handleEditItem"
-                @update-filter="Object.assign(historyFilter, $event)"
+                :payment-methods="paymentMethods" :projects="projects" :fx-rate="fxRate" :friends="friends"
+                @edit-item="handleEditItem" @update-filter="Object.assign(historyFilter, $event)"
                 @delete-multiple="handleDeleteMultiple"></history-page>
 
             <add-page v-if="currentTab === 'add'" :form="form" :categories="categories"
@@ -216,7 +216,7 @@
                 @cancel="currentTab = 'history'; editForm = null;" @create-project="handleCreateProject"
                 @add-friend-to-list="handleAddFriendToList"></edit-page>
             <stats-page v-if="currentTab === 'stats'" :transactions="transactions" :categories="categories"
-                :payment-methods="paymentMethods" :fx-rate="fxRate" :projects="projects"
+                :payment-methods="paymentMethods" :fx-rate="fxRate" :projects="projects" :friends="friends"
                 @drill-down="handleDrillDown"></stats-page>
             <settings-page v-if="currentTab === 'settings'" :config="systemConfig" :friends="friends"
                 :transactions="transactions" :projects="projects" :app-mode="appMode" :current-user="currentUser"
@@ -236,6 +236,11 @@
             <project-detail-page v-if="currentTab === 'project-detail'" :project="selectedProject"
                 :transactions="transactions" :fx-rate="fxRate" @back="currentTab = 'settings'; selectedProject = null"
                 @update-project="handleUpdateProject" @view-history="handleViewHistory"></project-detail-page>
+
+            <!-- Friend Detail Page -->
+            <friend-detail-page v-if="currentTab === 'friend-detail'" :friend="selectedFriend"
+                :transactions="transactions" :fx-rate="fxRate" @back="currentTab = 'settings'; selectedFriend = null"
+                @update-friend="handleUpdateFriend" @view-history="handleViewHistory"></friend-detail-page>
 
             <!-- Import Page -->
             <import-page v-if="currentTab === 'import'" @back="currentTab = 'settings'"

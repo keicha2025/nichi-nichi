@@ -115,30 +115,20 @@ export const OverviewPage = {
         },
 
         debtDisplayValue() {
-            // Calculate Net Debt locally to ensure proper conversion
-            // Logic:
-            // Debt (-): I owe someone (Payer != Me, !Paid) -> My Share
-            // Credit (+): Someone owes me (Payer == Me, Split/Friend, !Paid) -> (Total - MyShare)
-
             let net = 0;
+            const rate = Number(this.fxRate || 0.22);
+
             this.transactions.forEach(t => {
+                const currency = t.originalCurrency || t.currency || 'JPY';
+                const rawAmt = t.amount !== undefined ? Number(t.amount) : (currency === 'TWD' ? Number(t.amountTWD) : Number(t.amountJPY));
+
+                const toBase = (v, c) => {
+                    if (this.baseCurrency === 'JPY') return (c === 'TWD') ? v / rate : v;
+                    else return (c === 'JPY') ? v * rate : v;
+                };
+
                 if (t.type === '支出' && !t.isAlreadyPaid) {
-                    const val = this.getNormalizedAmount(t); // This converts My Share or Full Amount based on logic
-                    // BUT getNormalizedAmount returns "My Share" if not payer. 
-                    // And "Full Amount" if payer.
-
-                    // We need specific debt parts.
-                    const rate = Number(this.fxRate || 0.22);
-                    const currency = t.originalCurrency || t.currency || 'JPY';
-                    const rawAmt = t.amount !== undefined ? Number(t.amount) : (currency === 'TWD' ? Number(t.amountTWD) : Number(t.amountJPY));
                     const myShareRaw = (t.payer !== '我' || t.isSplit) ? Number(t.personalShare || 0) : rawAmt;
-
-                    // Convert to Base
-                    const toBase = (v, c) => {
-                        if (this.baseCurrency === 'JPY') return (c === 'TWD') ? v / rate : v;
-                        else return (c === 'JPY') ? v * rate : v;
-                    };
-
                     const myShareBase = toBase(myShareRaw, currency);
 
                     if (t.payer !== '我') {
@@ -148,6 +138,17 @@ export const OverviewPage = {
                         // They owe me (Total - My Share)
                         const lendRaw = rawAmt - myShareRaw;
                         net += toBase(lendRaw, currency);
+                    }
+                } else if (t.type === '收款') {
+                    // Repayment / Settlement
+                    const valBase = toBase(rawAmt, currency);
+                    // Assumption: friendName is the friend involved. 
+                    // If I am receiving money (default for 收款), net lend decreases.
+                    // If I am payer (me paying them), net lend increases.
+                    if (t.payer === '我') {
+                        net += valBase;
+                    } else {
+                        net -= valBase;
                     }
                 }
             });
