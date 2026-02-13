@@ -1,13 +1,20 @@
 import { API } from './api.js';
 import { auth } from './firebase-config.js';
+import { runMigration } from './migration-script.js';
 
 // --- Console Logger Helper ---
 const log = (msg, type = 'info') => {
     const el = document.getElementById('consoleOutput');
-    const color = type === 'error' ? 'text-red-400' : (type === 'success' ? 'text-blue-400' : 'text-green-400');
+    const color = type === 'error' ? 'text-danger' : (type === 'success' ? 'text-success' : 'text-txt-secondary');
+
     const div = document.createElement('div');
-    div.className = `${color} mb-1`;
-    div.innerText = `> ${msg}`;
+    div.className = "flex items-start";
+
+    div.innerHTML = `
+        <span class="mr-2 text-txt-muted shrink-0">></span>
+        <span class="${color}">${msg}</span>
+    `;
+
     el.appendChild(div);
     el.scrollTop = el.scrollHeight;
     console.log(`[Migration] ${msg}`);
@@ -18,6 +25,7 @@ const jsonInput = document.getElementById('jsonInput');
 const migrateBtn = document.getElementById('migrateBtn');
 const loginBtn = document.getElementById('loginBtn');
 const authStatus = document.getElementById('authStatus');
+const consistencyBtn = document.getElementById('consistencyBtn');
 
 // --- State ---
 let currentUser = null;
@@ -319,15 +327,24 @@ const handleMigrate = async () => {
 // --- Auth Logic ---
 API.onAuthStateChanged((user) => {
     currentUser = user;
+    const dot = authStatus.querySelector('span:first-child');
+    const label = authStatus.querySelector('span:last-child');
+
     if (user) {
-        authStatus.innerHTML = `<span class="text-green-600 font-bold">✓ 已登入: ${user.email}</span>`;
+        dot.className = "w-2 h-2 rounded-full bg-success";
+        label.innerText = `已登入: ${user.email}`;
+        label.className = "text-[10px] text-success tracking-widest uppercase font-medium";
         loginBtn.classList.add('hidden');
         migrateBtn.disabled = false;
+        consistencyBtn.disabled = false;
         log("Authenticated.");
     } else {
-        authStatus.innerHTML = `<span class="text-txt-secondary">未登入</span>`;
+        dot.className = "w-2 h-2 rounded-full bg-gray-300 animate-pulse";
+        label.innerText = "未登入";
+        label.className = "text-[10px] text-txt-secondary tracking-widest uppercase";
         loginBtn.classList.remove('hidden');
         migrateBtn.disabled = true;
+        consistencyBtn.disabled = true;
         log("Waiting for login...");
     }
 });
@@ -341,3 +358,18 @@ loginBtn.addEventListener('click', async () => {
 });
 
 migrateBtn.addEventListener('click', handleMigrate);
+
+consistencyBtn.addEventListener('click', async () => {
+    if (!confirm("確定要執行一致性修復嗎？這將掃描並更新所有付款人為「我」的紀錄。")) return;
+    consistencyBtn.disabled = true;
+    log("開始執行一致性修復 (UID 轉換)...");
+    try {
+        await runMigration();
+        log("修復程序執行完畢！", 'success');
+        alert("修復完成！");
+    } catch (e) {
+        log(`修復失敗: ${e.message}`, 'error');
+    } finally {
+        consistencyBtn.disabled = false;
+    }
+});

@@ -229,8 +229,21 @@ export const SettingsPage = {
                     <span class="text-txt-muted">~</span>
                     <input type="date" v-model="newProject.endDate" class="bg-white px-3 py-2 rounded-lg text-xs outline-none text-txt-secondary w-full">
                 </div>
-                 <button @click="createProject" :disabled="projectSaving" class="w-full bg-action-primary-bg text-white py-2 rounded-lg text-[10px] tracking-widest uppercase">
-                     {{ projectSaving ? '新增中...' : '新增計畫' }}
+                
+                <div class="flex items-center justify-between px-1 py-1" @click.stop="newProject.collaborationEnabled = !newProject.collaborationEnabled">
+                    <div class="flex flex-col">
+                        <span class="text-[10px] text-txt-primary font-medium tracking-wide">啟用雙向協作</span>
+                        <span class="text-[8px] text-txt-muted italic">開啟後可邀請好友同步紀錄</span>
+                    </div>
+                    <div class="w-9 h-5 rounded-full shadow-sm relative transition-colors" 
+                         :class="newProject.collaborationEnabled ? 'bg-[var(--action-primary-bg)]' : 'bg-gray-200'">
+                        <div class="absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform" 
+                             :class="{'translate-x-4': newProject.collaborationEnabled}"></div>
+                    </div>
+                </div>
+
+                 <button @click="createProject" :disabled="projectSaving" class="w-full bg-[var(--action-primary-bg)] text-white py-3 rounded-xl text-[10px] font-bold tracking-[0.2em] uppercase mt-2 shadow-sm active:scale-[0.98] transition-all">
+                     {{ projectSaving ? '新增中...' : '建立計畫' }}
                  </button>
             </div>
 
@@ -250,22 +263,83 @@ export const SettingsPage = {
 
         <!-- 2. 朋友名單管理 -->
          <div class="bg-white p-6 rounded-[2rem] muji-shadow border border-bdr-subtle space-y-4">
-             <h3 class="text-[10px] text-txt-secondary uppercase tracking-[0.2em] font-medium px-2">Friends List</h3>
+             <h3 class="text-[10px] text-txt-secondary uppercase tracking-[0.2em] font-medium px-2 flex justify-between items-center">
+                <span>Friends List</span>
+                <span class="text-[9px] text-txt-muted normal-case">{{ friends.filter(f => f.visible !== false).length }} 位好友</span>
+             </h3>
              <div class="grid grid-cols-1 divide-y divide-bdr-default">
-                <div v-for="f in friends" :key="f.name || f" @click="$emit('view-friend', f)" 
-                     class="py-4 flex justify-between items-center active:bg-bg-subtle transition-colors px-2 cursor-pointer">
-                    <div class="flex items-center space-x-3">
+                <div v-for="f in sortedFriends" :key="f.uid || f.id" 
+                     class="py-4 flex justify-between items-center px-2 group">
+                    <div class="flex items-center space-x-3 cursor-pointer" @click="$emit('view-friend', f)">
                         <div class="w-8 h-8 bg-bg-subtle rounded-full flex items-center justify-center relative">
                             <span class="material-symbols-rounded text-txt-secondary text-sm">person</span>
                             <div v-if="f.visible === false" class="absolute -top-1 -right-1 w-3 h-3 bg-bg-subtle border border-white rounded-full flex items-center justify-center">
                                 <span class="material-symbols-rounded text-[8px] text-txt-muted">visibility_off</span>
                             </div>
                         </div>
-                        <span class="text-xs text-txt-primary font-medium">{{ f.name || f }}</span>
+                        <div class="flex flex-col">
+                            <span class="text-xs text-txt-primary font-medium">{{ f.name || f }}</span>
+                            <span v-if="f.email" class="text-[9px] text-txt-muted">{{ f.email }}</span>
+                        </div>
                     </div>
-                    <span class="material-symbols-rounded text-txt-muted text-sm">arrow_forward_ios</span>
+                    <div class="flex items-center space-x-2">
+                        <button v-if="f.visible !== false" @click.stop="toggleFriendVisibility(f)" class="p-2 text-txt-muted hover:text-danger hover:bg-danger/5 rounded-full transition-all sm:opacity-0 group-hover:opacity-100">
+                            <span class="material-symbols-rounded text-sm">visibility_off</span>
+                        </button>
+                        <button v-else @click.stop="toggleFriendVisibility(f)" class="p-2 text-txt-muted hover:text-action-primary-bg hover:bg-action-primary-bg/5 rounded-full transition-all">
+                            <span class="material-symbols-rounded text-sm">visibility</span>
+                        </button>
+                        <span class="material-symbols-rounded text-txt-muted text-sm cursor-pointer" @click="$emit('view-friend', f)">arrow_forward_ios</span>
+                    </div>
                 </div>
             </div>
+        </div>
+
+        <!-- 3. 社交連結與權限管理 -->
+        <div v-if="appMode === 'ADMIN'" class="bg-white p-6 rounded-[2rem] muji-shadow border border-bdr-subtle space-y-4">
+             <h3 class="text-[10px] text-txt-secondary uppercase tracking-[0.2em] font-medium px-2">Privacy Settings</h3>
+             
+             <div class="bg-bg-subtle p-4 rounded-xl space-y-4">
+                  <div class="flex items-center justify-between px-1">
+                      <div class="flex items-center space-x-2">
+                         <span class="material-symbols-rounded text-base text-txt-secondary">key</span>
+                         <span class="text-xs text-txt-primary font-medium">專屬邀請與同步</span>
+                      </div>
+                      <button @click="rotateInviteToken" :disabled="rotatingToken" class="text-[9px] text-action-primary-bg font-medium uppercase tracking-widest hover:bg-white px-2 py-1 rounded-md transition-all active:scale-95 disabled:opacity-50">
+                          {{ rotatingToken ? 'Refreshing...' : '刷新邀請碼' }}
+                      </button>
+                  </div>
+                  
+                  <p class="text-[9px] text-txt-secondary px-1 leading-relaxed">
+                      邀請連結包含動態驗證碼。每當有人成功加入，驗證碼將自動更新，舊連結即失效，確保邀請不被濫用。
+                  </p>
+
+                  <div class="space-y-2">
+                      <div class="flex space-x-2">
+                          <button @click="copyInviteLink" :disabled="copying" class="flex-1 bg-white border border-bdr-subtle text-txt-primary py-3 rounded-xl flex items-center justify-center space-x-2 active:scale-95 transition-all shadow-sm hover:bg-bg-subtle disabled:opacity-50">
+                              <span class="material-symbols-rounded text-sm">{{ inviteCopied === 'friend' ? 'check' : 'link' }}</span>
+                              <span class="text-[10px] font-medium tracking-wide">{{ inviteCopied === 'friend' ? '已複製連結' : '複製邀請連結' }}</span>
+                          </button>
+                          <button @click="shareInviteLink" class="w-12 bg-white border border-bdr-subtle text-txt-primary py-3 rounded-xl flex items-center justify-center active:scale-95 transition-all shadow-sm hover:bg-bg-subtle">
+                              <span class="material-symbols-rounded text-base">ios_share</span>
+                          </button>
+                      </div>
+                      <p class="text-[8px] text-txt-muted text-center italic">僅建立聯動好友關係，不包含任何資料同步</p>
+                  </div>
+             </div>
+
+             <!-- SHARED LINK MANAGEMENT (Existing but unified) -->
+             <div class="bg-bg-subtle p-4 rounded-xl relative">
+                  <div class="flex items-center justify-between">
+                      <div class="space-y-0.5">
+                          <span class="text-xs text-txt-primary font-medium block">公開分享連結管理</span>
+                          <p class="text-[9px] text-txt-secondary">建立多個分享連結，並可設定不同的分享範圍與權限。</p>
+                      </div>
+                      <button @click="$emit('manage-shared-links')" class="w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-sm border border-bdr-subtle active:scale-95 transition-all text-txt-secondary hover:text-txt-primary mt-1">
+                          <span class="material-symbols-rounded text-sm">edit</span>
+                      </button>
+                  </div>
+             </div>
         </div>
 
         <!-- 4. Account & Sync (Default position for Logged In) -->
@@ -285,18 +359,7 @@ export const SettingsPage = {
                      </div>
                  </div>
 
-                 <!-- INVITE FRIEND -->
-                 <div class="bg-bg-subtle p-4 rounded-xl space-y-3">
-                      <div class="flex items-center space-x-2 px-1">
-                         <span class="material-symbols-rounded text-base text-txt-secondary">person_add</span>
-                         <span class="text-xs text-txt-primary font-medium">邀請好友</span>
-                      </div>
-                      <p class="text-[9px] text-txt-secondary px-1 leading-relaxed">分享連結給朋友，登入後即可自動建立聯動好友，方便直接選擇分帳對象。</p>
-                      <button @click="copyInviteLink" class="w-full bg-white border border-bdr-subtle text-txt-primary py-3 rounded-xl flex items-center justify-center space-x-2 active:scale-95 transition-all shadow-sm hover:bg-bg-subtle">
-                          <span class="material-symbols-rounded text-sm">{{ inviteCopied ? 'check' : 'link' }}</span>
-                          <span class="text-[10px] font-medium tracking-wide">{{ inviteCopied ? '已複製連結' : '複製專屬邀請連結' }}</span>
-                      </button>
-                 </div>
+
 
                  <!-- GOOGLE SERVICES (New) -->
                  <div class="bg-bg-subtle p-4 rounded-xl space-y-4">
@@ -332,18 +395,7 @@ export const SettingsPage = {
                      </div>
                  </div>
 
-                 <!-- SHARED LINK MANAGEMENT -->
-                 <div class="bg-bg-subtle p-4 rounded-xl relative">
-                     <div class="flex items-center justify-between">
-                         <div class="space-y-0.5">
-                             <span class="text-xs text-txt-primary font-medium block">公開分享連結管理</span>
-                             <p class="text-[9px] text-txt-secondary">建立多個分享連結，並可設定不同的分享範圍與權限。</p>
-                         </div>
-                         <button @click="$emit('manage-shared-links')" class="w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-sm border border-bdr-subtle active:scale-95 transition-all text-txt-secondary hover:text-txt-primary mt-1">
-                             <span class="material-symbols-rounded text-sm">edit</span>
-                         </button>
-                     </div>
-                 </div>
+
 
                 <button @click="$emit('view-import')" class="w-full border border-bdr-outline text-txt-secondary py-3 rounded-xl text-xs font-medium active:bg-bg-subtle">
                     匯入資料
@@ -383,7 +435,7 @@ export const SettingsPage = {
             sheetUrl: CONFIG.SPREADSHEET_URL,
             isAddingProject: false,
             projectSaving: false,
-            newProject: { name: '', startDate: '', endDate: '' },
+            newProject: { name: '', startDate: '', endDate: '', collaborationEnabled: true },
             selectedProject: null,
             isSharedLinkEnabled: false,
             sharedLink: '',
@@ -397,10 +449,19 @@ export const SettingsPage = {
             debouncedTimeout: null,
             exporting: false,
             backingUp: false,
-            inviteCopied: false
+            inviteCopied: false, // will store 'friend' or false
+            rotatingToken: false,
+            copying: false
         };
     },
     computed: {
+        sortedFriends() {
+            return [...(this.friends || [])].sort((a, b) => {
+                if (a.visible === false && b.visible !== false) return 1;
+                if (a.visible !== false && b.visible === false) return -1;
+                return (a.name || '').localeCompare(b.name || '');
+            });
+        },
         expenseCategories() {
             const list = this.isCategoryModeEdit ? this.localCategories : (this.categories || []);
             return list
@@ -471,7 +532,7 @@ export const SettingsPage = {
                 // ... same old logic, using emit
                 await this.$emit('create-project', this.newProject);
                 this.isAddingProject = false;
-                this.newProject = { name: '', startDate: '', endDate: '' };
+                this.newProject = { name: '', startDate: '', endDate: '', collaborationEnabled: true };
             } catch (e) {
                 // error handled
             } finally {
@@ -760,61 +821,67 @@ export const SettingsPage = {
                 const result = await GoogleSheetsService.cloudSave(data, token, API.requestIncrementalScope);
 
                 this.dialog.alert(`雲端存檔完成！\n備份檔：${result.backupFile}\n記帳表已同步至「${result.folder}」資料夾。`, { title: '雲端存檔' });
-            } catch (e) {
-                console.error(e);
-                this.dialog.alert('雲端存檔失敗: ' + e.message);
             } finally {
                 this.backingUp = false;
             }
         },
-        async copyInviteLink() {
+        async getShortInviteUrl() {
+            const token = this.config.invite_token;
+            if (!token) throw new Error("邀請碼尚未就緒，請重新整理頁面。");
+
+            const params = {
+                invite_code: this.currentUser.uid,
+                name: this.config.user_name || '朋友',
+                token: token
+            };
+
+            const shortId = await API.createShortInvite(params);
             const baseUrl = window.location.origin + window.location.pathname;
-            const inviteUrl = `${baseUrl}?invite_code=${this.currentUser.uid}&name=${encodeURIComponent(this.config.user_name || '朋友')}`;
-            const shareTitle = "日日記 | 帳務邀請";
-            const shareText = `日日記 | 帳務邀請\n邀請你一起記錄開銷與分帳\n${inviteUrl}`;
-
-            // 1. Try Native Share if available (Usually mobile)
-            if (navigator.share) {
-                try {
-                    await navigator.share({
-                        title: shareTitle,
-                        text: "邀請你一起記錄開銷與分帳",
-                        url: inviteUrl
-                    });
-                    this.inviteCopied = true;
-                    setTimeout(() => this.inviteCopied = false, 2500);
-                    return; // Success
-                } catch (e) {
-                    // Fallthrough to clipboard if cancelled or failed
-                    console.log("Native share result:", e.name);
-                }
-            }
-
-            // 2. Fallback to Clipboard with robust check
+            return `${baseUrl}?i=${shortId}`;
+        },
+        async copyInviteLink() {
+            if (this.copying) return;
+            this.copying = true;
             try {
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                    await navigator.clipboard.writeText(shareText);
-                } else {
-                    // Ultimate fallback: traditional textarea method for insecure contexts
-                    const textArea = document.createElement("textarea");
-                    textArea.value = shareText;
-                    textArea.style.position = "fixed";
-                    textArea.style.left = "-9999px";
-                    textArea.style.top = "0";
-                    document.body.appendChild(textArea);
-                    textArea.focus();
-                    textArea.select();
-                    const successful = document.execCommand('copy');
-                    document.body.removeChild(textArea);
-                    if (!successful) throw new Error('execCommand failed');
-                }
+                const inviteUrl = await this.getShortInviteUrl();
 
-                this.inviteCopied = true;
-                if (navigator.vibrate) navigator.vibrate(10);
+                if (navigator.clipboard) {
+                    await navigator.clipboard.writeText(inviteUrl);
+                } else {
+                    const textArea = document.createElement("textarea");
+                    textArea.value = inviteUrl;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand("copy");
+                    document.body.removeChild(textArea);
+                }
+                this.inviteCopied = 'friend';
                 setTimeout(() => this.inviteCopied = false, 2500);
             } catch (err) {
-                console.error('Final fallback copy failed:', err);
-                this.dialog.alert('複製失敗，可能是瀏覽器限制。請手動複製連結：' + inviteUrl);
+                console.error('Copy failed:', err);
+                this.dialog.alert('複製失敗: ' + err.message);
+            } finally {
+                this.copying = false;
+            }
+        },
+        async shareInviteLink() {
+            try {
+                const inviteUrl = await this.getShortInviteUrl();
+                const shareTitle = "日日記 | 帳務邀請";
+
+                if (navigator.share) {
+                    await navigator.share({
+                        title: shareTitle,
+                        text: "邀請你一起用日日記記錄開銷與分帳",
+                        url: inviteUrl
+                    });
+                } else {
+                    this.copyInviteLink();
+                }
+            } catch (e) {
+                if (e.name !== 'AbortError') {
+                    console.error("Share failed", e);
+                }
             }
         },
         navigateToGuide() {

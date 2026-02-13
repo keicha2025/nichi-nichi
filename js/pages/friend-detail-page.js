@@ -104,6 +104,12 @@ export const FriendDetailPage = {
                             class="w-full bg-[var(--action-primary-bg)] text-white py-4 rounded-2xl text-[10px] font-medium tracking-[0.3em] uppercase shadow-lg active:scale-95 transition-all">
                         {{ saving ? 'Saving...' : '儲存變更' }}
                     </button>
+                    
+                    <button @click="deleteFriend" :disabled="saving"
+                            class="w-full bg-white text-txt-secondary py-4 rounded-2xl text-[10px] font-medium tracking-[0.3em] uppercase border border-bdr-main hover:bg-bg-subtle transition-all">
+                        移除好友 (單向)
+                    </button>
+
                     <button @click="isEditing = false" class="w-full py-2 text-[10px] text-txt-secondary tracking-[0.2em] font-medium uppercase hover:text-txt-primary">
                         取消編輯
                     </button>
@@ -259,6 +265,25 @@ export const FriendDetailPage = {
                 this.dialog.alert("儲存失敗: " + e.toString());
             } finally {
                 this.saving = false;
+            }
+        },
+        async deleteFriend() {
+            const confirmed = await this.dialog.confirm(`確定要移除好友「${this.friend.name}」嗎？\n以此帳號身分記錄的花費將保留，但好友名單將不再顯示此人。`, {
+                title: "移除好友",
+                confirmText: "移除",
+                cancelText: "取消"
+            });
+
+            if (confirmed) {
+                this.saving = true;
+                try {
+                    this.$emit('delete-friend', this.friend.id);
+                    // Detail page will be closed by app.js handling the event
+                } catch (e) {
+                    this.dialog.alert("移除失敗: " + e.toString());
+                } finally {
+                    this.saving = false;
+                }
             }
         }
     }

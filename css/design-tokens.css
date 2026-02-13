@@ -46,6 +46,15 @@
     --color-danger: var(--action-primary-bg);
     /* 用品牌深色顯示錯誤，維持風格一致 */
     --color-success: var(--txt-secondary);
+    --color-warning: var(--txt-secondary);
+    --color-info: var(--txt-secondary);
+
+    /* 兼容性別名 (對應原有系統引用) */
+    --p-danger-500: var(--color-danger);
+    --p-success-500: var(--color-success);
+    --p-warn-500: var(--color-warning);
+    --p-info-500: var(--color-info);
+
     --color-border: #FFFFFF;
     /* 主要是卡片邊框 */
     --bdr-main: #EEEEEE;

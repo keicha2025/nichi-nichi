@@ -35,19 +35,15 @@ export const SystemModal = {
             </div>
 
             <!-- Actions -->
-            <div class="w-full space-y-3 pt-2">
-                <!-- Primary Action -->
-                <button @click="$emit('confirm')" 
-                        class="w-full text-white py-3.5 rounded-2xl text-xs font-bold tracking-[0.2em] uppercase active:scale-[0.96] transition-transform duration-200 shadow-md"
-                        :class="primaryBtnClass">
-                    {{ config.confirmText || '確認' }}
-                </button>
-                
-                <!-- Secondary Action (Cancel / View Details) -->
-                <button v-if="config.showCancel || config.secondaryText"
-                        @click="$emit('cancel')" 
-                        class="w-full text-txt-secondary py-2 text-[11px] tracking-widest font-medium active:bg-bg-subtle rounded-xl transition-colors">
+            <div class="flex space-x-3 pt-2 w-full">
+                <button v-if="config.secondaryAction || config.showCancel || config.secondaryText" @click="$emit('cancel')"
+                    class="flex-1 py-4 px-6 rounded-2xl text-[10px] font-medium tracking-[0.3em] uppercase transition-all bg-bg-subtle text-txt-secondary active:scale-95">
                     {{ config.secondaryText || '取消' }}
+                </button>
+                <button @click="$emit('confirm')"
+                    :class="primaryBtnClass"
+                    class="flex-1 py-4 px-6 rounded-2xl text-[10px] font-medium tracking-[0.3em] uppercase transition-all active:scale-95 shadow-md text-white">
+                    {{ config.confirmText || '確定' }}
                 </button>
             </div>
         </div>

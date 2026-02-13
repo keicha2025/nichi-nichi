@@ -65,7 +65,7 @@ export const InviteLanding = {
         </div>
     </div>
     `,
-    props: ['inviterName'],
+    props: ['inviterName', 'token'],
     methods: {
         openGuide() {
             window.location.href = 'guide.html';

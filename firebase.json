@@ -1,0 +1,37 @@
+{
+    "hosting": [
+        {
+            "target": "prod",
+            "public": "./",
+            "ignore": [
+                "firebase.json",
+                "**/.*",
+                "node_modules/**"
+            ],
+            "rewrites": [
+                {
+                    "source": "**",
+                    "destination": "/index.html"
+                }
+            ]
+        },
+        {
+            "target": "beta",
+            "public": "./",
+            "ignore": [
+                "firebase.json",
+                "**/.*",
+                "node_modules/**"
+            ],
+            "rewrites": [
+                {
+                    "source": "**",
+                    "destination": "/index.html"
+                }
+            ]
+        }
+    ],
+    "firestore": {
+        "rules": "firestore.rules"
+    }
+}

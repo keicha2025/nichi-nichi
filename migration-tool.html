@@ -3,71 +3,164 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>日日記 | 資料遷移工具</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>日日記 | 資料遷移與修復工具</title>
+
+    <!-- PWA / Mobile Cache -->
+    <meta name="theme-color" content="var(--action-primary-bg)">
+
+    <!-- Fonts & Icons -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500&family=Noto+Sans+JP:wght@300;400;500&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap">
-    <style>
-        body {
-            font-family: 'Noto Sans TC', sans-serif;
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
+    <!-- Style Tokens -->
+    <link rel="stylesheet" href="css/design-tokens.css">
+    <link rel="stylesheet" href="style.css">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        txt: {
+                            primary: 'var(--txt-primary)',
+                            secondary: 'var(--txt-secondary)',
+                            muted: 'var(--txt-secondary)',
+                            onbrand: 'var(--action-primary-text)'
+                        },
+                        bg: {
+                            main: 'var(--bg-main)',
+                            canvas: 'var(--bg-canvas)',
+                            subtle: 'var(--bg-subtle)',
+                            default: 'var(--bg-main)'
+                        },
+                        bdr: {
+                            default: 'var(--color-border)',
+                            subtle: 'var(--shadow-color)',
+                            outline: 'var(--color-outline)'
+                        },
+                        action: {
+                            primary: {
+                                bg: 'var(--action-primary-bg)',
+                                hover: 'var(--action-primary-hover)',
+                                text: 'var(--action-primary-text)'
+                            }
+                        },
+                        danger: 'var(--color-danger)',
+                        success: 'var(--color-success)',
+                        warning: 'var(--color-warning)',
+                        info: 'var(--color-info)'
+                    }
+                }
+            }
         }
-    </style>
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    </script>
 </head>
 
-<body class="bg-bg-subtle min-h-screen p-8">
-    <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-8">
-        <h1 class="text-2xl font-bold text-txt-primary mb-6 border-b pb-4">日日記 (Nichi-Nichi Log) 資料遷移工具</h1>
+<body class="bg-bg-canvas min-h-screen">
+    <div class="max-w-md mx-auto p-4">
+        <section class="animate-in fade-in pb-20">
+            <div
+                class="bg-white p-6 rounded-[2.5rem] muji-shadow border border-bdr-subtle flex flex-col min-h-[80vh] relative mt-2">
 
-        <div class="space-y-6">
-            <!-- 1. 說明區塊 -->
-            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded text-sm text-blue-700">
-                <p class="font-bold mb-2">使用說明：</p>
-                <ul class="list-disc list-inside space-y-1">
-                    <li>請將舊版 JSON 資料完整貼入下方文字框。</li>
-                    <li>資料格式應包含 <code>Transactions</code> 與 <code>Projects</code> 兩個主要物件。</li>
-                    <li>點擊「開始遷移」後，系統將自動解析並寫入您的 Firebase 帳戶。</li>
-                    <li>請確保您已登入 Google 帳號 (工具會自動檢查)。</li>
-                </ul>
-            </div>
-
-            <!-- 2. 輸入區塊 -->
-            <div>
-                <label class="block text-sm font-medium text-txt-primary mb-2">舊版資料 JSON</label>
-                <textarea id="jsonInput"
-                    class="w-full h-64 p-4 border border-bdr-default rounded-xl font-mono text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                    placeholder='Paste your JSON here (e.g., {"Transactions": {...}, "Projects": {...}})'></textarea>
-            </div>
-
-            <!-- 3. 控制區塊 -->
-            <div class="flex items-center justify-between">
-                <div id="authStatus" class="text-sm text-txt-secondary flex items-center space-x-2">
-                    <span class="w-2 h-2 rounded-full bg-gray-300"></span>
-                    <span>檢查登入狀態...</span>
+                <!-- Header -->
+                <div class="flex items-center justify-between pb-6 shrink-0">
+                    <a href="index.html"
+                        class="text-txt-secondary hover:text-txt-primary transition-colors flex items-center space-x-1">
+                        <span class="material-symbols-rounded text-xl">arrow_back</span>
+                        <span class="text-[10px] tracking-widest uppercase">BACK</span>
+                    </a>
+                    <h1 class="text-base font-medium text-txt-primary tracking-wide">資料遷移與修復</h1>
+                    <div class="w-10"></div> <!-- Spacer -->
                 </div>
-                <div class="space-x-3">
-                    <button id="loginBtn"
-                        class="px-4 py-2 bg-white border border-bdr-default rounded-lg text-sm text-txt-primary hover:bg-bg-subtle hidden">登入
-                        Google</button>
-                    <button id="migrateBtn"
-                        class="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled>
-                        開始遷移
-                    </button>
+
+                <!-- Content -->
+                <div class="flex-1 space-y-8">
+
+                    <!-- Auth Status -->
+                    <div id="authStatus"
+                        class="bg-bg-subtle/50 px-4 py-3 rounded-2xl border border-bdr-subtle/30 flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-2 h-2 rounded-full bg-gray-300 animate-pulse"></span>
+                            <span class="text-[10px] text-txt-secondary tracking-widest uppercase">Checking
+                                Status...</span>
+                        </div>
+                        <button id="loginBtn"
+                            class="hidden text-[10px] px-3 py-1 bg-action-primary-bg text-white rounded-full tracking-widest uppercase">Login</button>
+                    </div>
+
+                    <!-- Tool Section 1: JSON Import -->
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-2 ml-2">
+                            <span class="material-symbols-rounded text-sm text-txt-secondary">upload_file</span>
+                            <h2 class="text-[10px] text-txt-secondary uppercase tracking-widest font-medium">JSON 直接匯入
+                            </h2>
+                        </div>
+
+                        <div class="bg-bg-subtle border border-bdr-subtle p-4 rounded-xl">
+                            <p class="text-[11px] text-txt-secondary leading-relaxed">
+                                請輸入舊版 JSON 資料。此操作將會解析內容並寫入您的 Firebase 帳戶。
+                            </p>
+                        </div>
+
+                        <div class="space-y-2">
+                            <textarea id="jsonInput"
+                                class="w-full h-40 p-4 bg-bg-subtle/30 border border-bdr-subtle rounded-2xl font-mono text-[10px] focus:ring-1 focus:ring-action-primary-bg outline-none text-txt-primary placeholder:text-txt-muted/50"
+                                placeholder='{"Transactions": [...], "Projects": [...]}'></textarea>
+                        </div>
+
+                        <button id="migrateBtn" disabled
+                            class="w-full bg-action-primary-bg text-white py-4 rounded-2xl text-[10px] font-medium tracking-[0.3em] uppercase shadow-lg shadow-gray-200 active:scale-95 transition-all flex items-center justify-center space-x-2 disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed">
+                            <span>開始遷移</span>
+                        </button>
+                    </div>
+
+                    <!-- Divider -->
+                    <div class="border-t border-bdr-subtle/10 py-2"></div>
+
+                    <!-- Tool Section 2: Consistency Fix -->
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-2 ml-2">
+                            <span class="material-symbols-rounded text-sm text-txt-secondary">sync_problem</span>
+                            <h2 class="text-[10px] text-txt-secondary uppercase tracking-widest font-medium">資料一致性修復
+                                (UID)</h2>
+                        </div>
+
+                        <div class="bg-bg-subtle border border-bdr-subtle p-4 rounded-xl">
+                            <p class="text-[11px] text-txt-secondary leading-relaxed">
+                                將現有交易紀錄中的「我」標籤轉換為您的專屬 UID，解決多人協作時的身分顯示混淆。
+                            </p>
+                        </div>
+
+                        <button id="consistencyBtn" disabled
+                            class="w-full bg-bg-subtle text-txt-primary border border-bdr-subtle py-4 rounded-2xl text-[10px] font-medium tracking-[0.3em] uppercase shadow-sm active:scale-95 transition-all flex items-center justify-center space-x-2 disabled:opacity-30 disabled:cursor-not-allowed">
+                            <span>啟動一致性修復</span>
+                        </button>
+                    </div>
+
+                    <!-- Console Output -->
+                    <div class="space-y-2">
+                        <h3 class="text-[10px] text-txt-secondary uppercase tracking-widest font-medium ml-2">執行日誌</h3>
+                        <div id="consoleOutput"
+                            class="bg-bg-subtle rounded-2xl p-4 border border-bdr-subtle font-mono text-[10px] text-txt-secondary min-h-[120px] max-h-48 overflow-y-auto space-y-1">
+                            <div class="flex items-start">
+                                <span class="mr-2 text-txt-muted">></span>
+                                <span>Ready.</span>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
-
-            <!-- 4. 輸出區塊 -->
-            <div class="bg-gray-900 rounded-xl p-4 font-mono text-xs text-green-400 h-64 overflow-y-auto"
-                id="consoleOutput">
-                <div>> Ready.</div>
-            </div>
-        </div>
+        </section>
     </div>
 
     <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js"></script>
     <script type="module" src="./js/migration-tool.js"></script>
 </body>
 

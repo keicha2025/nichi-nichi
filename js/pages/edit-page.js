@@ -262,8 +262,13 @@ export const EditPage = {
         },
         getFriendName(idOrName) {
             if (idOrName === '我') return '我';
-            const f = this.friends.find(x => x.id === idOrName || x.name === idOrName);
-            return f ? f.name : idOrName;
+            if (!idOrName) return '';
+            const f = (this.friends || []).find(x => x.id === idOrName || x.uid === idOrName || x.name === idOrName);
+            if (f) return f.name;
+
+            // Fallback for long IDs
+            if (idOrName.length > 20 || idOrName.includes('_')) return '朋友';
+            return idOrName;
         },
         getFriendNamesFromList(idsOrNames) {
             if (!idsOrNames || idsOrNames.length === 0) return '';
@@ -320,6 +325,11 @@ export const EditPage = {
 
             this.form.personalShare = (this.form.type === '支出') ? share : this.form.personalShare;
             this.form.debtAmount = debt;
+
+            // Determine hostId if it's a shared project
+            const selectedProj = (this.projects || []).find(p => p.id === this.form.projectId);
+            this.form.hostId = selectedProj?.hostId || null;
+
             this.$emit('submit');
         },
         formatDateWithTimezone(dateStr, utc) {

@@ -20,6 +20,7 @@ import { IconEditPage } from './pages/icon-edit-page.js';
 import { InviteLanding } from './components/invite-landing.js';
 import { IconPicker } from './components/icon-picker.js';
 import { AppSelect } from './components/app-select.js';
+import { ProjectLanding } from './components/project-landing.js';
 
 const { createApp, ref, onMounted, computed, provide, watch } = window.Vue;
 
@@ -43,6 +44,7 @@ createApp({
         'shared-links-page': SharedLinksPage,
         'edit-shared-links-page': EditSharedLinksPage,
         'invite-landing': InviteLanding,
+        'project-landing': ProjectLanding,
         'friend-detail-page': FriendDetailPage
     },
     setup() {
@@ -58,13 +60,55 @@ createApp({
         const currentUser = ref(null); // Firebase User
 
         // --- Invitation Handling ---
-        const inviteCode = params.get('invite_code') || sessionStorage.getItem('pending_invite_code');
-        const inviterName = params.get('name') || sessionStorage.getItem('pending_invite_name');
-        const showInviteLanding = ref(!!inviteCode && !currentUser.value);
+        const inviteCode = ref(params.get('invite_code') || sessionStorage.getItem('pending_invite_code'));
+        const inviterName = ref(params.get('name') || sessionStorage.getItem('pending_invite_name'));
+        const inviteToken = ref(params.get('token') || sessionStorage.getItem('pending_invite_token'));
+        const inviteHostUid = ref(params.get('host_uid'));
+        const inviteProjectId = ref(params.get('invite_project_id'));
+        const showInviteLanding = ref(!!inviteCode.value && !currentUser.value);
 
-        if (inviteCode) {
-            sessionStorage.setItem('pending_invite_code', inviteCode);
-            if (inviterName) sessionStorage.setItem('pending_invite_name', inviterName);
+        const resolveShortInvite = async () => {
+            const shortId = params.get('i');
+            if (!shortId) return;
+
+            loading.value = true;
+            try {
+                const resolved = await API.resolveShortCode(shortId);
+                if (resolved) {
+                    console.log("[Short URL] Resolved:", resolved);
+                    inviteCode.value = resolved.invite_code || inviteCode.value;
+                    inviterName.value = resolved.name || inviterName.value;
+                    inviteToken.value = resolved.token || inviteToken.value;
+                    inviteHostUid.value = resolved.host_uid || inviteHostUid.value;
+                    inviteProjectId.value = resolved.invite_project_id || inviteProjectId.value;
+
+                    // Sync to session for after-login usage
+                    if (inviteCode.value) sessionStorage.setItem('pending_invite_code', inviteCode.value);
+                    if (inviterName.value) sessionStorage.setItem('pending_invite_name', inviterName.value);
+                    if (inviteToken.value) sessionStorage.setItem('pending_invite_token', inviteToken.value);
+
+                    // Update UI State: Trigger landing pages even if logged in
+                    if (inviteHostUid.value && inviteProjectId.value) {
+                        currentTab.value = 'project-landing';
+                    } else if (inviteCode.value) {
+                        showInviteLanding.value = true;
+                    }
+                }
+            } catch (e) {
+                console.error("[Short URL] Resolution failed", e);
+            } finally {
+                loading.value = false;
+            }
+        };
+
+        if (inviteCode.value) {
+            sessionStorage.setItem('pending_invite_code', inviteCode.value);
+            if (inviterName.value) sessionStorage.setItem('pending_invite_name', inviterName.value);
+            if (inviteToken.value) sessionStorage.setItem('pending_invite_token', inviteToken.value);
+        }
+
+        if (currentTab.value === 'project-landing' && (!inviteHostUid.value || !inviteProjectId.value) && !params.get('i')) {
+            currentTab.value = 'add';
         }
 
         // Scroll to top on tab change
@@ -497,9 +541,20 @@ createApp({
                             console.log(`[Discovery] Found ${pending.length} pending connections`);
                             let updated = false;
                             for (const conn of pending) {
-                                // Double check against latest friends list to avoid duplicates
-                                if (!friends.value.includes(conn.fromName)) {
-                                    friends.value.push(conn.fromName);
+                                // Double check against latest friends list to avoid duplicates (ID or Name)
+                                const exists = friends.value.some(f =>
+                                    (f.uid && f.uid === conn.fromUid) ||
+                                    (typeof f === 'string' ? f === conn.fromName : f.name === conn.fromName)
+                                );
+
+                                if (!exists) {
+                                    friends.value.push({
+                                        id: 'f_' + Date.now(),
+                                        uid: conn.fromUid,
+                                        name: conn.fromName,
+                                        visible: true,
+                                        createdAt: new Date().toISOString()
+                                    });
                                     updated = true;
                                     console.log("[Discovery] Adding mutual friend:", conn.fromName);
                                     dialog.alert(`您已接受 ${conn.fromName} 的鏈結，對方已自動加入好友！`, "success", "好友連動");
@@ -507,9 +562,8 @@ createApp({
                                 await API.clearConnection(conn.id);
                             }
                             if (updated) {
-                                // Use JSON methods to ensure we have a clean array without Proxy weirdness for Firestore
                                 await API.updateUserData({ friends: JSON.parse(JSON.stringify(friends.value)) });
-                                console.log("[Discovery] User data updated with new friends.");
+                                await loadData(true); // Final reload to sync
                             }
                         }
                     } catch (e) {
@@ -583,6 +637,24 @@ createApp({
                     spendDate: dataToSave.spendDate,
                     utc: utcOffset
                 };
+
+                // [Consistency] Convert '我' to UID for storage if the current user is the payer
+                if (payload.payer === '我' && API.auth.currentUser) {
+                    payload.payer = API.auth.currentUser.uid;
+                    payload.payerUid = API.auth.currentUser.uid;
+                } else {
+                    // Try to find if the payer is a friend with a UID or FID
+                    const friend = friends.value.find(f => f.id === payload.payer || f.name === payload.payer || (f.uid && f.uid === payload.payer));
+                    if (friend) {
+                        if (friend.uid) payload.payerUid = friend.uid;
+                        if (friend.id) payload.payerFid = friend.id;
+                    }
+                }
+
+                // Handle beneficiaries mapping too if applicable
+                if (payload.beneficiaries) {
+                    payload.beneficiaries = payload.beneficiaries.map(b => (b === '我' && API.auth.currentUser) ? API.auth.currentUser.uid : b);
+                }
 
                 // OPTIMISTIC UPDATE
                 if (dataToSave.action === 'edit') {
@@ -791,20 +863,27 @@ createApp({
                 if (user && !prevUser) {
                     const code = sessionStorage.getItem('pending_invite_code');
                     const name = sessionStorage.getItem('pending_invite_name');
+                    const token = sessionStorage.getItem('pending_invite_token');
                     if (code && code !== user.uid) {
                         try {
-                            await API.processInvite(code, name);
+                            await API.processInvite(code, name, token);
                             sessionStorage.removeItem('pending_invite_code');
                             sessionStorage.removeItem('pending_invite_name');
+                            sessionStorage.removeItem('pending_invite_token');
                             showInviteLanding.value = false;
                             dialog.alert("已成功與邀請人連結！", "success", "好友邀請");
                         } catch (e) {
                             console.error("Invite Process Failed", e);
+                            dialog.alert("邀請連結無效或已過期：" + e.message);
+                            sessionStorage.removeItem('pending_invite_code');
+                            sessionStorage.removeItem('pending_invite_name');
+                            sessionStorage.removeItem('pending_invite_token');
                         }
                     } else if (code === user.uid) {
                         // User trying to invite themselves
                         sessionStorage.removeItem('pending_invite_code');
                         sessionStorage.removeItem('pending_invite_name');
+                        sessionStorage.removeItem('pending_invite_token');
                         showInviteLanding.value = false;
                     }
                 }
@@ -941,12 +1020,34 @@ createApp({
                                 console.log("[Background Sync] Friend update success", id);
                             } catch (e) {
                                 console.error("[Background Sync] Friend update failed", e);
-                                // Rollback local state on failure (optional, but good for robustness)
-                                // friends.value[idx] = { ...friends.value[idx], name: oldName, visible: oldVisible };
                             }
                         })();
                     } else {
                         // Guest mode: just save and reload
+                        localStorage.setItem('guest_friends', JSON.stringify(friends.value));
+                        await loadData(true);
+                    }
+                }
+            },
+            handleDeleteFriend: async (id) => {
+                const idx = friends.value.findIndex(f => f.id === id);
+                if (idx !== -1) {
+                    // 1. LOCAL UPDATE
+                    friends.value.splice(idx, 1);
+                    selectedFriend.value = null;
+                    currentTab.value = 'settings';
+
+                    // 2. BACKGROUND SYNC
+                    if (appMode.value === 'ADMIN') {
+                        try {
+                            await API.updateUserData({ friends: JSON.parse(JSON.stringify(friends.value)) });
+                            await loadData(true);
+                            console.log("[API] Friend deleted successfully", id);
+                        } catch (e) {
+                            console.error("[API] Friend deletion failed", e);
+                            dialog.alert("同步刪除失敗，請檢查網路連線");
+                        }
+                    } else {
                         localStorage.setItem('guest_friends', JSON.stringify(friends.value));
                         await loadData(true);
                     }
@@ -1127,13 +1228,16 @@ createApp({
                 let name = '';
                 let startDate = getLocalISOString().split('T')[0];
                 let endDate = getLocalISOString().split('T')[0];
+                let collaborationEnabled = true;
 
                 if (typeof input === 'object') {
                     name = input.name;
                     startDate = input.startDate || startDate;
                     endDate = input.endDate || endDate;
+                    collaborationEnabled = input.collaborationEnabled !== undefined ? input.collaborationEnabled : true;
                 } else {
                     name = input;
+                    collaborationEnabled = true;
                 }
 
                 if (!name) return;
@@ -1148,6 +1252,7 @@ createApp({
                         startDate: startDate,
                         endDate: endDate,
                         status: 'Planned',
+                        collaborationEnabled: collaborationEnabled,
                         createdAt: new Date().toISOString()
                     };
                     projects.value.push(newProject);
@@ -1159,7 +1264,8 @@ createApp({
                         name: name,
                         startDate: startDate,
                         endDate: endDate,
-                        status: 'Active'
+                        status: 'Active',
+                        collaborationEnabled: collaborationEnabled
                     };
                     projects.value.push(newProject);
                     pendingUpdates.value.projects.push(newProject);
@@ -1172,6 +1278,26 @@ createApp({
                     } else if (currentTab.value === 'edit' && editForm.value) {
                         editForm.value = { ...editForm.value, projectId: newProject.id };
                     }
+                }
+            },
+            handleProjectJoined: async (project) => {
+                loading.value = true;
+                try {
+                    await loadData(); // Refresh to get the new project and transactions
+                    selectedProject.value = project;
+                    currentTab.value = 'project-detail';
+                } catch (e) {
+                    dialog.alert("重新整理資料失敗: " + e.message);
+                } finally {
+                    loading.value = false;
+                    // Clean up URL
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete('host_uid');
+                    url.searchParams.delete('invite_project_id');
+                    url.searchParams.delete('tab');
+                    window.history.replaceState({}, '', url);
+                    inviteHostUid.value = null;
+                    inviteProjectId.value = null;
                 }
             }
         };
@@ -1206,9 +1332,18 @@ createApp({
         };
 
         onMounted(() => {
+            resolveShortInvite();
             setTimeout(autoBackupIfNeeded, 5000);
         });
 
-        return methods;
+        return {
+            ...methods,
+            API,
+            inviteHostUid,
+            inviteProjectId,
+            inviteToken, // Added inviteToken
+            showInviteLanding,
+            inviterName
+        };
     }
 }).mount('#app');

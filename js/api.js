@@ -1,7 +1,7 @@
 import {
     db, auth, googleProvider, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider,
     collection, doc, setDoc, addDoc, getDocs, updateDoc, deleteDoc, query, orderBy, where, getDoc, writeBatch, arrayUnion, arrayRemove, collectionGroup,
-    reauthenticateWithPopup, serverTimestamp
+    reauthenticateWithPopup, serverTimestamp, deleteField
 } from './firebase-config.js';
 
 import { CONFIG } from './config.js?v=1.3';
@@ -29,10 +29,6 @@ export const DEFAULTS = {
     config: { user_name: '', fx_rate: 0.21 }
 };
 
-// ... (existing helper)
-
-
-
 // Helper: Get Current User or throw
 const getCurrentUser = () => {
     const user = auth.currentUser;
@@ -41,6 +37,25 @@ const getCurrentUser = () => {
 };
 
 export const API = {
+    db,
+    auth,
+    // Firestore Functions
+    doc,
+    getDoc,
+    getDocs,
+    collection,
+    query,
+    where,
+    orderBy,
+    setDoc,
+    updateDoc,
+    deleteDoc,
+    collectionGroup,
+    writeBatch,
+    arrayUnion,
+    arrayRemove,
+    serverTimestamp,
+    deleteField,
     // Auth wrappers
     async login() {
         try {
@@ -78,14 +93,13 @@ export const API = {
             provider.addScope('https://www.googleapis.com/auth/spreadsheets');
             provider.addScope('https://www.googleapis.com/auth/drive.file');
 
-            // Re-authenticate with extra scope
             const result = await signInWithPopup(auth, provider);
             const credential = GoogleAuthProvider.credentialFromResult(result);
             const token = credential.accessToken;
 
             if (token) {
                 sessionStorage.setItem('google_access_token_v4', token);
-                sessionStorage.setItem('google_token_expiry', Date.now() + 3500 * 1000); // Usually 1 hour
+                sessionStorage.setItem('google_token_expiry', Date.now() + 3500 * 1000);
                 return token;
             }
             return null;
@@ -110,13 +124,9 @@ export const API = {
     },
 
     // Data Access
-    async fetchInitialData(options = {}) {
+    async fetchInitialData() {
         const user = getCurrentUser();
-        // If no user, or in Guest Mode (check app logic), return defaults or handle locally
-        // But here we rely on Auth. If not logged in, return empty or defaults.
         if (!user) {
-            // Check if Guest? Typically caller should know.
-            // Return defaults for guest to start with
             return {
                 categories: [],
                 friends: [],
@@ -128,56 +138,134 @@ export const API = {
         }
 
         const uid = user.uid;
+        const email = user.email;
 
         try {
-            // 1. Fetch Config & Metadata (Stored in user's root document or subcollection?)
-            // Plan: users/{uid} stores config, categories, paymentMethods as fields or subcollections.
-            // Let's store compact metadata in the user doc itself for fewer reads.
-            // users/{uid} => { config: {...}, categories: [...], paymentMethods: [...] }
-
-            // 2. Fetch Transactions (Subcollection)
-            // users/{uid}/transactions
-
             const userDocRef = doc(db, 'users', uid);
-            // Initialize User Doc if not exists (First login)
-            // NOTE: We do a lazy init here.
 
-            // Parallel Fetch
-            const [userSnapshot, txSnapshot] = await Promise.all([
+            // Parallel Fetch: Config & Transactions & Projects Subcollection
+            const [userSnapshot, txSnapshot, projSnapshot] = await Promise.all([
                 getDoc(userDocRef),
-                getDocs(query(collection(db, 'users', uid, 'transactions'), orderBy('spendDate', 'desc')))
+                getDocs(query(collection(db, 'users', uid, 'transactions'), orderBy('spendDate', 'desc'))),
+                getDocs(collection(db, 'users', uid, 'projects'))
             ]);
 
-            let userData = userSnapshot.exists() ? userSnapshot.data() : null;
+            let config = DEFAULTS.config;
+            let friends = DEFAULTS.friends;
+            let userData = null;
 
-            // If new user, init defaults
-            if (!userData) {
-                // Use Google Display Name as default, fallback to DEFAULTS, fallback to 'User'
-                const initialUserName = user.displayName || DEFAULTS.config.user_name || 'User';
+            if (userSnapshot.exists()) {
+                const data = userSnapshot.data();
+                userData = data; // Assign existing data to userData
+                config = { ...config, ...data.config };
+                friends = data.friends || [];
 
+                // [Upgrade] Ensure email and invite_token exist
+                let needsUpdate = false;
+                if (config.email !== email) {
+                    config.email = email;
+                    needsUpdate = true;
+                }
+                if (!config.invite_token) {
+                    config.invite_token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+                    needsUpdate = true;
+                }
+                if (needsUpdate) {
+                    await updateDoc(userDocRef, { config });
+                }
+            } else {
+                // Initialize User Doc
+                config.email = email;
+                config.invite_token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
                 userData = {
-                    config: { user_name: initialUserName, fx_rate: DEFAULTS.config.fx_rate },
+                    config,
                     categories: DEFAULTS.categories,
                     paymentMethods: DEFAULTS.paymentMethods,
-                    friends: DEFAULTS.friends,
-                    projects: []
+                    friends: [],
+                    projects: [],
+                    createdAt: serverTimestamp()
                 };
                 await setDoc(userDocRef, userData);
             }
 
-            const transactions = txSnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
+            // Migration: Move projects from array in user doc to subcollection
+            let userProjects = (projSnapshot.docs || []).map(d => ({ ...d.data(), id: d.id }));
+
+            if (userData && userData.projects && userData.projects.length > 0) {
+                console.log("[API] Migrating projects from array to subcollection...");
+                const batch = writeBatch(db);
+                userData.projects.forEach(p => {
+                    const projectRef = doc(db, 'users', uid, 'projects', p.id);
+                    batch.set(projectRef, { ...p, collaborators: p.collaborators || [] });
+                });
+                batch.update(userDocRef, { projects: deleteField() });
+                await batch.commit();
+
+                const newProjSnap = await getDocs(collection(db, 'users', uid, 'projects'));
+                userProjects = newProjSnap.docs.map(d => ({ ...d.data(), id: d.id }));
+            }
+
+            // Update userData with potentially migrated projects
+            if (userData) {
+                userData.projects = userProjects;
+            }
+
+
+            const transactions = txSnapshot.docs.map(doc => {
+                const data = doc.data();
+                // [Consistency] Map UID back to '我' if it belongs to current user
+                if (data.payer === uid) data.payer = '我';
+                if (data.beneficiaries) {
+                    data.beneficiaries = data.beneficiaries.map(b => b === uid ? '我' : b);
+                }
+                return { id: doc.id, ...data };
+            });
+
+            // --- FETCH COLLABORATIVE DATA ---
+            const sharedProjSnap = await getDocs(query(collectionGroup(db, 'projects'), where('collaborators', 'array-contains', uid)));
+
+            const sharedProjects = [];
+            const sharedTransactions = [];
+
+            for (const pDoc of sharedProjSnap.docs) {
+                const pData = pDoc.data();
+                const hostId = pDoc.ref.parent.parent.id;
+                if (hostId === uid) continue;
+
+                const sharedProject = { ...pData, id: pDoc.id, hostId, isCollaborative: true };
+                sharedProjects.push(sharedProject);
+
+                const stxSnap = await getDocs(query(collection(db, 'users', hostId, 'transactions'), where('projectId', '==', pDoc.id)));
+                stxSnap.docs.forEach(d => {
+                    const data = d.data();
+
+                    // [Sharing Logic] If mode is RELATED, filter out transactions not involving this user
+                    if (pData.sharingMode === 'RELATED') {
+                        const isPayer = data.payer === uid;
+                        const isBeneficiary = data.beneficiaries && data.beneficiaries.includes(uid);
+                        if (!isPayer && !isBeneficiary) return;
+                    }
+
+                    // [Consistency] If payer is the host, mark it so we can resolve it later
+                    // If not host and not '我', it's likely another collaborator or friend
+                    if (data.payer === hostId) data.payerIsHost = true;
+
+                    if (data.payer === uid) data.payer = '我';
+                    if (data.beneficiaries) {
+                        data.beneficiaries = data.beneficiaries.map(b => b === uid ? '我' : b);
+                    }
+                    sharedTransactions.push({ id: d.id, ...data, hostId });
+                });
+            }
 
             return {
                 categories: userData.categories || DEFAULTS.categories,
                 paymentMethods: userData.paymentMethods || DEFAULTS.paymentMethods,
                 friends: userData.friends || [],
-                projects: userData.projects || [],
+                projects: [...(userData.projects || []), ...sharedProjects],
                 config: userData.config || {},
-                transactions: transactions,
-                stats: {} // Calc on frontend now
+                transactions: [...transactions, ...sharedTransactions],
+                stats: {}
             };
 
         } catch (error) {
@@ -186,16 +274,12 @@ export const API = {
         }
     },
 
-    async saveTransaction(payload, tokenOrUid = '') {
-        // payload might be a transaction OR a config update
+    async saveTransaction(payload) {
         const user = auth.currentUser;
         if (!user) throw new Error("Not logged in");
 
         const uid = user.uid;
         const userRef = doc(db, 'users', uid);
-
-        // Action routing based on 'action' field (Legacy compat) or just check payload structure
-        // The app currently sends { action: 'updateConfig', ... } or { ...transaction }
 
         if (payload.action === 'updateConfig') {
             await updateDoc(userRef, {
@@ -210,7 +294,6 @@ export const API = {
             const { oldName, newName, id } = payload;
             if (!newName) return false;
 
-            // 1. Update friends list
             const userSnap = await getDoc(userRef);
             let friends = userSnap.data().friends || [];
             const idx = friends.findIndex(f => (id && f.id === id) || (typeof f === 'string' ? f : f.name) === oldName);
@@ -225,12 +308,6 @@ export const API = {
                 await updateDoc(userRef, { friends });
             }
 
-            // 2. Robust update transactions
-            // We need to find all transactions where oldName appears in 'friendName' or 'payer'
-            // Since Firestore doesn't support "contains" for strings well, we fetch 
-            // the user's transactions and filter. In a real large-scale app, we'd use a different schema.
-            // But for this app's scale, fetching the user's transactions is acceptable.
-
             const transactionsSnap = await getDocs(collection(userRef, 'transactions'));
             const batch = writeBatch(db);
             let count = 0;
@@ -240,19 +317,16 @@ export const API = {
                 let needsUpdate = false;
                 const updateData = {};
 
-                // Check Payer
                 if (t.payer === oldName) {
                     updateData.payer = newName;
                     needsUpdate = true;
                 }
 
-                // Check FriendName (could be "Bob, 我")
                 if (t.friendName) {
                     if (t.friendName === oldName) {
                         updateData.friendName = newName;
                         needsUpdate = true;
                     } else if (t.friendName.includes(oldName)) {
-                        // Word-boundary check to avoid partial replacements
                         const regex = new RegExp('\\b' + oldName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'g');
                         if (regex.test(t.friendName)) {
                             updateData.friendName = t.friendName.replace(regex, newName);
@@ -267,96 +341,58 @@ export const API = {
                 }
             });
 
-            if (count > 0) {
-                await batch.commit();
-                console.log(`[API] Renamed ${count} transaction references`);
-            }
+            if (count > 0) await batch.commit();
             return true;
         }
 
         if (payload.action === 'updateProject') {
-            // Projects are stored in an array in userDoc? Or subcollection?
-            // User doc is better for small lists.
-            const userSnap = await getDoc(userRef);
-            let projects = userSnap.data().projects || [];
+            const hostId = payload.hostId || uid;
+            const projectRef = payload.id ? doc(db, 'users', hostId, 'projects', payload.id) : doc(collection(db, 'users', hostId, 'projects'));
 
-            if (payload.id) {
-                // Edit
-                const idx = projects.findIndex(p => p.id === payload.id);
-                if (idx !== -1) {
-                    // Sanitize payload to remove 'action' and undefined values
-                    const { action, ...cleanPayload } = payload;
-                    // Merge existing project with clean payload
-                    // Filter out undefined from result to be safe
-                    const merged = { ...projects[idx], ...cleanPayload };
+            const { action, ...dataToSave } = payload;
+            const finalPayload = { ...dataToSave, updatedAt: new Date().toISOString() };
 
-                    // Firestore rejects undefined, so we must ensure no field is undefined
-                    Object.keys(merged).forEach(key => merged[key] === undefined && delete merged[key]);
+            Object.keys(finalPayload).forEach(key => finalPayload[key] === undefined && delete finalPayload[key]);
 
-                    projects[idx] = merged;
-                }
-            } else {
-                // Create
-                projects.push({
-                    id: 'proj_' + Date.now(),
-                    name: payload.name,
-                    startDate: payload.startDate,
-                    endDate: payload.endDate,
-                    status: 'Active' // Default
-                });
+            if (!payload.id) {
+                finalPayload.id = projectRef.id;
+                finalPayload.collaborators = [];
+                finalPayload.createdAt = new Date().toISOString();
+                finalPayload.status = finalPayload.status || 'Active';
             }
-            await updateDoc(userRef, { projects });
+
+            await setDoc(projectRef, finalPayload, { merge: true });
             return true;
         }
 
         if (payload.action === 'delete') {
             if (!payload.id) throw new Error("Missing ID for deletion");
-            await deleteDoc(doc(db, 'users', uid, 'transactions', payload.id));
+            const targetUid = payload.hostId || uid;
+            await deleteDoc(doc(db, 'users', targetUid, 'transactions', payload.id));
             return true;
         }
 
-        // Standard Transaction Save (Add or Edit)
-        // If edit, payload should have ID.
-        // We clean the payload of UI-only fields
-        const { action, row, token, ...dataToSave } = payload;
+        const { action, row, token, hostId, ...dataToSave } = payload;
+        const targetUid = hostId || uid;
 
         if (action === 'edit' && payload.id) {
-            await setDoc(doc(db, 'users', uid, 'transactions', payload.id), dataToSave, { merge: true });
+            await setDoc(doc(db, 'users', targetUid, 'transactions', payload.id), dataToSave, { merge: true });
         } else {
-            // New
-            // For 'add', generate new doc.
-            // If payload has an ID (client generated), use it? Or let Firestore gen?
-            // App generates 'tx_{timestamp}'. We can use that as Doc ID.
-            const newRef = payload.id ? doc(db, 'users', uid, 'transactions', payload.id) : collection(db, 'users', uid, 'transactions');
-            if (payload.id) {
-                await setDoc(newRef, dataToSave);
-            } else {
-                await addDoc(newRef, dataToSave);
-            }
+            const txId = payload.id || `tx_${Date.now()}`;
+            await setDoc(doc(db, 'users', targetUid, 'transactions', txId), dataToSave);
         }
         return true;
     },
 
-    // Save full user data (for Settings page: categories, payments, etc.)
     async updateUserData(data) {
-        console.log('[DEBUG API] updateUserData called with:', JSON.stringify(data));
-
         const user = auth.currentUser;
         if (!user) throw new Error("Not logged in");
-
         const userRef = doc(db, 'users', user.uid);
-        // We only update top-level fields: categories, paymentMethods
         const updates = {};
         if (data.categories) updates.categories = data.categories;
         if (data.paymentMethods) updates.paymentMethods = data.paymentMethods;
         if (data.friends) updates.friends = data.friends;
-
-        console.log('[DEBUG API] Updates to write to Firestore:', JSON.stringify(updates));
-        console.log('[DEBUG API] User UID:', user.uid);
-
         await updateDoc(userRef, updates);
-
-        console.log('[DEBUG API] Firestore updateDoc completed successfully');
         return true;
     },
 
@@ -364,7 +400,6 @@ export const API = {
         const user = auth.currentUser;
         if (!user) throw new Error("Not logged in");
         const uid = user.uid;
-
         const chunkSize = 450;
         for (let i = 0; i < ids.length; i += chunkSize) {
             const batch = writeBatch(db);
@@ -378,9 +413,6 @@ export const API = {
         return true;
     },
 
-    // Sharing Features
-    // --- Shared Links System ---
-
     async getSharedLinks() {
         const user = auth.currentUser;
         if (!user) throw new Error("Not logged in");
@@ -391,27 +423,12 @@ export const API = {
     async createSharedLink(config) {
         const user = auth.currentUser;
         if (!user) throw new Error("Not logged in");
-
-        // Generate Link ID
         const linkId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-        const linkData = {
-            id: linkId,
-            createdAt: new Date().toISOString(),
-            ...config
-        };
-
+        const linkData = { id: linkId, createdAt: new Date().toISOString(), ...config };
         const batch = writeBatch(db);
-
-        // 1. Create Link Doc
         const linkRef = doc(db, 'users', user.uid, 'shared_links', linkId);
         batch.set(linkRef, linkData);
-
-        // 2. Update User's activeSharedIds
-        const userRef = doc(db, 'users', user.uid);
-        batch.update(userRef, {
-            activeSharedIds: arrayUnion(linkId)
-        });
-
+        batch.update(doc(db, 'users', user.uid), { activeSharedIds: arrayUnion(linkId) });
         await batch.commit();
         return linkId;
     },
@@ -419,61 +436,37 @@ export const API = {
     async deleteSharedLink(linkId) {
         const user = auth.currentUser;
         if (!user) throw new Error("Not logged in");
-
         const batch = writeBatch(db);
-
-        // 1. Delete Link Doc
-        const linkRef = doc(db, 'users', user.uid, 'shared_links', linkId);
-        batch.delete(linkRef);
-
-        // 2. Remove from activeSharedIds
-        const userRef = doc(db, 'users', user.uid);
-        batch.update(userRef, {
-            activeSharedIds: arrayRemove(linkId)
-        });
-
+        batch.delete(doc(db, 'users', user.uid, 'shared_links', linkId));
+        batch.update(doc(db, 'users', user.uid), { activeSharedIds: arrayRemove(linkId) });
         await batch.commit();
     },
 
     async updateSharedLink(linkId, config) {
         const user = auth.currentUser;
         if (!user) throw new Error("Not logged in");
-        const linkRef = doc(db, 'users', user.uid, 'shared_links', linkId);
-        await updateDoc(linkRef, config);
+        await updateDoc(doc(db, 'users', user.uid, 'shared_links', linkId), config);
     },
 
-    // Updated Fetch for Viewer Mode
     async fetchSharedData(linkId, targetUid = null) {
         try {
             let uid = targetUid;
             let linkConfig = null;
-
             if (uid) {
-                // FAST PATH: Direct Access via UID (No Collection Group Index needed)
                 const linkSnap = await getDoc(doc(db, 'users', uid, 'shared_links', linkId));
                 if (!linkSnap.exists()) throw new Error("Link configuration not found.");
                 linkConfig = linkSnap.data();
             } else {
-                // SLOW PATH: Legacy links without UID (Requires Index)
                 const linkQuery = query(collectionGroup(db, 'shared_links'), where('id', '==', linkId));
                 const linkQuerySnapshot = await getDocs(linkQuery);
-
-                if (linkQuerySnapshot.empty) {
-                    throw new Error("Shared link is invalid or expired.");
-                }
-
+                if (linkQuerySnapshot.empty) throw new Error("Shared link is invalid or expired.");
                 const linkSnap = linkQuerySnapshot.docs[0];
                 linkConfig = linkSnap.data();
                 uid = linkSnap.ref.parent.parent.id;
             }
-
-            const userDocRef = doc(db, 'users', uid);
-            const userDoc = await getDoc(userDocRef);
-
+            const userDoc = await getDoc(doc(db, 'users', uid));
             if (!userDoc.exists()) throw new Error("Owner user not found.");
-
             return this._fetchDataForUser(userDoc, linkConfig);
-
         } catch (error) {
             console.error("Fetch Shared Data Error", error);
             throw error;
@@ -483,100 +476,67 @@ export const API = {
     async _fetchDataForUser(userDoc, linkConfig) {
         const uid = userDoc.id;
         const userData = userDoc.data();
-
-        // 3. Fetch Transactions
         let qTx = query(collection(db, 'users', uid, 'transactions'), orderBy('spendDate', 'desc'));
         const txSnapshot = await getDocs(qTx);
         let transactions = txSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        // 4. Apply Link Filters
-        // Date Range
         if (linkConfig.scope === 'range' && linkConfig.scopeValue) {
             const { start, end } = linkConfig.scopeValue;
             if (start) transactions = transactions.filter(t => t.spendDate >= start);
             if (end) transactions = transactions.filter(t => t.spendDate <= end);
         }
-        // Project Scope
         if (linkConfig.scope === 'project' && linkConfig.scopeValue) {
             transactions = transactions.filter(t => t.projectId === linkConfig.scopeValue);
         }
-        // Exclude Project Expenses (if not project scope)
         if (linkConfig.scope !== 'project' && linkConfig.excludeProjectExpenses) {
             transactions = transactions.filter(t => !t.projectId);
-            userData.projects = []; // Don't load projects if expenses are excluded
+            userData.projects = [];
         }
 
-        // Privacy: Mask Friends
         if (linkConfig.hideFriendNames) {
-            // Mask in transactions
+            const currentUid = auth.currentUser?.uid;
             transactions.forEach(t => {
-                if (t.payer && t.payer !== 'Me' && t.payer !== '我') t.payer = "友";
+                if (t.payer && t.payer !== 'Me' && t.payer !== '我' && t.payer !== currentUid) t.payer = "友";
                 if (t.friendName) t.friendName = "友";
                 if (t.beneficiaries) {
-                    t.beneficiaries = t.beneficiaries.map(b => (b === 'Me' || b === '我') ? b : "友");
+                    t.beneficiaries = t.beneficiaries.map(b => (b === 'Me' || b === '我' || b === currentUid) ? b : "友");
                 }
             });
-            // Don't return real friend list
             userData.friends = [];
         }
 
-        // Privacy: Mask Projects
         if (linkConfig.hideProjectNames) {
-            // transactions.forEach(t => { if(t.projectId) t.projectName = "專案"; }); // We don't have projectName in tx usually, just ID.
-            // But we filter the projects list passed to config.
-            // Actually, we fetch projects?
-            // "Viewer Mode" expects 'projects' list.
             if (linkConfig.scope === 'project') {
-                // Return only that project, maybe masked? No, if dedicated link, name should probably show?
-                // User requirement: "隱藏專案名稱，僅顯示代號"
                 userData.projects = userData.projects?.filter(p => p.id === linkConfig.scopeValue).map((p, i) => ({ ...p, name: "專案 " + (i + 1) }));
             } else {
                 userData.projects = userData.projects?.map((p, i) => ({ ...p, name: "專案 " + (i + 1) }));
             }
-        } else {
-            // Normal Project Filtering
-            if (linkConfig.scope === 'project') {
-                userData.projects = userData.projects?.filter(p => p.id === linkConfig.scopeValue);
-            }
-        }
-
-        // Merge Owner Config
-        const config = { ...(userData.config || {}) };
-
-        // Override User Name with Link Name if provided
-        if (linkConfig.name) {
-            config.user_name = linkConfig.name;
+        } else if (linkConfig.scope === 'project') {
+            userData.projects = userData.projects?.filter(p => p.id === linkConfig.scopeValue);
         }
 
         return {
-            config, // Correctly returns the config sub-object
+            config: userData.config || {},
             transactions,
-            friends: userData.friends || [], // Might be empty if masked
+            friends: userData.friends || [],
             projects: userData.projects || [],
             paymentMethods: userData.paymentMethods || [],
             categories: userData.categories || [],
-            linkConfig: linkConfig // Pass full config for UI usage
+            linkConfig: linkConfig
         };
     },
 
     async clearAccountData() {
         const user = getCurrentUser();
         if (!user) throw new Error("No user logged in");
-
-        const uid = user.uid;
-
-        // Delete 'transactions' Subcollection with chunked batching
-        await this._deleteCollectionChunked(collection(db, 'users', uid, 'transactions'));
+        await this._deleteCollectionChunked(collection(db, 'users', user.uid, 'transactions'));
     },
 
-    // Helper: Chunked Deletion to handle batch limits (500)
     async _deleteCollectionChunked(colRef) {
         const snapshot = await getDocs(colRef);
         if (snapshot.empty) return;
-
         const docs = snapshot.docs;
-        const chunkSize = 450; // Safer limit
-
+        const chunkSize = 450;
         for (let i = 0; i < docs.length; i += chunkSize) {
             const batch = writeBatch(db);
             const chunk = docs.slice(i, i + chunkSize);
@@ -588,61 +548,36 @@ export const API = {
     async importData(data, onProgress) {
         const user = auth.currentUser;
         if (!user) throw new Error("Not logged in");
-
         const uid = user.uid;
         const userRef = doc(db, 'users', uid);
-
         let count = 0;
-
         try {
-            // 1. Update User Metadata (Config, Categories, etc.)
             const updates = {};
             if (data.categories) updates.categories = data.categories;
             if (data.paymentMethods) updates.paymentMethods = data.paymentMethods;
             if (data.friends) updates.friends = data.friends;
             if (data.projects) updates.projects = data.projects;
             if (data.config) updates.config = data.config;
-
             if (Object.keys(updates).length > 0) {
                 if (onProgress) onProgress("正在更新設定與類別...");
                 await setDoc(userRef, updates, { merge: true });
             }
-
-            // 2. Import Transactions (Batch Write)
             if (data.transactions && data.transactions.length > 0) {
                 if (onProgress) onProgress(`準備匯入 ${data.transactions.length} 筆交易...`);
-
-                // Chunk into batches of 500
-                const chunkSize = 450; // Safer limit
-                const chunks = [];
+                const chunkSize = 450;
                 for (let i = 0; i < data.transactions.length; i += chunkSize) {
-                    chunks.push(data.transactions.slice(i, i + chunkSize));
-                }
-
-                for (let i = 0; i < chunks.length; i++) {
-                    const chunk = chunks[i];
+                    const chunk = data.transactions.slice(i, i + chunkSize);
                     const batch = writeBatch(db);
-
-                    if (onProgress) onProgress(`正在寫入批次 ${i + 1}/${chunks.length}...`);
-
+                    if (onProgress) onProgress(`正在寫入批次 ${Math.floor(i / chunkSize) + 1}...`);
                     chunk.forEach(tx => {
-                        // Ensure we use the ID from JSON or generate one?
-                        // If JSON has ID, use it (Restore).
-                        // If checking for duplicates? "Restore" usually implies we trust the backup ID.
-                        // If ID exists, setDoc matches overwrite.
                         const txId = tx.id || `tx_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
-                        const txRef = doc(db, 'users', uid, 'transactions', txId);
-
-                        // Clean data
                         const { id, ...txData } = tx;
-                        batch.set(txRef, txData);
+                        batch.set(doc(db, 'users', uid, 'transactions', txId), txData);
                     });
-
                     await batch.commit();
                     count += chunk.length;
                 }
             }
-
             return { success: true, count };
         } catch (error) {
             console.error("Import Data Error", error);
@@ -653,98 +588,238 @@ export const API = {
     async deleteFullAccount() {
         const user = getCurrentUser();
         if (!user) throw new Error("No user logged in");
-
         const uid = user.uid;
-
-        // 1. Delete Subcollections with chunked batching
-        // Only target actual subcollections. Fields (projects, categories, friends) are deleted with user doc.
-        const collections = ['transactions', 'shared_links'];
-
-        for (const colName of collections) {
+        for (const colName of ['transactions', 'shared_links']) {
             await this._deleteCollectionChunked(collection(db, 'users', uid, colName));
         }
-
-        // 2. Delete User Doc
-        const userRef = doc(db, 'users', uid);
-        await deleteDoc(userRef); // Use deleteDoc instead of batch for single doc if simple
-
-        // 3. Delete Auth User
-        // This requires recent login. If it fails, we catch it in UI and ask for re-login.
+        await deleteDoc(doc(db, 'users', uid));
         await user.delete();
     },
 
-    async processInvite(inviteCode, inviterName) {
-        // inviteCode is the UID of the inviter
-        // inviterName is passed from URL params (optional)
+    async rotateInviteToken() {
+        const user = auth.currentUser;
+        if (!user) return;
+        const newToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        await updateDoc(doc(db, 'users', user.uid), {
+            'config.invite_token': newToken
+        });
+        return newToken;
+    },
 
+    async createShortInvite(params) {
+        const user = auth.currentUser;
+        if (!user) throw new Error("Not logged in");
+
+        // Generate a 6-character short ID
+        const shortId = Math.random().toString(36).substring(2, 8).toUpperCase();
+        await setDoc(doc(db, 'short_invites', shortId), {
+            params,
+            ownerUid: user.uid,
+            createdAt: serverTimestamp()
+        });
+        return shortId;
+    },
+
+    async resolveShortCode(shortId) {
+        if (!shortId) return null;
+        const snap = await getDoc(doc(db, 'short_invites', shortId));
+        if (snap.exists()) {
+            return snap.data().params;
+        }
+        return null;
+    },
+
+    async processInvite(inviteCode, inviterName, token) {
         const user = auth.currentUser;
         if (!user) throw new Error("Not logged in");
         if (user.uid === inviteCode) throw new Error("不能邀請自己");
 
-        // 1. Add Inviter to My Friends list
-        const userRef = doc(db, 'users', user.uid);
-        let userSnap = await getDoc(userRef);
+        // 1. Validate Token
+        const hostSnap = await getDoc(doc(db, 'users', inviteCode));
+        if (!hostSnap.exists()) throw new Error("找不到該用戶");
 
-        // If doc doesn't exist (new user), we should initialize it using defaults
-        if (!userSnap.exists()) {
-            const initialUserData = {
-                config: { user_name: user.displayName || 'User', fx_rate: DEFAULTS.config.fx_rate },
-                categories: DEFAULTS.categories,
-                paymentMethods: DEFAULTS.paymentMethods,
-                friends: DEFAULTS.friends,
-                projects: []
-            };
-            await setDoc(userRef, initialUserData);
-            userSnap = await getDoc(userRef);
+        const hostConfig = hostSnap.data().config || {};
+        if (hostConfig.invite_token !== token) {
+            throw new Error("邀請連結已失效，請向好友索取最新連結");
         }
 
-        const userData = userSnap.data();
-        let friends = userData.friends || [];
-        const finalName = inviterName || "分享人";
+        // 2. Accept Invite (Connect Friends)
+        const hostEmail = hostConfig.email || '';
+        await this._ensureFriendConnection(inviteCode, inviterName, hostEmail);
 
-        if (!friends.includes(finalName)) {
-            friends.push(finalName);
-            await updateDoc(userRef, { friends });
-            console.log("Inviter added to my friends list:", finalName);
-        }
-
-        // 2. Signal the inviter that I've joined (Discoverability)
+        // 3. Rotate Host Token
+        // Note: In a production app, this might be a Cloud Function for security.
+        // For this project, we execute it from the joiner's side if rules allow.
         try {
-            const myName = user.displayName || "新朋友";
-            const connRef = doc(db, 'friend_connections', `${inviteCode}_${user.uid}`);
-            console.log(`[API] Sending mutual signal to inviter ${inviteCode} from ${user.uid} (${myName})`);
-            await setDoc(connRef, {
-                toUid: inviteCode,
+            const newToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            await updateDoc(doc(db, 'users', inviteCode), {
+                'config.invite_token': newToken
+            });
+        } catch (e) { console.warn("Token rotation failed (ignore if joining project, as host might have restricted write)", e); }
+
+        return { uid: inviteCode, name: hostConfig.user_name || inviterName || "分享人", email: hostEmail };
+    },
+
+    async _ensureFriendConnection(targetUid, targetName, targetEmail = '') {
+        const user = auth.currentUser;
+        if (!user || !targetUid || user.uid === targetUid) return;
+
+        const myRef = doc(db, 'users', user.uid);
+        const mySnap = await getDoc(myRef);
+        if (!mySnap.exists()) return;
+
+        let friends = mySnap.data().friends || [];
+        const existingIdx = friends.findIndex(f => f.uid === targetUid);
+
+        if (existingIdx === -1) {
+            friends.push({
+                id: 'f_' + Date.now(),
+                uid: targetUid,
+                email: targetEmail,
+                name: targetName || '新朋友',
+                visible: true,
+                createdAt: new Date().toISOString()
+            });
+            await updateDoc(myRef, { friends });
+        } else {
+            // Restore visibility and update info
+            let changed = false;
+            if (friends[existingIdx].visible === false) {
+                friends[existingIdx].visible = true;
+                changed = true;
+            }
+            if (targetEmail && friends[existingIdx].email !== targetEmail) {
+                friends[existingIdx].email = targetEmail;
+                changed = true;
+            }
+            if (targetName && friends[existingIdx].name !== targetName && (!friends[existingIdx].name || friends[existingIdx].name === '分享人' || friends[existingIdx].name === '新朋友' || friends[existingIdx].name === '主機人' || friends[existingIdx].name === '朋友')) {
+                friends[existingIdx].name = targetName;
+                changed = true;
+            }
+            if (changed) await updateDoc(myRef, { friends });
+        }
+
+        // Send signal for mutual connection
+        try {
+            await setDoc(doc(db, 'friend_connections', `${targetUid}_${user.uid}`), {
+                toUid: targetUid,
                 fromUid: user.uid,
-                fromName: myName,
+                fromName: user.displayName || "好友",
+                fromEmail: user.email || '',
                 timestamp: serverTimestamp()
             });
-            console.log("[API] Friend acceptance signal sent successfully.");
         } catch (e) {
-            console.warn("[API] Mutual signal failed (Check Firestore Rules):", e);
+            console.warn("Signal failed", e);
         }
-
-        return { uid: inviteCode, name: finalName };
     },
 
     async checkPendingConnections() {
         const user = auth.currentUser;
         if (!user) return [];
         try {
-            const q = query(collection(db, 'friend_connections'), where('toUid', '==', user.uid));
-            const snap = await getDocs(q);
-            return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        } catch (e) {
-            console.warn("Failed to check pending connections:", e);
-            return [];
-        }
+            const snap = await getDocs(query(collection(db, 'friend_connections'), where('toUid', '==', user.uid)));
+            const connections = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+            for (const conn of connections) {
+                await this._ensureFriendConnection(conn.fromUid, conn.fromName, conn.fromEmail);
+                await this.clearConnection(conn.id);
+            }
+            return connections;
+        } catch (e) { return []; }
     },
 
     async clearConnection(connId) {
-        try {
-            await deleteDoc(doc(db, 'friend_connections', connId));
-        } catch (e) {
-            console.warn("Failed to clear connection:", e);
+        try { await deleteDoc(doc(db, 'friend_connections', connId)); } catch (e) { }
+    },
+
+    // --- COLLABORATION SPECIFIC ---
+    async joinProject(hostUid, projectId, token, inviterName) {
+        const user = auth.currentUser;
+        if (!user) throw new Error("請先登入");
+        if (user.uid === hostUid) throw new Error("您已經是計畫擁有者");
+
+        // 1. Validate Token
+        const hostSnap = await getDoc(doc(db, 'users', hostUid));
+        if (!hostSnap.exists()) throw new Error("找不到該用戶");
+        const hostData = hostSnap.data();
+        const hostConfig = hostData.config || {};
+        if (hostConfig.invite_token !== token) {
+            throw new Error("邀請連結已失效，請向好友索取最新連結");
         }
+
+        const projectRef = doc(db, 'users', hostUid, 'projects', projectId);
+        const projectSnap = await getDoc(projectRef);
+        if (!projectSnap.exists()) throw new Error("找不到該計畫，可能已被刪除");
+
+        const projectData = projectSnap.data();
+        if (!projectData.collaborationEnabled) throw new Error("該計畫尚未開啟協作功能");
+
+        // 2. Add me to project collaborators
+        await updateDoc(projectRef, {
+            collaborators: arrayUnion(user.uid)
+        });
+
+        // 3. Ensure Mutual Friend connection between joiner and host
+        const hostName = hostConfig.user_name || inviterName || '好友';
+        const hostEmail = hostConfig.email || '';
+        await this._ensureFriendConnection(hostUid, hostName, hostEmail);
+
+        // 4. Rotate Host Token (if permissions allow, otherwise host will rotate it on next login/refresh)
+        try {
+            const newToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            await updateDoc(doc(db, 'users', hostUid), {
+                'config.invite_token': newToken
+            });
+        } catch (e) { console.warn("Token rotation failed (joined successfully but host token must be rotated by host)", e); }
+
+        return { ...projectData, id: projectId, hostId: hostUid };
+    },
+
+    async getProjectCollaborators(hostUid, projectId) {
+        try {
+            const projectSnap = await getDoc(doc(db, 'users', hostUid, 'projects', projectId));
+            if (!projectSnap.exists()) return [];
+            const uids = projectSnap.data().collaborators || [];
+            if (uids.length === 0) return [];
+
+            const collaborators = [];
+            for (const uid of uids) {
+                try {
+                    const uSnap = await getDoc(doc(db, 'users', uid));
+                    if (uSnap.exists()) {
+                        collaborators.push({
+                            uid,
+                            name: uSnap.data().config?.user_name || '不具名好友'
+                        });
+                    }
+                } catch (userErr) {
+                    console.warn(`[API] Failed to fetch collaborator profile: ${uid}`, userErr);
+                    collaborators.push({ uid, name: '參與者' });
+                }
+            }
+            return collaborators;
+        } catch (e) {
+            console.error("[API] getProjectCollaborators Failed", e);
+            throw e;
+        }
+    },
+
+    async deleteProject(hostId, projectId) {
+        const user = auth.currentUser;
+        if (!user) throw new Error("Not logged in");
+        const targetUid = hostId || user.uid;
+
+        // 1. Delete all transactions associated with this project
+        const txSnap = await getDocs(query(collection(db, 'users', targetUid, 'transactions'), where('projectId', '==', projectId)));
+        const batch = writeBatch(db);
+        txSnap.docs.forEach(doc => batch.delete(doc.ref));
+
+        // 2. Delete the project document
+        batch.delete(doc(db, 'users', targetUid, 'projects', projectId));
+
+        await batch.commit();
+        return true;
     }
 };
+
+window.API = API;

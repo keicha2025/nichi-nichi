@@ -217,9 +217,26 @@ export const HistoryPage = {
         getFriendName(idOrName) {
             if (idOrName === '我') return '我';
             if (!idOrName) return '';
+
+            // 1. Try resolving via UID/FID in friends list
             const list = (this.friends || []);
-            const f = list.find(x => x.id === idOrName || x.name === idOrName);
-            return f ? f.name : idOrName;
+            const f = list.find(x => x.id === idOrName || x.uid === idOrName || x.name === idOrName);
+            if (f) return f.name;
+
+            // 2. Try resolving via project's collaborators if applicable
+            if (this.projects) {
+                for (const p of this.projects) {
+                    if (p.collaborators) {
+                        const coll = p.collaborators.find(c => c.uid === idOrName || c.name === idOrName);
+                        if (coll) return coll.name;
+                    }
+                }
+            }
+
+            // [Security] If it starts with tx_ or looks like a long ID, return fallback
+            if (idOrName.length > 20 || idOrName.includes('_')) return '朋友';
+
+            return idOrName;
         },
         getIcon(id) {
             const cat = this.categories.find(c => c.id === id);

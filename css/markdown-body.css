@@ -177,21 +177,21 @@
 }
 
 .markdown-body .container-block.tip {
-    background-color: var(--bg-main);
+    background-color: var(--bg-subtle);
     border-color: var(--bdr-main);
     color: var(--txt-primary);
 }
 
 .markdown-body .container-block.warning {
-    background-color: #fffbeb;
-    border-color: #fef3c7;
-    color: #92400e;
+    background-color: var(--bg-subtle);
+    border-color: var(--bdr-main);
+    color: var(--txt-secondary);
 }
 
 .markdown-body .container-block.danger {
-    background-color: #fef2f2;
-    border-color: #fee2e2;
-    color: #991b1b;
+    background-color: var(--bg-subtle);
+    border-color: var(--color-danger);
+    color: var(--color-danger);
 }
 
 .markdown-body .container-title {

@@ -55,7 +55,7 @@
               "name": "如何一次刪除多筆紀錄？",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "前往「紀錄 (History)」頁面，長按任何一筆紀錄即可進入多選模式。選取您想要移除的項目後，點擊底部的紅色垃圾桶按鈕即可批量刪除。"
+                "text": "前往「紀錄 (History)」頁面，長按任何一筆紀錄即可進入多選模式。選取您想要移除的項目後，點擊底部的垃圾桶按鈕即可批量刪除。"
               }
             },
             {
@@ -234,13 +234,15 @@
 
             <!-- Project Detail Page -->
             <project-detail-page v-if="currentTab === 'project-detail'" :project="selectedProject"
-                :transactions="transactions" :fx-rate="fxRate" @back="currentTab = 'settings'; selectedProject = null"
-                @update-project="handleUpdateProject" @view-history="handleViewHistory"></project-detail-page>
+                :transactions="transactions" :fx-rate="fxRate" :config="systemConfig"
+                @back="currentTab = 'settings'; selectedProject = null" @update-project="handleUpdateProject"
+                @view-history="handleViewHistory"></project-detail-page>
 
             <!-- Friend Detail Page -->
             <friend-detail-page v-if="currentTab === 'friend-detail'" :friend="selectedFriend"
                 :transactions="transactions" :fx-rate="fxRate" @back="currentTab = 'settings'; selectedFriend = null"
-                @update-friend="handleUpdateFriend" @view-history="handleViewHistory"></friend-detail-page>
+                @update-friend="handleUpdateFriend" @delete-friend="handleDeleteFriend"
+                @view-history="handleViewHistory"></friend-detail-page>
 
             <!-- Import Page -->
             <import-page v-if="currentTab === 'import'" @back="currentTab = 'settings'"
@@ -256,6 +258,10 @@
                 :projects="projects" :default-user-name="systemConfig.user_name" :current-user="currentUser"
                 @back="currentTab = 'shared-links'" @saved="currentTab = 'shared-links'"
                 @deleted="currentTab = 'shared-links'"></edit-shared-links-page>
+
+            <project-landing v-if="currentTab === 'project-landing'" :host-id="inviteHostUid"
+                :project-id="inviteProjectId" :inviter-name="inviterName" :token="inviteToken" @login="API.login"
+                @joined="handleProjectJoined" @close="currentTab = 'add'" />
         </main>
 
         <app-footer :current-tab="currentTab" @update:current-tab="handleTabChange" :app-mode="appMode">
@@ -269,7 +275,8 @@
         </system-modal>
 
         <!-- 好友邀請落地頁面 -->
-        <invite-landing v-if="showInviteLanding" :inviter-name="inviterName" @login="handleGoogleLogin">
+        <invite-landing v-if="showInviteLanding" :inviter-name="inviterName" :token="inviteToken"
+            @login="handleGoogleLogin">
         </invite-landing>
     </div>
 

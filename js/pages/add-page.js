@@ -326,6 +326,10 @@ export const AddPage = {
             this.form.personalShare = (this.form.type === '支出') ? share : this.form.personalShare;
             this.form.debtAmount = debt;
 
+            // Determine hostId if it's a shared project
+            const selectedProj = (this.projects || []).find(p => p.id === this.form.projectId);
+            this.form.hostId = selectedProj?.hostId || null;
+
             this.isSubmitting = true;
             this.$emit('submit');
 
