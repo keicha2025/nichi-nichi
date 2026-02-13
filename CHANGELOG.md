@@ -871,3 +871,18 @@ Added comprehensive debug logging throughout the category save flow for easier t
 - Updated SoftwareApplication description in JSON-LD script (index.html).
 
 *網站文案更新：全面更新 Meta 描述、社群標籤及 JSON-LD，強調 PWA 離線同步、雙幣別獨立統計、以及匯出分享功能，確保品牌訊息一致。*
+
+---
+
+## [2026-02-13T22:55:00+08:00] README Refactor & Project Documentation Update
+
+### Features & Improvements
+- **Major README Refactor**: Completely rewrote the project documentation to align with the current **Vue 3 + Firebase PWA** architecture. Removed legacy Google Apps Script (GAS) and Google Sheets setup instructions.
+- **Brand Story & Value Prop**: Updated the project introduction to highlight the "True Dual-Currency" and "Data Sovereignty" core values, targeting both residents and travelers in Japan.
+- **Tech Stack Transparency**: Explicitly documented the use of Vite, Firebase, and PWA Service Workers for offline reliability.
+
+### Technical Details
+- Replaced old README.md with a modern, bilingual (English/Chinese) version.
+- Unified the project identity across README and home page metadata.
+
+*重構 README：全面更新專案文件，移除過時的 GAS 指南，改為以 PWA 與 Firebase 為核心的架構說明，並強化品牌核心價值傳達。*
