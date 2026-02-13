@@ -856,3 +856,18 @@ Added comprehensive debug logging throughout the category save flow for easier t
 - Switched og:image and twitter:image content to https://keicha2025.github.io/nichi-nichi/OGImage.png.
 
 *品牌圖標與社群標籤強化：統一 Favicon 宣告順序，並將社群預覽圖改為絕對路徑，解決搜尋引擎與 Line/FB 抓取不到正確 Logo 的問題。*
+
+---
+
+## [2026-02-13T22:51:00+08:00] Website Description Update
+
+### Features & Improvements
+- **Copywriting Excellence**: Fully updated the application description across all platforms (Meta, OG, Twitter, and JSON-LD) to emphasize core USP: PWA offline syncing, independent dual-currency tracking, and social sharing of exportable data.
+- **Messaging Alignment**: Ensured consistent brand voice between organic search results and social media snippets.
+
+### Technical Details
+- Updated meta name="description" in index.html.
+- Updated og:description and twitter:description in index.html.
+- Updated SoftwareApplication description in JSON-LD script (index.html).
+
+*網站文案更新：全面更新 Meta 描述、社群標籤及 JSON-LD，強調 PWA 離線同步、雙幣別獨立統計、以及匯出分享功能，確保品牌訊息一致。*
