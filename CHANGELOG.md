@@ -830,3 +830,15 @@ Added comprehensive debug logging throughout the category save flow for easier t
 - Updated og:title and twitter:title meta tags in index.html.
 
 *網站標題與 SEO 優化：更新首頁標題及社群標籤，強化產品核心價值（旅日雙幣、極簡、一鍵匯出）。*
+
+---
+
+## [2026-02-13T22:38:00+08:00] SEO URL Correction
+
+### Fixed
+- **Corrected Entry URL**: Replaced the placeholder domain 'nichi-nichi.app' with the official GitHub Pages URL 'https://keicha2025.github.io/nichi-nichi/' in all SEO meta tags. This ensures social sharing cards and canonical linking point to the correct live deployment.
+
+### Technical Details
+- Updated og:url and twitter:url in index.html.
+
+*修正 SEO 網址：將 Meta 標籤中的入口網址修正為正確的 GitHub Pages 位置，確保社群分享與預覽卡片連結正確。*
