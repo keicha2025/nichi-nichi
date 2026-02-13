@@ -143,9 +143,10 @@ export const API = {
             // NOTE: We do a lazy init here.
 
             // Parallel Fetch
-            const [userSnapshot, txSnapshot] = await Promise.all([
+            const [userSnapshot, txSnapshot, projSnapshot] = await Promise.all([
                 getDoc(userDocRef),
-                getDocs(query(collection(db, 'users', uid, 'transactions'), orderBy('spendDate', 'desc')))
+                getDocs(query(collection(db, 'users', uid, 'transactions'), orderBy('spendDate', 'desc'))),
+                getDocs(collection(db, 'users', uid, 'projects'))
             ]);
 
             let userData = userSnapshot.exists() ? userSnapshot.data() : null;
@@ -165,6 +166,22 @@ export const API = {
                 await setDoc(userDocRef, userData);
             }
 
+            // Migration: Move projects from array in user doc to subcollection
+            let userProjects = (projSnapshot.docs || []).map(d => ({ ...d.data(), id: d.id }));
+
+            if (userData && userData.projects && userData.projects.length > 0) {
+                console.log("[API] Migrating projects from array to subcollection...");
+                const batch = writeBatch(db);
+                userData.projects.forEach(p => {
+                    const projectRef = doc(db, 'users', uid, 'projects', p.id);
+                    batch.set(projectRef, { ...p, collaborators: p.collaborators || [] });
+                    userProjects.push({ ...p, id: p.id });
+                });
+                // Remove from array after migration
+                batch.update(userDocRef, { projects: deleteField() });
+                await batch.commit();
+            }
+
             const transactions = txSnapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
@@ -174,7 +191,7 @@ export const API = {
                 categories: userData.categories || DEFAULTS.categories,
                 paymentMethods: userData.paymentMethods || DEFAULTS.paymentMethods,
                 friends: userData.friends || [],
-                projects: userData.projects || [],
+                projects: userProjects,
                 config: userData.config || {},
                 transactions: transactions,
                 stats: {} // Calc on frontend now
@@ -275,37 +292,23 @@ export const API = {
         }
 
         if (payload.action === 'updateProject') {
-            // Projects are stored in an array in userDoc? Or subcollection?
-            // User doc is better for small lists.
-            const userSnap = await getDoc(userRef);
-            let projects = userSnap.data().projects || [];
+            const { action, ...cleanPayload } = payload;
+            const projectId = payload.id || ("proj_" + Date.now());
+            const projectRef = doc(db, 'users', uid, 'projects', projectId);
 
-            if (payload.id) {
-                // Edit
-                const idx = projects.findIndex(p => p.id === payload.id);
-                if (idx !== -1) {
-                    // Sanitize payload to remove 'action' and undefined values
-                    const { action, ...cleanPayload } = payload;
-                    // Merge existing project with clean payload
-                    // Filter out undefined from result to be safe
-                    const merged = { ...projects[idx], ...cleanPayload };
-
-                    // Firestore rejects undefined, so we must ensure no field is undefined
-                    Object.keys(merged).forEach(key => merged[key] === undefined && delete merged[key]);
-
-                    projects[idx] = merged;
-                }
+            // Fetch current project to merge
+            const snap = await getDoc(projectRef);
+            let merged = { ...cleanPayload };
+            if (snap.exists()) {
+                merged = { ...snap.data(), ...cleanPayload };
             } else {
-                // Create
-                projects.push({
-                    id: 'proj_' + Date.now(),
-                    name: payload.name,
-                    startDate: payload.startDate,
-                    endDate: payload.endDate,
-                    status: 'Active' // Default
-                });
+                merged.createdAt = serverTimestamp();
             }
-            await updateDoc(userRef, { projects });
+
+            // Clean undefined
+            Object.keys(merged).forEach(key => merged[key] === undefined && delete merged[key]);
+
+            await setDoc(projectRef, merged, { merge: true });
             return true;
         }
 
@@ -376,6 +379,27 @@ export const API = {
             await batch.commit();
         }
         return true;
+    },
+
+    async deleteFriend(friendId) {
+        const user = auth.currentUser;
+        if (!user) throw new Error("Not logged in");
+        const userRef = doc(db, 'users', user.uid);
+        const userSnap = await getDoc(userRef);
+        if (!userSnap.exists()) return false;
+
+        let friends = userSnap.data().friends || [];
+        const initialLen = friends.length;
+        friends = friends.filter(f => {
+            const id = typeof f === 'object' ? f.id : f;
+            return id !== friendId;
+        });
+
+        if (friends.length < initialLen) {
+            await updateDoc(userRef, { friends });
+            return true;
+        }
+        return false;
     },
 
     // Sharing Features
@@ -671,80 +695,5 @@ export const API = {
         // 3. Delete Auth User
         // This requires recent login. If it fails, we catch it in UI and ask for re-login.
         await user.delete();
-    },
-
-    async processInvite(inviteCode, inviterName) {
-        // inviteCode is the UID of the inviter
-        // inviterName is passed from URL params (optional)
-
-        const user = auth.currentUser;
-        if (!user) throw new Error("Not logged in");
-        if (user.uid === inviteCode) throw new Error("不能邀請自己");
-
-        // 1. Add Inviter to My Friends list
-        const userRef = doc(db, 'users', user.uid);
-        let userSnap = await getDoc(userRef);
-
-        // If doc doesn't exist (new user), we should initialize it using defaults
-        if (!userSnap.exists()) {
-            const initialUserData = {
-                config: { user_name: user.displayName || 'User', fx_rate: DEFAULTS.config.fx_rate },
-                categories: DEFAULTS.categories,
-                paymentMethods: DEFAULTS.paymentMethods,
-                friends: DEFAULTS.friends,
-                projects: []
-            };
-            await setDoc(userRef, initialUserData);
-            userSnap = await getDoc(userRef);
-        }
-
-        const userData = userSnap.data();
-        let friends = userData.friends || [];
-        const finalName = inviterName || "分享人";
-
-        if (!friends.includes(finalName)) {
-            friends.push(finalName);
-            await updateDoc(userRef, { friends });
-            console.log("Inviter added to my friends list:", finalName);
-        }
-
-        // 2. Signal the inviter that I've joined (Discoverability)
-        try {
-            const myName = user.displayName || "新朋友";
-            const connRef = doc(db, 'friend_connections', `${inviteCode}_${user.uid}`);
-            console.log(`[API] Sending mutual signal to inviter ${inviteCode} from ${user.uid} (${myName})`);
-            await setDoc(connRef, {
-                toUid: inviteCode,
-                fromUid: user.uid,
-                fromName: myName,
-                timestamp: serverTimestamp()
-            });
-            console.log("[API] Friend acceptance signal sent successfully.");
-        } catch (e) {
-            console.warn("[API] Mutual signal failed (Check Firestore Rules):", e);
-        }
-
-        return { uid: inviteCode, name: finalName };
-    },
-
-    async checkPendingConnections() {
-        const user = auth.currentUser;
-        if (!user) return [];
-        try {
-            const q = query(collection(db, 'friend_connections'), where('toUid', '==', user.uid));
-            const snap = await getDocs(q);
-            return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        } catch (e) {
-            console.warn("Failed to check pending connections:", e);
-            return [];
-        }
-    },
-
-    async clearConnection(connId) {
-        try {
-            await deleteDoc(doc(db, 'friend_connections', connId));
-        } catch (e) {
-            console.warn("Failed to clear connection:", e);
-        }
     }
 };

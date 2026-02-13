@@ -1,5 +1,36 @@
 # Changelog
 
+## [2026-02-13] Friend Features & UI Refinement (Main Branch)
+
+### Added
+- **Delete Friend Feature**: Implemented a complete "Delete Friend" workflow from API to UI, allowing users to remove friends from their active list while preserving existing transaction history.
+- **Improved Friend Search**: Added support for searching transactions by Friend ID in addition to Name, ensuring consistent filtering even after renames.
+
+### Fixed
+- **History UI Redundancy**: Fixed the issue where "我 付款" (Me paid) was displayed in transaction details when the payer was the current user. The label is now hidden for self-payments for a cleaner look.
+- **Identity Logic Alignment**: Standardized UID-to-"我" resolution across `OverviewPage`, `FriendDetailPage`, and `app.js` to ensure the core accounting engine matches the local user identity.
+- **Settings Page Layout Restoration**: Reverted the "Account" management section to the **bottom** of the page (after Projects and Friends) to maintain design consistency and original UX flow.
+- **App Mode State Fix**: Fixed a critical bug in `app.js` where the `appMode` reactive state was not correctly exposed to the Vue template, which previously caused account management buttons to be hidden.
+
+### Removed
+- **Invitation System**: Completely removed the "Invite Friend" feature (both UI buttons and backend listeners/methods) to streamline the main application for stability.
+
+*優化好友功能與介面：實作「刪除好友」功能；修正明細顯示冗餘；將帳號區塊恢復至設定頁面底部以維持設計一致性；及修復 `appMode` 狀態回傳錯誤以找回遺失的功能按鍵。*
+
+
+### Added
+- **Project Subcollection Support**: Updated `api.js` to support reading and writing projects from/to the Firestore subcollection (`users/{uid}/projects`), ensuring compatibility with the latest data structure.
+- **Automatic Project Migration**: Implement a one-time migration to move projects from the legacy user document array to the new subcollection structure safely.
+
+### Improved
+- **UID Identity Mapping**: Enhanced `getFriendName` across all pages and `handleSubmit` in `app.js` to correctly map the user's UID to "我" (Me). This ensures that transactions recorded in the database with UIDs are correctly identified as the user's own transactions in the UI.
+- **Robust Friend Labeling**: Added security fallbacks to mask raw UIDs with a generic "朋友" (Friend) label if local resolution fails.
+
+### Archived
+- **Beta Development Progress**: Current Beta features (including experimental invitation flows and UI refinements) have been archived to the `archive/beta-fix-safety` branch for future refinement.
+
+*針對主分支進行了重大的資料相容性修復，包含支援專案子集合路徑、自動資料遷移，以及跨頁面的 UID 身分識別優化，確保舊版程式能完美相容新版資料結構。*
+
 ## [2026-02-12] 14:15
 ### Fixed
 - **Friend Name Sync & Data Disconnect**:

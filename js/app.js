@@ -17,7 +17,6 @@ import { SystemModal } from './components/system-modal.js';
 import { AppHeader } from './components/app-header.js';
 import { AppFooter } from './components/app-footer.js';
 import { IconEditPage } from './pages/icon-edit-page.js';
-import { InviteLanding } from './components/invite-landing.js';
 import { IconPicker } from './components/icon-picker.js';
 import { AppSelect } from './components/app-select.js';
 
@@ -42,7 +41,6 @@ createApp({
         'app-select': AppSelect,
         'shared-links-page': SharedLinksPage,
         'edit-shared-links-page': EditSharedLinksPage,
-        'invite-landing': InviteLanding,
         'friend-detail-page': FriendDetailPage
     },
     setup() {
@@ -57,15 +55,6 @@ createApp({
         const loading = ref(false);
         const currentUser = ref(null); // Firebase User
 
-        // --- Invitation Handling ---
-        const inviteCode = params.get('invite_code') || sessionStorage.getItem('pending_invite_code');
-        const inviterName = params.get('name') || sessionStorage.getItem('pending_invite_name');
-        const showInviteLanding = ref(!!inviteCode && !currentUser.value);
-
-        if (inviteCode) {
-            sessionStorage.setItem('pending_invite_code', inviteCode);
-            if (inviterName) sessionStorage.setItem('pending_invite_name', inviterName);
-        }
 
         // Scroll to top on tab change
         watch(currentTab, () => {
@@ -489,33 +478,6 @@ createApp({
                     }
                 }
 
-                // --- Discover Mutual Friends (Pending Connections) ---
-                if (currentUser.value) {
-                    try {
-                        const pending = await API.checkPendingConnections();
-                        if (pending.length > 0) {
-                            console.log(`[Discovery] Found ${pending.length} pending connections`);
-                            let updated = false;
-                            for (const conn of pending) {
-                                // Double check against latest friends list to avoid duplicates
-                                if (!friends.value.includes(conn.fromName)) {
-                                    friends.value.push(conn.fromName);
-                                    updated = true;
-                                    console.log("[Discovery] Adding mutual friend:", conn.fromName);
-                                    dialog.alert(`您已接受 ${conn.fromName} 的鏈結，對方已自動加入好友！`, "success", "好友連動");
-                                }
-                                await API.clearConnection(conn.id);
-                            }
-                            if (updated) {
-                                // Use JSON methods to ensure we have a clean array without Proxy weirdness for Firestore
-                                await API.updateUserData({ friends: JSON.parse(JSON.stringify(friends.value)) });
-                                console.log("[Discovery] User data updated with new friends.");
-                            }
-                        }
-                    } catch (e) {
-                        console.error("[Discovery] Failed", e);
-                    }
-                }
             }
         };
 
@@ -584,6 +546,15 @@ createApp({
                     utc: utcOffset
                 };
 
+                // [Database Compatibility] Payer '我' should be stored as UID
+                const dbPayload = { ...payload };
+                if (dbPayload.payer === '我' && currentUser.value) {
+                    dbPayload.payer = currentUser.value.uid;
+                }
+                if (dbPayload.beneficiaries) {
+                    dbPayload.beneficiaries = dbPayload.beneficiaries.map(b => (b === '我' && currentUser.value) ? currentUser.value.uid : b);
+                }
+
                 // OPTIMISTIC UPDATE
                 if (dataToSave.action === 'edit') {
                     const idx = transactions.value.findIndex(t => t.id === payload.id);
@@ -620,7 +591,7 @@ createApp({
                 (async () => {
                     try {
                         if (appMode.value === 'ADMIN') {
-                            await API.saveTransaction(payload);
+                            await API.saveTransaction(dbPayload);
                             console.log("[Background Sync] Save success", payload.id);
                         } else if (appMode.value === 'GUEST') {
                             const localOnly = transactions.value.filter(t => !t.isRemote);
@@ -787,32 +758,6 @@ createApp({
                 const prevUser = currentUser.value;
                 currentUser.value = user;
 
-                // --- Handle Invite Logic ---
-                if (user && !prevUser) {
-                    const code = sessionStorage.getItem('pending_invite_code');
-                    const name = sessionStorage.getItem('pending_invite_name');
-                    if (code && code !== user.uid) {
-                        try {
-                            await API.processInvite(code, name);
-                            sessionStorage.removeItem('pending_invite_code');
-                            sessionStorage.removeItem('pending_invite_name');
-                            showInviteLanding.value = false;
-                            dialog.alert("已成功與邀請人連結！", "success", "好友邀請");
-                        } catch (e) {
-                            console.error("Invite Process Failed", e);
-                        }
-                    } else if (code === user.uid) {
-                        // User trying to invite themselves
-                        sessionStorage.removeItem('pending_invite_code');
-                        sessionStorage.removeItem('pending_invite_name');
-                        showInviteLanding.value = false;
-                    }
-                }
-
-                if (user) {
-                    showInviteLanding.value = false;
-                }
-
                 // If user changed (e.g. login or logout), reload data
                 // Also first load
                 loadData();
@@ -863,9 +808,68 @@ createApp({
         const methods = {
             currentTab, handleTabChange, loading, currentUser, categories, friends, paymentMethods, projects,
             transactions, filteredTransactions, systemConfig, form, editForm, selectedProject, selectedFriend, fxRate, historyFilter,
-            stats, modalState, baseCurrency, appMode, isSettingsDirty,
-            showInviteLanding, inviterName,
-            syncStatus, hasMultipleCurrencies,
+            syncStatus, hasMultipleCurrencies, appMode,
+            handleDeleteFriend: async (id) => {
+                if (appMode.value === 'GUEST') {
+                    friends.value = friends.value.filter(f => f.id !== id);
+                    localStorage.setItem('guest_friends', JSON.stringify(friends.value));
+                    currentTab.value = 'settings';
+                    return;
+                }
+                if (appMode.value !== 'ADMIN') return;
+                loading.value = true;
+                try {
+                    await API.deleteFriend(id);
+                    await loadData();
+                    currentTab.value = 'settings';
+                } catch (e) {
+                    dialog.alert("刪除失敗: " + e.message);
+                } finally {
+                    loading.value = false;
+                }
+            },
+            handleUpdateFriend: async (payload) => {
+                const { id, newName, visible } = payload;
+                if (appMode.value === 'GUEST') {
+                    const idx = friends.value.findIndex(f => f.id === id);
+                    if (idx !== -1) {
+                        friends.value[idx].name = newName;
+                        friends.value[idx].visible = visible;
+                        localStorage.setItem('guest_friends', JSON.stringify(friends.value));
+                    }
+                    await loadData();
+                    return;
+                }
+                if (appMode.value !== 'ADMIN') return;
+                loading.value = true;
+                try {
+                    // Update transactions references if name changed
+                    const friend = friends.value.find(f => f.id === id);
+                    const oldName = friend ? friend.name : '';
+
+                    if (oldName && oldName !== newName) {
+                        await API.saveTransaction({
+                            action: 'renameFriend',
+                            id,
+                            oldName,
+                            newName
+                        });
+                    }
+
+                    // Also update visibility and name in user data
+                    const updatedFriends = friends.value.map(f => {
+                        if (f.id === id) return { ...f, name: newName, visible };
+                        return f;
+                    });
+                    await API.updateUserData({ friends: JSON.parse(JSON.stringify(updatedFriends)) });
+
+                    await loadData();
+                } catch (e) {
+                    dialog.alert("更新失敗: " + e.message);
+                } finally {
+                    loading.value = false;
+                }
+            },
             handleSubmit, handleDelete, handleDeleteMultiple, handleEditItem,
             formatNumber: (n) => new Intl.NumberFormat().format(Math.round(n || 0)),
             getTabIcon,

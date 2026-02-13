@@ -55,7 +55,7 @@ export const OverviewPage = {
         </div>
     </section>
     `,
-    props: ['transactions', 'stats', 'fxRate'],
+    props: ['transactions', 'stats', 'fxRate', 'currentUser'],
     setup() {
         const { inject, computed } = window.Vue;
         const baseCurrency = inject('baseCurrency');
@@ -87,7 +87,8 @@ export const OverviewPage = {
             return this.transactions
                 .filter(t => t.spendDate.startsWith(ym) && t.type === '支出' && (t.currency === 'JPY' || !t.currency))
                 .reduce((acc, t) => {
-                    const val = this.isMyShareOnly || t.payer !== '我' ? Number(t.personalShare || 0) : Number(t.amount || 0);
+                    const isMe = t.payer === '我' || (this.currentUser && t.payer === this.currentUser.uid);
+                    const val = this.isMyShareOnly || !isMe ? Number(t.personalShare || 0) : Number(t.amount || 0);
                     return acc + val;
                 }, 0);
         },
@@ -96,7 +97,8 @@ export const OverviewPage = {
             return this.transactions
                 .filter(t => t.spendDate.startsWith(ym) && t.type === '支出' && t.currency === 'TWD')
                 .reduce((acc, t) => {
-                    const val = this.isMyShareOnly || t.payer !== '我' ? Number(t.personalShare || 0) : Number(t.amount || 0);
+                    const isMe = t.payer === '我' || (this.currentUser && t.payer === this.currentUser.uid);
+                    const val = this.isMyShareOnly || !isMe ? Number(t.personalShare || 0) : Number(t.amount || 0);
                     return acc + val;
                 }, 0);
         },
@@ -127,11 +129,12 @@ export const OverviewPage = {
                     else return (c === 'JPY') ? v * rate : v;
                 };
 
+                const isMe = t.payer === '我' || (this.currentUser && t.payer === this.currentUser.uid);
                 if (t.type === '支出' && !t.isAlreadyPaid) {
-                    const myShareRaw = (t.payer !== '我' || t.isSplit) ? Number(t.personalShare || 0) : rawAmt;
+                    const myShareRaw = (!isMe || t.isSplit) ? Number(t.personalShare || 0) : rawAmt;
                     const myShareBase = toBase(myShareRaw, currency);
 
-                    if (t.payer !== '我') {
+                    if (!isMe) {
                         // I owe them My Share
                         net -= myShareBase;
                     } else if (t.friendName || t.isSplit) {
@@ -145,7 +148,7 @@ export const OverviewPage = {
                     // Assumption: friendName is the friend involved. 
                     // If I am receiving money (default for 收款), net lend decreases.
                     // If I am payer (me paying them), net lend increases.
-                    if (t.payer === '我') {
+                    if (isMe) {
                         net += valBase;
                     } else {
                         net -= valBase;
@@ -165,7 +168,8 @@ export const OverviewPage = {
             // 1. Determine the value in ORIGINAL currency
             // If my share only or not payer -> Personal Share. Else -> Full Amount.
             // If personalShare is missing (legacy), fallback? Legacy usually had it.
-            if (this.isMyShareOnly || t.payer !== '我') {
+            const isMe = t.payer === '我' || (this.currentUser && t.payer === this.currentUser.uid);
+            if (this.isMyShareOnly || !isMe) {
                 val = Number(t.personalShare || 0);
             } else {
                 // Full Amount

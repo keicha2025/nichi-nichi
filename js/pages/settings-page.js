@@ -6,32 +6,6 @@ import { GoogleSheetsService } from '../services/google-sheets-service.js';
 export const SettingsPage = {
     template: `
     <section class="space-y-4 py-4 animate-in fade-in pb-24">
-        <!-- 4. Account & Sync (Moved to top in GUEST mode) -->
-        <div v-if="appMode === 'GUEST'" class="bg-white p-6 rounded-[2rem] muji-shadow border border-bdr-subtle space-y-4">
-             <h3 class="text-[10px] text-txt-secondary uppercase tracking-[0.2em] font-medium px-2">Account</h3>
-             <div class="space-y-4">
-                 <p class="text-[10px] text-txt-secondary px-2 leading-relaxed">
-                    登入 Google 帳號以開啟雲端同步、多裝置存取與分享功能。
-                 </p>
-                 
-                 <!-- 使用指南按鈕 (GUEST) -->
-                 <button @click="navigateToGuide" class="w-full border border-bdr-outline text-txt-primary py-3 rounded-xl flex items-center justify-center space-x-2 active:scale-95 transition-transform hover:bg-bg-subtle">
-                     <span class="material-symbols-rounded text-base">map</span>
-                     <span class="text-xs font-medium tracking-wide">使用指南</span>
-                 </button>
-
-                 <!-- 登入按鈕 -->
-                 <button @click="$emit('login')" class="w-full border border-bdr-outline text-txt-primary py-3 rounded-xl flex items-center justify-center space-x-2 active:scale-95 transition-transform hover:bg-bg-subtle">
-                     <svg class="w-4 h-4 bg-white rounded-full p-0.5" viewBox="0 0 24 24">
-                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                     </svg>
-                     <span class="text-xs font-medium tracking-wide">使用 Google 帳號登入</span>
-                 </button>
-             </div>
-        </div>
 
         <!-- 0. 基本設定卡片 -->
         <div class="bg-white p-6 rounded-[2rem] muji-shadow border border-bdr-subtle space-y-6">
@@ -268,101 +242,113 @@ export const SettingsPage = {
             </div>
         </div>
 
-        <!-- 4. Account & Sync (Default position for Logged In) -->
-        <div v-if="appMode !== 'GUEST'" class="bg-white p-6 rounded-[2rem] muji-shadow border border-bdr-subtle space-y-4">
+
+
+        <!-- Account & Sync -->
+        <div class="bg-white p-6 rounded-[2rem] muji-shadow border border-bdr-subtle space-y-4">
              <h3 class="text-[10px] text-txt-secondary uppercase tracking-[0.2em] font-medium px-2">Account</h3>
              
+             <!-- GUEST MODE -->
+             <div v-if="appMode === 'GUEST'" class="space-y-4">
+                  <p class="text-[10px] text-txt-secondary px-2 leading-relaxed">
+                     登入 Google 帳號以開啟雲端同步、多裝置存取與分享功能。
+                  </p>
+                  
+                  <!-- 使用指南按鈕 (GUEST) -->
+                  <button @click="navigateToGuide" class="w-full border border-bdr-outline text-txt-primary py-3 rounded-xl flex items-center justify-center space-x-2 active:scale-95 transition-transform hover:bg-bg-subtle">
+                      <span class="material-symbols-rounded text-base">map</span>
+                      <span class="text-xs font-medium tracking-wide">使用指南</span>
+                  </button>
+
+                  <!-- 登入按鈕 -->
+                  <button @click="$emit('login')" class="w-full border border-bdr-outline text-txt-primary py-3 rounded-xl flex items-center justify-center space-x-2 active:scale-95 transition-transform hover:bg-bg-subtle">
+                      <svg class="w-4 h-4 bg-white rounded-full p-0.5" viewBox="0 0 24 24">
+                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                         <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                         <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                         <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                      </svg>
+                      <span class="text-xs font-medium tracking-wide">使用 Google 帳號登入</span>
+                  </button>
+             </div>
+
              <!-- ADMIN MODE (Logged In) -->
              <div v-if="appMode === 'ADMIN'" class="space-y-4">
-                 <div class="flex items-center space-x-3 px-2">
-                     <div class="w-10 h-10 rounded-full bg-bg-subtle overflow-hidden">
-                         <img v-if="config.photoURL" :src="config.photoURL" class="w-full h-full object-cover">
-                         <span v-else class="material-symbols-rounded text-txt-secondary p-2">person</span>
-                     </div>
-                     <div class="flex flex-col justify-center">
-                         <span class="text-xs font-medium text-txt-primary">{{ currentUser?.email }}</span>
-                         <span class="text-[9px] text-txt-secondary">已登入 Google 帳號</span>
-                     </div>
-                 </div>
-
-                 <!-- INVITE FRIEND -->
-                 <div class="bg-bg-subtle p-4 rounded-xl space-y-3">
-                      <div class="flex items-center space-x-2 px-1">
-                         <span class="material-symbols-rounded text-base text-txt-secondary">person_add</span>
-                         <span class="text-xs text-txt-primary font-medium">邀請好友</span>
+                  <div class="flex items-center space-x-3 px-2">
+                      <div class="w-10 h-10 rounded-full bg-bg-subtle overflow-hidden">
+                          <img v-if="config.photoURL" :src="config.photoURL" class="w-full h-full object-cover">
+                          <span v-else class="material-symbols-rounded text-txt-secondary p-2">person</span>
                       </div>
-                      <p class="text-[9px] text-txt-secondary px-1 leading-relaxed">分享連結給朋友，登入後即可自動建立聯動好友，方便直接選擇分帳對象。</p>
-                      <button @click="copyInviteLink" class="w-full bg-white border border-bdr-subtle text-txt-primary py-3 rounded-xl flex items-center justify-center space-x-2 active:scale-95 transition-all shadow-sm hover:bg-bg-subtle">
-                          <span class="material-symbols-rounded text-sm">{{ inviteCopied ? 'check' : 'link' }}</span>
-                          <span class="text-[10px] font-medium tracking-wide">{{ inviteCopied ? '已複製連結' : '複製專屬邀請連結' }}</span>
-                      </button>
-                 </div>
+                      <div class="flex flex-col justify-center">
+                          <span class="text-xs font-medium text-txt-primary">{{ currentUser?.email }}</span>
+                          <span class="text-[9px] text-txt-secondary">已登入 Google 帳號</span>
+                      </div>
+                  </div>
 
-                 <!-- GOOGLE SERVICES (New) -->
-                 <div class="bg-bg-subtle p-4 rounded-xl space-y-4">
-                     <div class="flex items-center space-x-2 px-1">
-                        <span class="material-symbols-rounded text-base text-txt-secondary">cloud_sync</span>
-                        <span class="text-xs text-txt-primary font-medium">記帳資料管理</span>
-                     </div>
-                     
-                     <p class="text-[10px] text-txt-secondary px-1 pb-2">
-                         檔案將儲存至「日日記」備份資料夾
-                     </p>
-                     <div class="grid grid-cols-2 gap-3">
-                          <button @click="handleBackup" :disabled="backingUp" class="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-bdr-subtle active:scale-95 transition-all disabled:opacity-50 hover:bg-bg-subtle">
-                              <span v-if="backingUp" class="w-4 h-4 border-2 border-bdr-default border-t-txt-primary rounded-full animate-spin"></span>
-                              <span v-else class="material-symbols-rounded text-xl text-txt-secondary">cloud_upload</span>
-                             <span class="text-[10px] text-txt-secondary mt-2 font-medium tracking-wide">雲端存檔</span>
-                         </button>
-                          <button @click="handleExport" :disabled="exporting" class="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-bdr-subtle active:scale-95 transition-all disabled:opacity-50 hover:bg-bg-subtle">
-                              <span v-if="exporting" class="w-4 h-4 border-2 border-bdr-default border-t-txt-primary rounded-full animate-spin"></span>
-                              <span v-else class="material-symbols-rounded text-xl text-txt-secondary">download</span>
-                             <span class="text-[10px] text-txt-secondary mt-2 font-medium tracking-wide">匯出檔案</span>
-                         </button>
-                     </div>
-                     <div class="flex items-center justify-between px-1">
-                         <div class="flex flex-col">
-                             <span class="text-[10px] text-txt-primary font-medium tracking-wide">每日自動備份</span>
-                             <span class="text-[8px] text-txt-muted"></span>
-                         </div>
-                         <label class="relative inline-flex items-center cursor-pointer">
-                             <input type="checkbox" v-model="localConfig.auto_backup" @change="debouncedUpdate" class="sr-only peer">
-                             <div class="w-9 h-5 bg-bg-subtle shadow-sm peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-bdr-default after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[var(--action-primary-bg)]"></div>
-                         </label>
-                     </div>
-                 </div>
+                  <!-- GOOGLE SERVICES -->
+                  <div class="bg-bg-subtle p-4 rounded-xl space-y-4">
+                      <div class="flex items-center space-x-2 px-1">
+                         <span class="material-symbols-rounded text-base text-txt-secondary">cloud_sync</span>
+                         <span class="text-xs text-txt-primary font-medium">記帳資料管理</span>
+                      </div>
+                      
+                      <p class="text-[10px] text-txt-secondary px-1 pb-2">
+                          檔案將儲存至「日日記」備份資料夾
+                      </p>
+                      <div class="grid grid-cols-2 gap-3">
+                           <button @click="handleBackup" :disabled="backingUp" class="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-bdr-subtle active:scale-95 transition-all disabled:opacity-50 hover:bg-bg-subtle">
+                               <span v-if="backingUp" class="w-4 h-4 border-2 border-bdr-default border-t-txt-primary rounded-full animate-spin"></span>
+                               <span v-else class="material-symbols-rounded text-xl text-txt-secondary">cloud_upload</span>
+                              <span class="text-[10px] text-txt-secondary mt-2 font-medium tracking-wide">雲端存檔</span>
+                          </button>
+                           <button @click="handleExport" :disabled="exporting" class="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-bdr-subtle active:scale-95 transition-all disabled:opacity-50 hover:bg-bg-subtle">
+                               <span v-if="exporting" class="w-4 h-4 border-2 border-bdr-default border-t-txt-primary rounded-full animate-spin"></span>
+                               <span v-else class="material-symbols-rounded text-xl text-txt-secondary">download</span>
+                              <span class="text-[10px] text-txt-secondary mt-2 font-medium tracking-wide">匯出檔案</span>
+                          </button>
+                      </div>
+                      <div class="flex items-center justify-between px-1">
+                          <div class="flex flex-col">
+                              <span class="text-[10px] text-txt-primary font-medium tracking-wide">每日自動備份</span>
+                          </div>
+                          <label class="relative inline-flex items-center cursor-pointer">
+                              <input type="checkbox" v-model="localConfig.auto_backup" @change="debouncedUpdate" class="sr-only peer">
+                              <div class="w-9 h-5 bg-bg-subtle shadow-sm peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-bdr-default after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[var(--action-primary-bg)]"></div>
+                          </label>
+                      </div>
+                  </div>
 
-                 <!-- SHARED LINK MANAGEMENT -->
-                 <div class="bg-bg-subtle p-4 rounded-xl relative">
-                     <div class="flex items-center justify-between">
-                         <div class="space-y-0.5">
-                             <span class="text-xs text-txt-primary font-medium block">公開分享連結管理</span>
-                             <p class="text-[9px] text-txt-secondary">建立多個分享連結，並可設定不同的分享範圍與權限。</p>
-                         </div>
-                         <button @click="$emit('manage-shared-links')" class="w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-sm border border-bdr-subtle active:scale-95 transition-all text-txt-secondary hover:text-txt-primary mt-1">
-                             <span class="material-symbols-rounded text-sm">edit</span>
-                         </button>
-                     </div>
-                 </div>
+                  <!-- SHARED LINK MANAGEMENT -->
+                  <div class="bg-bg-subtle p-4 rounded-xl relative">
+                      <div class="flex items-center justify-between">
+                          <div class="space-y-0.5">
+                              <span class="text-xs text-txt-primary font-medium block">公開分享連結管理</span>
+                              <p class="text-[9px] text-txt-secondary">建立多個分享連結，並可設定不同的分享範圍與權限。</p>
+                          </div>
+                          <button @click="$emit('manage-shared-links')" class="w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-sm border border-bdr-subtle active:scale-95 transition-all text-txt-secondary hover:text-txt-primary mt-1">
+                              <span class="material-symbols-rounded text-sm">edit</span>
+                          </button>
+                      </div>
+                  </div>
 
-                <button @click="$emit('view-import')" class="w-full border border-bdr-outline text-txt-secondary py-3 rounded-xl text-xs font-medium active:bg-bg-subtle">
-                    匯入資料
-                </button>
-                <button @click="$emit('logout')" class="w-full border border-bdr-outline text-txt-secondary py-3 rounded-xl text-xs font-medium active:bg-bg-subtle">
-                    登出 Google 帳號
-                </button>
-                <button @click="confirmDeleteData" class="w-full py-2 text-[10px] text-txt-muted tracking-widest uppercase hover:text-txt-secondary transition-colors">
-                    刪除記帳資料
-                </button>
-                <button @click="$emit('delete-account')" class="w-full py-2 text-[10px] text-txt-muted tracking-widest uppercase hover:text-txt-secondary transition-colors">
-                    註銷帳戶
-                </button>
-            </div>
+                 <button @click="$emit('view-import')" class="w-full border border-bdr-outline text-txt-secondary py-3 rounded-xl text-xs font-medium active:bg-bg-subtle">
+                     匯入資料
+                 </button>
+                 <button @click="$emit('logout')" class="w-full border border-bdr-outline text-txt-secondary py-3 rounded-xl text-xs font-medium active:bg-bg-subtle">
+                     登出 Google 帳號
+                 </button>
+                 <button @click="confirmDeleteData" class="w-full py-2 text-[10px] text-txt-muted tracking-widest uppercase hover:text-txt-secondary transition-colors">
+                     刪除記帳資料
+                 </button>
+                 <button @click="$emit('delete-account')" class="w-full py-2 text-[10px] text-txt-muted tracking-widest uppercase hover:text-txt-secondary transition-colors">
+                     註銷帳戶
+                 </button>
+             </div>
 
-            <!-- VIEWER MODE -->
-            <div v-else class="space-y-3">
-                <div class="text-[10px] text-txt-secondary px-2">閱覽模式 (唯讀)</div>
-            </div>
+             <!-- VIEWER MODE -->
+             <div v-if="appMode === 'VIEWER'" class="space-y-3">
+                 <div class="text-[10px] text-txt-secondary px-2">閱覽模式 (唯讀)</div>
+             </div>
         </div>
 
         <!-- 使用指南入口 (ADMIN/VIEWER/Logged-in GUEST) - 文字連結 -->
@@ -396,8 +382,7 @@ export const SettingsPage = {
             localPaymentMethods: [],
             debouncedTimeout: null,
             exporting: false,
-            backingUp: false,
-            inviteCopied: false
+            backingUp: false
         };
     },
     computed: {
@@ -765,56 +750,6 @@ export const SettingsPage = {
                 this.dialog.alert('雲端存檔失敗: ' + e.message);
             } finally {
                 this.backingUp = false;
-            }
-        },
-        async copyInviteLink() {
-            const baseUrl = window.location.origin + window.location.pathname;
-            const inviteUrl = `${baseUrl}?invite_code=${this.currentUser.uid}&name=${encodeURIComponent(this.config.user_name || '朋友')}`;
-            const shareTitle = "日日記 | 帳務邀請";
-            const shareText = `日日記 | 帳務邀請\n邀請你一起記錄開銷與分帳\n${inviteUrl}`;
-
-            // 1. Try Native Share if available (Usually mobile)
-            if (navigator.share) {
-                try {
-                    await navigator.share({
-                        title: shareTitle,
-                        text: "邀請你一起記錄開銷與分帳",
-                        url: inviteUrl
-                    });
-                    this.inviteCopied = true;
-                    setTimeout(() => this.inviteCopied = false, 2500);
-                    return; // Success
-                } catch (e) {
-                    // Fallthrough to clipboard if cancelled or failed
-                    console.log("Native share result:", e.name);
-                }
-            }
-
-            // 2. Fallback to Clipboard with robust check
-            try {
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                    await navigator.clipboard.writeText(shareText);
-                } else {
-                    // Ultimate fallback: traditional textarea method for insecure contexts
-                    const textArea = document.createElement("textarea");
-                    textArea.value = shareText;
-                    textArea.style.position = "fixed";
-                    textArea.style.left = "-9999px";
-                    textArea.style.top = "0";
-                    document.body.appendChild(textArea);
-                    textArea.focus();
-                    textArea.select();
-                    const successful = document.execCommand('copy');
-                    document.body.removeChild(textArea);
-                    if (!successful) throw new Error('execCommand failed');
-                }
-
-                this.inviteCopied = true;
-                if (navigator.vibrate) navigator.vibrate(10);
-                setTimeout(() => this.inviteCopied = false, 2500);
-            } catch (err) {
-                console.error('Final fallback copy failed:', err);
-                this.dialog.alert('複製失敗，可能是瀏覽器限制。請手動複製連結：' + inviteUrl);
             }
         },
         navigateToGuide() {

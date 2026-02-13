@@ -192,7 +192,7 @@ export const EditPage = {
         </div>
     </section>
     `,
-    props: ['form', 'categories', 'friends', 'loading', 'paymentMethods', 'projects'],
+    props: ['form', 'categories', 'friends', 'loading', 'paymentMethods', 'projects', 'currentUser'],
     data() {
         return {
             selectedFriends: [],
@@ -262,8 +262,17 @@ export const EditPage = {
         },
         getFriendName(idOrName) {
             if (idOrName === '我') return '我';
-            const f = this.friends.find(x => x.id === idOrName || x.name === idOrName);
-            return f ? f.name : idOrName;
+            if (!idOrName) return '';
+
+            // Check if it's the current user
+            if (this.currentUser && idOrName === this.currentUser.uid) return '我';
+
+            const f = (this.friends || []).find(x => x.id === idOrName || x.uid === idOrName || x.name === idOrName);
+            if (f) return f.name;
+
+            // Fallback for long IDs
+            if (idOrName.length > 20 || idOrName.includes('_')) return '朋友';
+            return idOrName;
         },
         getFriendNamesFromList(idsOrNames) {
             if (!idsOrNames || idsOrNames.length === 0) return '';

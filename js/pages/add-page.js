@@ -156,7 +156,7 @@ export const AddPage = {
         </div>
     </section>
     `,
-    props: ['form', 'categories', 'friends', 'loading', 'paymentMethods', 'projects'],
+    props: ['form', 'categories', 'friends', 'loading', 'paymentMethods', 'projects', 'currentUser'],
     inject: ['dialog'],
     data() {
         return {

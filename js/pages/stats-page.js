@@ -126,7 +126,7 @@ export const StatsPage = {
          </div>
     </section>
     `,
-    props: ['transactions', 'categories', 'fxRate', 'paymentMethods', 'projects'],
+    props: ['transactions', 'categories', 'fxRate', 'paymentMethods', 'projects', 'currentUser'],
     setup() {
         const { inject, computed } = window.Vue;
         const baseCurrency = inject('baseCurrency');
@@ -199,7 +199,8 @@ export const StatsPage = {
                 let finalVal = 0;
 
                 // 邏輯修正：直接依據 payer, personalShare, currency, fxRate計算
-                if (this.isMyShareOnly || t.payer !== '我') {
+                const isMe = t.payer === '我' || (this.currentUser && t.payer === this.currentUser.uid);
+                if (this.isMyShareOnly || !isMe) {
                     // 顯示個人份額 (來源貨幣 -> 目標貨幣)
                     if (this.baseCurrency === currency) {
                         finalVal = personal;

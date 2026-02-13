@@ -108,11 +108,19 @@ export const FriendDetailPage = {
                         取消編輯
                     </button>
                 </div>
+
+                <!-- Danger Zone -->
+                <div class="pt-8 border-t border-bdr-subtle">
+                    <button @click="deleteFriend" class="w-full border border-danger/30 text-danger py-4 rounded-2xl text-[10px] font-medium tracking-[0.3em] uppercase active:scale-95 transition-all hover:bg-danger/5">
+                        刪除好友
+                    </button>
+                    <p class="text-[9px] text-txt-muted text-center mt-3 leading-relaxed">刪除後將無法在分帳名單中選擇此人，<br>但現有的交易紀錄仍會保留。</p>
+                </div>
             </div>
         </div>
     </section>
     `,
-    props: ['friend', 'transactions', 'fxRate'],
+    props: ['friend', 'transactions', 'fxRate', 'currentUser'],
     inject: ['dialog'],
     setup() {
         const { inject, computed } = window.Vue;
@@ -153,8 +161,8 @@ export const FriendDetailPage = {
                 // 2. Identify Parties
                 const isFriendPayer = (t.payer === id || (name && t.payer === name));
                 const isFriendInList = friendList.includes(id) || (name && friendList.includes(name));
-                const isMePayer = (t.payer === '我' || t.payer === 'Me');
-                const isMeInList = friendList.includes('我') || friendList.includes('Me');
+                const isMePayer = (t.payer === '我' || t.payer === 'Me' || (this.currentUser && t.payer === this.currentUser.uid));
+                const isMeInList = friendList.includes('我') || friendList.includes('Me') || (this.currentUser && friendList.includes(this.currentUser.uid));
 
                 if (t.type === '支出' && !t.isAlreadyPaid) {
                     if (isFriendPayer) {
@@ -259,6 +267,11 @@ export const FriendDetailPage = {
                 this.dialog.alert("儲存失敗: " + e.toString());
             } finally {
                 this.saving = false;
+            }
+        },
+        async deleteFriend() {
+            if (await this.dialog.confirm(`確定要刪除「${this.friend.name}」嗎？\n這將會移除此好友，但不會刪除與其相關的交易紀錄。`)) {
+                this.$emit('delete-friend', this.friend.id);
             }
         }
     }

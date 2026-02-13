@@ -198,26 +198,27 @@
 
             <!-- Regular Admin/Guest Dashboard -->
             <overview-page v-else-if="currentTab === 'overview'" :transactions="transactions" :stats="stats"
-                :fx-rate="fxRate"
+                :fx-rate="fxRate" :current-user="currentUser"
                 @go-to-history="historyFilter = { mode: $event.mode, categoryId: null, friendName: null, currency: $event.currency }; handleTabChange('history')"></overview-page>
 
             <history-page v-if="currentTab === 'history'" :transactions="filteredTransactions" :categories="categories"
                 :payment-methods="paymentMethods" :projects="projects" :fx-rate="fxRate" :friends="friends"
-                @edit-item="handleEditItem" @update-filter="Object.assign(historyFilter, $event)"
+                :current-user="currentUser" @edit-item="handleEditItem"
+                @update-filter="Object.assign(historyFilter, $event)"
                 @delete-multiple="handleDeleteMultiple"></history-page>
 
             <add-page v-if="currentTab === 'add'" :form="form" :categories="categories"
                 :payment-methods="paymentMethods" :friends="friends" :projects="projects" :loading="loading"
-                @toggle-currency="toggleCurrency" @submit="handleSubmit(form)"
+                :current-user="currentUser" @toggle-currency="toggleCurrency" @submit="handleSubmit(form)"
                 @add-friend-to-list="handleAddFriendToList" @create-project="handleCreateProject"></add-page>
             <edit-page v-if="currentTab === 'edit'" :form="editForm" :categories="categories"
                 :payment-methods="paymentMethods" :friends="friends" :projects="projects" :loading="loading"
-                @submit="handleSubmit(editForm)" @delete-item="handleDelete"
+                :current-user="currentUser" @submit="handleSubmit(editForm)" @delete-item="handleDelete"
                 @cancel="currentTab = 'history'; editForm = null;" @create-project="handleCreateProject"
                 @add-friend-to-list="handleAddFriendToList"></edit-page>
             <stats-page v-if="currentTab === 'stats'" :transactions="transactions" :categories="categories"
                 :payment-methods="paymentMethods" :fx-rate="fxRate" :projects="projects" :friends="friends"
-                @drill-down="handleDrillDown"></stats-page>
+                :current-user="currentUser" @drill-down="handleDrillDown"></stats-page>
             <settings-page v-if="currentTab === 'settings'" :config="systemConfig" :friends="friends"
                 :transactions="transactions" :projects="projects" :app-mode="appMode" :current-user="currentUser"
                 :categories="categories" :payment-methods="paymentMethods" @update-config="handleUpdateConfig"
@@ -239,8 +240,9 @@
 
             <!-- Friend Detail Page -->
             <friend-detail-page v-if="currentTab === 'friend-detail'" :friend="selectedFriend"
-                :transactions="transactions" :fx-rate="fxRate" @back="currentTab = 'settings'; selectedFriend = null"
-                @update-friend="handleUpdateFriend" @view-history="handleViewHistory"></friend-detail-page>
+                :transactions="transactions" :fx-rate="fxRate" :current-user="currentUser"
+                @back="currentTab = 'settings'; selectedFriend = null" @update-friend="handleUpdateFriend"
+                @delete-friend="handleDeleteFriend" @view-history="handleViewHistory"></friend-detail-page>
 
             <!-- Import Page -->
             <import-page v-if="currentTab === 'import'" @back="currentTab = 'settings'"
