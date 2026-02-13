@@ -816,3 +816,17 @@ Added comprehensive debug logging throughout the category save flow for easier t
 - Updated `<head>` in `guide.html` and `guide-en.html` to include manifest link and iOS app tags.
 - Injected Service Worker registration script before `</body>`.
 - Confirmed `manifest.json` defines `start_url` as `./index.html`.
+
+---
+
+## [2026-02-13T22:35:00+08:00] Website Title & SEO Optimization
+
+### Features & Improvements
+- **Website Title Update**: Updated the SEO title of the application to highlight core value propositions: "專屬旅日雙幣帳本" (Travel-focused Dual-Currency Ledger), "極簡介面" (Minimalist Interface), and "一鍵匯出" (One-click Export).
+- **Social Metadata Synchronization**: Synced the Open Graph (Facebook) and Twitter titles with the new branding to ensure consistent messaging across all social sharing platforms.
+
+### Technical Details
+- Modified <title> tag in index.html.
+- Updated og:title and twitter:title meta tags in index.html.
+
+*網站標題與 SEO 優化：更新首頁標題及社群標籤，強化產品核心價值（旅日雙幣、極簡、一鍵匯出）。*
