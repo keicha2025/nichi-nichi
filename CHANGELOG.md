@@ -983,3 +983,10 @@ Added comprehensive debug logging throughout the category save flow for easier t
     - **Integrated UX**: The "Daily Auto Backup" toggle now acts as an entry point for Google Services setup, ensuring a seamless connection between settings and the backup destination folder.
 
 *自動備份與授權優化：將 Google 授權權杖從 sessionStorage 遷移至 localStorage，確保瀏覽器重啟後背景備份仍能觸發。同時在開啟「每日自動備份」時新增主動授權引導對話框，確保功能開啟時已具備必要的雲端存取權限。*
+
+- **Strict Account Matching Logic**:
+    - **Identity Guard**: Implemented backend verification during the Google Drive authorization process. The system now strictly compares the email address of the Google Drive session with the app's current logged-in account.
+    - **Auto-Hinting**: Added `login_hint` to the OAuth flow to pre-select and prioritize the correct email address in the Google popup, minimizing user error.
+    - **Data Integrity**: Prevents the "cross-account backup" issue where data could inadvertently be saved to a different Google account logged into the same browser.
+
+*帳號比對機制：在 Google 雲端授權過程中加入嚴格的身分比對。系統會自動引導並檢查授權帳號是否與「日日記」登入帳號一致，防止資料誤存至同瀏覽器內的其他 Google 帳戶。*

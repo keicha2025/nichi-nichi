@@ -73,13 +73,28 @@ export const API = {
     },
 
     async requestIncrementalScope() {
+        const expectedUser = auth.currentUser;
+        if (!expectedUser) throw new Error("請先登入帳號");
+        const expectedEmail = expectedUser.email;
+
         try {
             const provider = new GoogleAuthProvider();
             provider.addScope('https://www.googleapis.com/auth/spreadsheets');
             provider.addScope('https://www.googleapis.com/auth/drive.file');
 
+            // Hint Google to use the account that is already logged in
+            provider.setCustomParameters({
+                login_hint: expectedEmail
+            });
+
             // Re-authenticate with extra scope
             const result = await signInWithPopup(auth, provider);
+
+            // CRITICAL: Verification
+            if (result.user.email !== expectedEmail) {
+                throw new Error(`授權帳號錯誤！\n目前的登入帳號為：${expectedEmail}\n您剛才選擇了：${result.user.email}\n請重新授權並選擇正確的帳號。`);
+            }
+
             const credential = GoogleAuthProvider.credentialFromResult(result);
             const token = credential.accessToken;
 
