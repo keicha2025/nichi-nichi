@@ -969,3 +969,10 @@ Added comprehensive debug logging throughout the category save flow for easier t
     - **Cleaner Fields**: Removed "(e.g., Kyoto Trip)" examples from input placeholders to maintain a minimalist aesthetic.
 
 *設定頁面重構與體驗優化：合併系統設定至帳號區塊並重新定義全頁排序（計畫 > 好友 > 自定義 > 帳號）。優化用戶資訊顯示位置、移除冗餘提示文字並加入即時儲存反饋圖示，同時為好友清單新增快速操作入口，打造更極簡且高效的設定介面。*
+
+- **[Critical Fix] Project & Friend Sync Reliability**:
+    - **Immediate Persistence**: Fixed a bug where newly created projects and friends would disappear after a page reload if no transaction was submitted. 
+    - **Sync Strategy**: Upgraded `handleCreateProject` and `handleAddFriendToList` to perform immediate synchronization with Firebase Firestore in Admin mode, ensuring data is persisted instantly.
+    - **Removed Deferred Logic**: Deprecated the "pending updates" queue in `handleSubmit` in favor of more robust, event-driven synchronization handlers.
+
+*重大修復：解決新增計畫或好友後，若未建立交易紀錄便重新整理會導致資料消失的問題。現在改為在新增當下立即同步至 Firebase 後端，確保資料持久性。*

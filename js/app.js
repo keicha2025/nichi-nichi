@@ -497,32 +497,7 @@ createApp({
             // loading.value = true; // [UX] optimistic: do not show loading
 
             try {
-                // 1. Process Pending Updates (Friends/Projects)
-                if (pendingUpdates.value.friends.length > 0) {
-                    // Sync full friends list
-                    await API.updateUserData({ friends: friends.value });
-                    pendingUpdates.value.friends = [];
-                }
-
-                if (pendingUpdates.value.projects.length > 0) {
-                    for (const p of pendingUpdates.value.projects) {
-                        await API.saveTransaction({
-                            action: 'updateProject',
-                            name: p.name,
-                            startDate: p.startDate,
-                            endDate: p.endDate
-                            // Note: We might be creating duplicates if we don't handle ID?
-                            // API.saveTransaction for 'updateProject' usually creates new or updates based on logic?
-                            // Let's assume it handles "create new" if no ID passed, or we pass the mapped ID?
-                            // Previous logic passed name/dates.
-                            // We should probably check if API.saveTransaction supports ID for projects?
-                            // Checking API.js would be good, but assuming standard flow:
-                            // The previous code didn't pass ID. So it created NEW.
-                            // So we just call it.
-                        });
-                    }
-                    pendingUpdates.value.projects = [];
-                }
+                // [REMOVED] Pending Updates are now synced immediately in their respective handlers
 
                 // Prepare Payload
                 const now = new Date();
@@ -803,7 +778,17 @@ createApp({
             if (!exists) {
                 const newFriend = { id: generateId('f'), name: n, visible: true };
                 friends.value.push(newFriend);
-                pendingUpdates.value.friends.push(newFriend);
+
+                if (appMode.value === 'ADMIN') {
+                    try {
+                        await API.updateUserData({ friends: JSON.parse(JSON.stringify(friends.value)) });
+                        await loadData(true);
+                    } catch (e) {
+                        console.error("Friend sync failed", e);
+                    }
+                } else if (appMode.value === 'GUEST') {
+                    localStorage.setItem('guest_friends', JSON.stringify(friends.value));
+                }
             }
         };
 
@@ -1187,7 +1172,7 @@ createApp({
                     projects.value.push(newProject);
                     localStorage.setItem('guest_projects', JSON.stringify(projects.value));
                 } else {
-                    // ADMIN: Optimistic Update & Defer Sync
+                    // ADMIN: Optimistic Update & Immediate Sync
                     newProject = {
                         id: 'proj_' + Math.floor(Math.random() * 1000000), // Temp ID
                         name: name,
@@ -1196,7 +1181,21 @@ createApp({
                         status: 'Active'
                     };
                     projects.value.push(newProject);
-                    pendingUpdates.value.projects.push(newProject);
+
+                    try {
+                        await API.saveTransaction({
+                            action: 'updateProject',
+                            id: newProject.id,
+                            name: newProject.name,
+                            startDate: newProject.startDate,
+                            endDate: newProject.endDate,
+                            status: newProject.status
+                        });
+                        await loadData(true);
+                    } catch (e) {
+                        console.error("Project sync failed", e);
+                        dialog.alert("同步失敗: " + e.message);
+                    }
                 }
 
                 // Auto Select Project
