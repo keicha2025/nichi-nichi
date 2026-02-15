@@ -17,19 +17,21 @@
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://keicha2025.github.io/nichi-nichi/">
+    <meta property="og:url" content="https://nichi-nichi.web.app/">
     <meta property="og:title" content="日日記 | 專屬旅日雙幣帳本：極簡介面、一鍵匯出">
     <meta property="og:description"
         content="專為在日生活與旅遊設計。無需網路也能即時背景存檔，體驗與 App 一樣順暢。支援雙幣別獨立管理，分別統計台幣與日幣支出，不受匯率干擾。一鍵匯出 CSV 試算表與公開連結，讓您的花費紀錄輕鬆化為攻略分享。">
-    <meta property="og:image" content="https://keicha2025.github.io/nichi-nichi/OGImage.png">
+    <meta property="og:image"
+        content="https://raw.githubusercontent.com/keicha2025/nichi-nichi/refs/heads/main/OGImage.png">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://keicha2025.github.io/nichi-nichi/">
+    <meta property="twitter:url" content="https://nichi-nichi.web.app/">
     <meta property="twitter:title" content="日日記 | 專屬旅日雙幣帳本：極簡介面、一鍵匯出">
     <meta property="twitter:description"
         content="專為在日生活與旅遊設計。無需網路也能即時背景存檔，體驗與 App 一樣順暢。支援雙幣別獨立管理，分別統計台幣與日幣支出，不受匯率干擾。一鍵匯出 CSV 試算表與公開連結，讓您的花費紀錄輕鬆化為攻略分享。">
-    <meta property="twitter:image" content="https://keicha2025.github.io/nichi-nichi/OGImage.png">
+    <meta property="twitter:image"
+        content="https://raw.githubusercontent.com/keicha2025/nichi-nichi/refs/heads/main/OGImage.png">
 
     <!-- JSON-LD Structured Data for Rich Results -->
     <script type="application/ld+json">
@@ -230,11 +232,12 @@
                 @create-project="handleCreateProject" @open-icon-edit="handleOpenIconEdit"
                 @clear-account-data="handleClearAccountData" @view-import="currentTab = 'import'"
                 @delete-account="handleDeleteAccount" @update:dirty="isSettingsDirty = $event"
-                @manage-shared-links="currentTab = 'shared-links'"></settings-page>
+                @manage-shared-links="currentTab = 'shared-links'"
+                @current-tab-change="currentTab = $event"></settings-page>
 
             <!-- Icon Edit Page -->
             <icon-edit-page v-if="currentTab === 'icon-edit'" :context="iconEditContext" @select="handleSelectIcon"
-                @cancel="currentTab = 'settings'"></icon-edit-page>
+                @cancel="handleIconEditCancel"></icon-edit-page>
 
             <!-- Project Detail Page -->
             <project-detail-page v-if="currentTab === 'project-detail'" :project="selectedProject"
@@ -250,6 +253,11 @@
             <!-- Import Page -->
             <import-page v-if="currentTab === 'import'" @back="currentTab = 'settings'"
                 @refresh-data="retrySync"></import-page>
+
+            <!-- Custom List Page -->
+            <custom-list-page v-if="currentTab === 'custom-list'" :categories="categories"
+                :payment-methods="paymentMethods" :app-mode="appMode" @back="currentTab = 'settings'"
+                @open-icon-edit="handleOpenIconEdit" @update-user-data="handleUpdateUserData"></custom-list-page>
 
             <!-- Shared Links Pages -->
             <shared-links-page v-if="currentTab === 'shared-links'" :current-user="currentUser"

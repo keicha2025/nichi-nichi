@@ -900,3 +900,72 @@ Added comprehensive debug logging throughout the category save flow for easier t
 
 *生產環境部署：將穩定的 main 分支同步至生產環境專用儲存庫，完成正式網域的內容更新。*
 
+---
+
+## [2026-02-15T13:25:00+08:00] Firebase Hosting Integration & CI/CD Enhancement
+
+### Features & Improvements
+- **Firebase Hosting Deployment**: Integrated automated deployment to Firebase Hosting (`nichi-nichi.web.app`). The application is now dual-deployed to both GitHub Pages and Firebase on every push to the `main` branch.
+- **Improved CI/CD Pipeline**: Upgraded the existing GitHub Action workflow to handle multi-platform deployment.
+- **Local Firebase Environment**: Initialized `firebase.json` and `.firebaserc` for professional hosting management.
+
+### Technical Details
+- Added `firebase.json` defining deployment root and routing rewrites.
+- Established a **4-environment deployment architecture**:
+    1. **Local Preview**: Vite with IP hosting (`npm run dev`).
+    2. **GitHub Pages**: Automated CI/CD via GitHub Actions.
+    3. **Firebase Production (`nichi-nichi`)**: Manual deployment via `npm run deploy:prod`.
+    4. **Firebase Beta (`nichinichi-beta`)**: Manual deployment via `npm run deploy:beta`.
+- Configured individual site entries in `firebase.json` and added `npx` based deployment scripts to ensure environment independence.
+- **UI Refinement**: Reordered Settings page sections; "Account" and "User Guide" now appear at the top when in Guest mode for better onboarding.
+
+*全環境架構確立：完成「四位一體」部署體系設定，包含本機 IP 預覽、GitHub 自動部署、Firebase 正式版 (nichi-nichi) 與測試版 (beta) 的手動控管指令。*
+*介面優化：調整設定頁面佈局，訪客模式下將帳號管理與指南移至最上方，增強引導性。*
+
+### [2026-02-15] Interface Customization Refactor & UI Polish
+
+- **New Page**: Created `CustomListPage` as a dedicated interface for managing categories (Expense/Income) and payment methods.
+- **Unified Logic**: Consolidated the editing, reordering, adding, and icon selection logic into a single component to eliminate redundant "Save" buttons and prevent data loss.
+- **Bug Fixes**:
+    - Resolved unreliable payment method addition by centralizing list management.
+    - Fixed "Manage" button navigation failure caused by missing Vue event declarations.
+    - Eliminated "restoreEditState" runtime error in SettingsPage lifecycle.
+- **UI & Aesthetics Polish**:
+    - **Color Standardization**: Updated all customization UI text to `txt-secondary` for a more premium, muted look.
+    - **Spacing Optimization**: Adjusted "Add Item" button margins and footer spacing to achieve perfectly symmetrical 1rem vertical gaps.
+    - **Layout Consistency**: Aligned management button heights (`py-3`) with primary action buttons.
+
+*功能重構與體感優化：建立專屬自定義頁面並統一儲存邏輯，修復導覽與狀態恢復錯誤。同時調整文字為次要色調並優化間距，確保操作介面視覺對稱且一致。*
+
+- **SEO & Social Sharing Fix**: Updated Open Graph and Twitter metadata to point to the production domain (`nichi-nichi.web.app`) and linked a stable, remote image source from GitHub to ensure correct link previews across social platforms.
+
+*SEO 修復：更新 OG 與 Twitter 標籤網域，並將分享縮圖指向穩定的 GitHub 原始檔案路徑，解決社群分享無法顯示預覽圖的問題。*
+
+- **Summary Dashboard Refinement**:
+    - Reconstructed the categorization summary using a **3-column Grid layout** to ensure uniform sizing and clean alignment.
+    - Separated Expense and Income categories into distinct sections for better organization.
+    - Adopted a clean, borderless "Mini Capsule" design for a more lightweight and modern aesthetic.
+
+*摘要介面優化：將分類摘要改為三欄位網格佈局，確保元件大小一致且排列對稱。區分支出與收入區塊，並採用無邊框的迷你膠囊設計，提升視覺簡潔感。*
+
+
+
+
+
+### [2026-02-15] Settings Page Layout Refactor & UX Polish
+
+- **Layout Architecture Overhaul**:
+    - **Section Merging**: Merged the legacy "System Config" block into the "Account Management" card to reduce vertical clutter and group related settings.
+    - **Global Reordering**: Re-prioritized page hierarchy: **Travel Plans** > **Friends List** > **Interface Customization** > **Account Management**.
+    - **Adaptive Context**: Account management (with login/config) now dynamically moves to the **top** in Guest mode and stays at the **bottom** for logged-in users.
+- **Visual & UI Refinements**:
+    - **Profile Header**: Repositioned the User Profile (Avatar/Email) to the top of the Account section. Removed the avatar border ring for a cleaner, flatter look.
+    - **Subtle Sub-cards**: Applied the standardized `bg-bg-subtle` sub-card style (with icons and rounded corners) to the merged System Config inputs.
+    - **Active Feedback**: Added a functional `save` icon to the System Config header that provides visual feedback (loading spinner) during automated or manual saves.
+    - **Empty State Optimization**: Removed redundant "No plans/friends" text labels. The areas now adapt their height dynamically based on content, creating a tighter layout.
+    - **Consistent Alignment**: Left-aligned the "User Guide" link at the bottom of the page and ensured all empty states and section headers follow a shared vertical alignment.
+- **Enhanced Interactions**:
+    - **Inline Management**: Added a functional "Add Friend" `+` button and inline form directly to the Friends List section, matching the Projects management experience.
+    - **Cleaner Fields**: Removed "(e.g., Kyoto Trip)" examples from input placeholders to maintain a minimalist aesthetic.
+
+*設定頁面重構與體驗優化：合併系統設定至帳號區塊並重新定義全頁排序（計畫 > 好友 > 自定義 > 帳號）。優化用戶資訊顯示位置、移除冗餘提示文字並加入即時儲存反饋圖示，同時為好友清單新增快速操作入口，打造更極簡且高效的設定介面。*

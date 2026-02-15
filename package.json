@@ -8,6 +8,9 @@
   },
   "scripts": {
     "dev": "vite --host",
+    "login": "firebase login",
+    "deploy:prod": "firebase deploy --only hosting:nichi-nichi --project project-2096109701191973112",
+    "deploy:beta": "firebase deploy --only hosting:nichinichi-beta --project project-2096109701191973112",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -23,6 +26,7 @@
   },
   "homepage": "https://github.com/keicha2025/record#readme",
   "devDependencies": {
+    "firebase-tools": "^15.6.0",
     "vite": "^7.3.1"
   }
 }

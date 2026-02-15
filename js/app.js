@@ -13,6 +13,7 @@ import { ImportPage } from './pages/import-page.js';
 import { SharedLinksPage } from './pages/shared-links-page.js?v=1.4';
 import { EditSharedLinksPage } from './pages/edit-shared-links-page.js?v=1.4';
 import { ViewDashboard } from './pages/view-dashboard.js';
+import { CustomListPage } from './pages/custom-list-page.js';
 import { SystemModal } from './components/system-modal.js';
 import { AppHeader } from './components/app-header.js';
 import { AppFooter } from './components/app-footer.js';
@@ -41,7 +42,8 @@ createApp({
         'app-select': AppSelect,
         'shared-links-page': SharedLinksPage,
         'edit-shared-links-page': EditSharedLinksPage,
-        'friend-detail-page': FriendDetailPage
+        'friend-detail-page': FriendDetailPage,
+        'custom-list-page': CustomListPage
     },
     setup() {
         const getLocalISOString = () => {
@@ -1041,7 +1043,35 @@ createApp({
                     }
                 }
 
+                // Check if we're in custom list edit mode
+                const customEditState = sessionStorage.getItem('custom_list_edit_state');
+                if (customEditState) {
+                    try {
+                        const state = JSON.parse(customEditState);
+                        if (type === 'category') {
+                            const cat = state.localCategories.find(c => c.id === id);
+                            if (cat) { cat.icon = icon; cat.name = name; }
+                        } else if (type === 'payment') {
+                            const pm = state.localPaymentMethods.find(p => p.id === id);
+                            if (pm) { pm.icon = icon; pm.name = name; }
+                        }
+                        sessionStorage.setItem('custom_list_edit_state', JSON.stringify(state));
+                        currentTab.value = 'custom-list';
+                        return;
+                    } catch (e) {
+                        console.error('Failed to parse custom edit state:', e);
+                    }
+                }
+
                 currentTab.value = 'settings';
+            },
+            handleIconEditCancel: () => {
+                const customEditState = sessionStorage.getItem('custom_list_edit_state');
+                if (customEditState) {
+                    currentTab.value = 'custom-list';
+                } else {
+                    currentTab.value = 'settings';
+                }
             },
 
             // NEW: Auth Methods
