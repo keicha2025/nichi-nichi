@@ -104,17 +104,7 @@ export const FriendDetailPage = {
                             class="w-full bg-[var(--action-primary-bg)] text-white py-4 rounded-2xl text-[10px] font-medium tracking-[0.3em] uppercase shadow-lg active:scale-95 transition-all">
                         {{ saving ? 'Saving...' : '儲存變更' }}
                     </button>
-                    <button @click="isEditing = false" class="w-full py-2 text-[10px] text-txt-secondary tracking-[0.2em] font-medium uppercase hover:text-txt-primary">
-                        取消編輯
-                    </button>
-                </div>
-
-                <!-- Danger Zone -->
-                <div class="pt-8 border-t border-bdr-subtle">
-                    <button @click="deleteFriend" class="w-full border border-danger/30 text-danger py-4 rounded-2xl text-[10px] font-medium tracking-[0.3em] uppercase active:scale-95 transition-all hover:bg-danger/5">
-                        刪除好友
-                    </button>
-                    <p class="text-[9px] text-txt-muted text-center mt-3 leading-relaxed">刪除後將無法在分帳名單中選擇此人，<br>但現有的交易紀錄仍會保留。</p>
+                    <button @click="deleteFriend" class="w-full py-2 text-[10px] text-txt-secondary tracking-widest uppercase hover:text-danger">刪除好友</button>
                 </div>
             </div>
         </div>

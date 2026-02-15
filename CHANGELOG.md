@@ -996,4 +996,7 @@ Added comprehensive debug logging throughout the category save flow for easier t
     - **In-Detail Deletion UI**: Added a "Delete Project" button within the project detail's edit mode, replacing the redundant "Cancel Edit" button for a cleaner interface.
     - **Global Filtering**: Updated transaction addition, editing, and management lists to exclude projects marked as invisible, ensuring a focused and relevant workspace.
 
-*計畫軟刪除功能：比照好友管理導入軟刪除機制。在計畫詳情的編輯模式中新增「刪除計畫」按鈕，刪除後計畫將從清單中隱藏，但過往關聯的歷史帳目仍會保留原始計畫名稱。*
+- **Unified Delete Interface**: Synchronized deletion UI across "Friends" and "Projects". Both sections now feature a low-interference "Delete" button in edit mode, replacing the "Cancel" button for a more streamlined management experience.
+    - **UI Cleanup**: Removed the "Danger Zone" from the friend detail page to maintain visual consistency with other detail components.
+
+*介面統一化：統一好友與計畫的刪除介面。兩者現在皆於編輯模式中，以簡潔的「刪除」按鈕取代「取消編輯」，並移除好友詳情頁底部的危險區域，讓整體設計語彙更趨一致。*
