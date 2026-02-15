@@ -886,3 +886,17 @@ Added comprehensive debug logging throughout the category save flow for easier t
 - Unified the project identity across README and home page metadata.
 
 *重構 README：全面更新專案文件，移除過時的 GAS 指南，改為以 PWA 與 Firebase 為核心的架構說明，並強化品牌核心價值傳達。*
+
+---
+
+## [2026-02-15T12:35:00+08:00] Production Deployment to Dedicated Domain
+
+### Features & Improvements
+- **Cross-Repository Deployment**: Synchronized the stable `main` branch to the production static site repository (`nichi-nichi.github.io`) to update the live environment.
+
+### Technical Details
+- Added a new git remote `deploy` pointing to `https://github.com/nichi-nichi/nichi-nichi.github.io.git`.
+- Executed forced push from local `main` to `deploy/main`.
+
+*生產環境部署：將穩定的 main 分支同步至生產環境專用儲存庫，完成正式網域的內容更新。*
+
