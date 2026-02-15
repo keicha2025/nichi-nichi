@@ -103,15 +103,27 @@ export const GoogleSheetsService = {
         const metadata = { name, parents: [folderId], mimeType: 'application/json' };
         const fileContent = JSON.stringify(data, null, 2);
 
-        const form = new FormData();
-        form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-        form.append('file', new Blob([fileContent], { type: 'application/json' }));
+        const boundary = '-------nichinichi_boundary_314159';
+        const delimiter = "\r\n--" + boundary + "\r\n";
+        const close_delim = "\r\n--" + boundary + "--";
+
+        const multipartRequestBody =
+            delimiter +
+            'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+            JSON.stringify(metadata) +
+            delimiter +
+            'Content-Type: application/json\r\n\r\n' +
+            fileContent +
+            close_delim;
 
         const url = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
         const options = {
             method: 'POST',
-            body: form
-            // Do NOT set Content-Type for FormData
+            headers: {
+                'Content-Type': `multipart/related; boundary=${boundary}`,
+                'Content-Length': multipartRequestBody.length
+            },
+            body: multipartRequestBody
         };
         return await this._fetchWithRetry(url, options, token, onTokenExpired);
     },
@@ -161,8 +173,13 @@ export const GoogleSheetsService = {
         const ts = this._getTimestamp();
         const fileName = `系統還原用備份檔_${ts}.json`;
 
-        await this.saveJsonFile(folder.id, fileName, data, token, onTokenExpired);
-        return { folder: folder.name, file: fileName };
+        const result = await this.saveJsonFile(folder.id, fileName, data, token, onTokenExpired);
+        return {
+            folderName: folder.name,
+            folderId: folder.id,
+            fileName: fileName,
+            fileId: result.id
+        };
     },
 
     /**
@@ -252,8 +269,9 @@ export const GoogleSheetsService = {
             this.exportReadableSheet(data, token, onTokenExpired)
         ]);
         return {
-            folder: backupResult.folder,
-            backupFile: backupResult.file,
+            folderName: backupResult.folderName,
+            folderId: backupResult.folderId,
+            backupFile: backupResult.fileName,
             sheetUrl: sheetResult.url
         };
     },

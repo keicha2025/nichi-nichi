@@ -534,10 +534,9 @@ export const SettingsPage = {
                     config: this.config
                 };
 
-                // Cloud Save: JSON + Spreadsheet simultaneously
                 const result = await GoogleSheetsService.cloudSave(data, token, API.requestIncrementalScope);
 
-                this.dialog.alert(`雲端存檔完成！\n備份檔：${result.backupFile}\n記帳表已同步至「${result.folder}」資料夾。`, { title: '雲端存檔' });
+                this.dialog.alert(`雲端存檔完成！\n\n1. 備份檔：${result.backupFile}\n2. 記帳表：已同步至 Google 試算表\n\n資料夾：${result.folderName}\n\n[點此開啟試算表](${result.sheetUrl})`, { title: '雲端存檔' });
             } catch (e) {
                 console.error(e);
                 this.dialog.alert('雲端存檔失敗: ' + e.message);
