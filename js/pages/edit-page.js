@@ -223,7 +223,7 @@ export const EditPage = {
         activeProjects() {
             const currentId = this.form.projectId;
             return (this.projects || []).filter(p =>
-                (p.status !== 'Archived' && p.status !== 'archived') || p.id === currentId
+                ((p.status !== 'Archived' && p.status !== 'archived') && p.visible !== false) || p.id === currentId
             );
         },
         currentProjectName() {

@@ -81,8 +81,9 @@ export const ProjectDetailPage = {
                 
                 <div class="space-y-4 pt-6">
                     <button @click="saveProject" :disabled="saving" class="w-full bg-[var(--action-primary-bg)] text-white py-4 rounded-2xl text-[10px] font-medium tracking-[0.3em] uppercase active:scale-95 transition-all">
-                {{ saving ? 'Saving...' : '更新紀錄' }}
-            </button> <button @click="isEditing = false" class="w-full py-2 text-[10px] text-txt-secondary tracking-widest uppercase hover:text-txt-primary">取消編輯</button>
+                        {{ saving ? 'Saving...' : '更新紀錄' }}
+                    </button> 
+                    <button @click="deleteProject" class="w-full py-2 text-[10px] text-txt-secondary tracking-widest uppercase hover:text-danger">刪除計畫</button>
                 </div>
             </div>
         </div>
@@ -169,6 +170,24 @@ export const ProjectDetailPage = {
                 this.dialog.alert("儲存失敗: " + e.toString());
             } finally {
                 this.saving = false;
+            }
+        },
+        async deleteProject() {
+            if (await this.dialog.confirm(`確定要刪除「${this.project.name}」嗎？\n這將會從清單中移除此計畫，但歷史交易明細仍會保留。`)) {
+                this.saving = true;
+                try {
+                    await API.saveTransaction({
+                        action: 'updateProject',
+                        id: this.project.id,
+                        visible: false
+                    });
+                    this.$emit('back'); // Go back to settings/list after deletion
+                    this.$emit('update-project'); // Trigger reload in parent
+                } catch (e) {
+                    this.dialog.alert("刪除失敗: " + e.toString());
+                } finally {
+                    this.saving = false;
+                }
             }
         }
     }

@@ -990,3 +990,10 @@ Added comprehensive debug logging throughout the category save flow for easier t
     - **Data Integrity**: Prevents the "cross-account backup" issue where data could inadvertently be saved to a different Google account logged into the same browser.
 
 *帳號比對機制：在 Google 雲端授權過程中加入嚴格的身分比對。系統會自動引導並檢查授權帳號是否與「日日記」登入帳號一致，防止資料誤存至同瀏覽器內的其他 Google 帳戶。*
+
+- **Project Soft Delete Capability**:
+    - **Soft Deletion Mechanism**: Implemented `visible: false` logic for projects, similar to the friends list. Deleted projects are hidden from active lists but their historical data remains intact in transaction logs and stats.
+    - **In-Detail Deletion UI**: Added a "Delete Project" button within the project detail's edit mode, replacing the redundant "Cancel Edit" button for a cleaner interface.
+    - **Global Filtering**: Updated transaction addition, editing, and management lists to exclude projects marked as invisible, ensuring a focused and relevant workspace.
+
+*計畫軟刪除功能：比照好友管理導入軟刪除機制。在計畫詳情的編輯模式中新增「刪除計畫」按鈕，刪除後計畫將從清單中隱藏，但過往關聯的歷史帳目仍會保留原始計畫名稱。*

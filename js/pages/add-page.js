@@ -172,8 +172,8 @@ export const AddPage = {
             return Math.round(this.form.amount / totalPeople);
         },
         activeProjects() {
-            // 只顯示 Active 的專案
-            return (this.projects || []).filter(p => p.status !== 'Archived' && p.status !== 'archived');
+            // 只顯示 Active 且未被刪除的專案
+            return (this.projects || []).filter(p => (p.status !== 'Archived' && p.status !== 'archived') && p.visible !== false);
         },
         visibleFriends() {
             return (this.friends || []).filter(f => f.visible !== false);

@@ -89,7 +89,7 @@ export const SettingsPage = {
             </div>
 
             <div class="space-y-3">
-                 <div v-for="p in projects" :key="p.id" 
+                 <div v-for="p in visibleProjects" :key="p.id" 
                       @click="$emit('view-project', p)"
                       class="flex justify-between items-center p-3 bg-bg-subtle rounded-xl active:bg-bg-subtle transition-colors cursor-pointer border border-transparent hover:border-bdr-subtle">
                     <div class="flex flex-col">
@@ -341,6 +341,9 @@ export const SettingsPage = {
         },
         sortedPaymentMethods() {
             return [...(this.paymentMethods || [])].sort((a, b) => (a.order || 99) - (b.order || 99));
+        },
+        visibleProjects() {
+            return (this.projects || []).filter(p => p.visible !== false);
         }
     },
     watch: {
