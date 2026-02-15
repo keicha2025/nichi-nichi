@@ -976,3 +976,10 @@ Added comprehensive debug logging throughout the category save flow for easier t
     - **Removed Deferred Logic**: Deprecated the "pending updates" queue in `handleSubmit` in favor of more robust, event-driven synchronization handlers.
 
 *重大修復：解決新增計畫或好友後，若未建立交易紀錄便重新整理會導致資料消失的問題。現在改為在新增當下立即同步至 Firebase 後端，確保資料持久性。*
+
+- **Auto-Backup & Auth Optimization**:
+    - **Persistent Authorization**: Migrated Google OAuth tokens from `sessionStorage` to `localStorage`. This allows the background auto-backup to function even after browser restarts, provided the session remains active.
+    - **Smart Authorization Prompt**: Implemented a proactive authorization flow. When "Daily Auto Backup" is enabled, the system checks for a valid Google token and prompts the user with a custom explanation dialog if authentication is required.
+    - **Integrated UX**: The "Daily Auto Backup" toggle now acts as an entry point for Google Services setup, ensuring a seamless connection between settings and the backup destination folder.
+
+*自動備份與授權優化：將 Google 授權權杖從 sessionStorage 遷移至 localStorage，確保瀏覽器重啟後背景備份仍能觸發。同時在開啟「每日自動備份」時新增主動授權引導對話框，確保功能開啟時已具備必要的雲端存取權限。*

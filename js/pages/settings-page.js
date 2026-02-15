@@ -365,10 +365,40 @@ export const SettingsPage = {
         async saveSettings() {
             this.saving = true;
             try {
-                this.$emit('update-config', this.localConfig);
+                this.$emit('update-config', JSON.parse(JSON.stringify(this.localConfig)));
             } finally {
                 this.saving = false;
             }
+        },
+        async debouncedUpdate() {
+            if (this.debouncedTimeout) clearTimeout(this.debouncedTimeout);
+
+            // Special check for Auto Backup authorization
+            if (this.localConfig.auto_backup && !API.getGoogleToken()) {
+                if (await this.dialog.confirm("開啟自動備份需要授權存取 Google Drive 與試算表，以便將資料備份至您的雲端硬碟。", {
+                    title: '需要 Google 授權',
+                    confirmText: '由此去授權',
+                    secondaryText: '先不要'
+                })) {
+                    try {
+                        this.saving = true;
+                        await API.requestIncrementalScope();
+                    } catch (e) {
+                        console.error("Auth failed", e);
+                        this.localConfig.auto_backup = false;
+                        return;
+                    } finally {
+                        this.saving = false;
+                    }
+                } else {
+                    this.localConfig.auto_backup = false;
+                    return;
+                }
+            }
+
+            this.debouncedTimeout = setTimeout(() => {
+                this.saveSettings();
+            }, 800);
         },
         async createProject() {
             if (!this.newProject.name) return this.dialog.alert("請輸入計畫名稱");

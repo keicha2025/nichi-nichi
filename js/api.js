@@ -84,8 +84,8 @@ export const API = {
             const token = credential.accessToken;
 
             if (token) {
-                sessionStorage.setItem('google_access_token_v4', token);
-                sessionStorage.setItem('google_token_expiry', Date.now() + 3500 * 1000); // Usually 1 hour
+                localStorage.setItem('google_access_token_v4', token);
+                localStorage.setItem('google_token_expiry', (Date.now() + 3500 * 1000).toString()); // Usually 1 hour
                 return token;
             }
             return null;
@@ -96,8 +96,8 @@ export const API = {
     },
 
     getGoogleToken() {
-        const token = sessionStorage.getItem('google_access_token_v4');
-        const expiry = sessionStorage.getItem('google_token_expiry');
+        const token = localStorage.getItem('google_access_token_v4');
+        const expiry = localStorage.getItem('google_token_expiry');
         if (token && expiry && Date.now() < parseInt(expiry)) {
             return token;
         }
@@ -105,8 +105,8 @@ export const API = {
     },
 
     invalidateGoogleToken() {
-        sessionStorage.removeItem('google_access_token_v4');
-        sessionStorage.removeItem('google_token_expiry');
+        localStorage.removeItem('google_access_token_v4');
+        localStorage.removeItem('google_token_expiry');
     },
 
     // Data Access
