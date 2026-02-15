@@ -1000,3 +1000,109 @@ Added comprehensive debug logging throughout the category save flow for easier t
     - **UI Cleanup**: Removed the "Danger Zone" from the friend detail page to maintain visual consistency with other detail components.
 
 *介面統一化：統一好友與計畫的刪除介面。兩者現在皆於編輯模式中，以簡潔的「刪除」按鈕取代「取消編輯」，並移除好友詳情頁底部的危險區域，讓整體設計語彙更趨一致。*
+
+---
+
+## [2026-02-15T17:35:00+08:00] Performance & SEO Reinforcement
+
+### Added
+- **Search Engine Optimization (SEO)**: Created `robots.txt` to properly guide search engine crawlers and resolve Lighthouse SEO audit errors.
+- **Resource Preconnecting**: Added `preconnect` hints for Google Fonts and Gstatic servers to reduce latency during font fetching.
+
+### Improved
+- **Loading Performance (Critical Path)**: 
+    - Implemented `defer` loading for non-critical third-party libraries (`Chart.js`, `JSZip`), allowing the main UI to render faster and improving First Contentful Paint (FCP).
+    - Added `&display=swap` parameter to font loading strategy (applied via `link` tags) to ensure text remains visible during font download.
+
+### Technical Decision
+- **PWA Experience Preservation**: Decided to RETAIN `user-scalable=no` in the viewport settings despite Lighthouse accessibility suggestions. This preserves the established App-like tactile interface and prevents accidental UI zooming on mobile devices, which is a core design requirement for this project.
+
+*效能與 SEO 強化：建立 `robots.txt` 並優化資源載入策略（包含字體預連線與非關鍵腳本延遲載入），在不影響「禁止縮放」之 App 手感的前提下提升首屏渲染速度。*
+
+---
+
+## [2026-02-15T17:40:00+08:00] Tailwind CSS Compilation & Performance Optimization
+
+### Improved
+- **Style Delivery Performance**: 
+    - Migrated from **Tailwind CDN** (client-side compilation) to **Build-time Compilation** using PostCSS and Vite.
+    - Removed the hefty 1MB+ Tailwind CDN script and inline configuration from `index.html`.
+    - This change significantly reduces First Contentful Paint (FCP) and eliminates the "Flash of Unstyled Content" (FOUC).
+
+### Infrastructure
+- **Build System Upgrade**: 
+    - Installed `tailwindcss`, `postcss`, and `autoprefixer` as dev dependencies.
+    - Created `tailwind.config.js` to centralize our semantic design tokens (Shared with `design-tokens.css`).
+    - Created `postcss.config.js` to automate CSS processing within the Vite pipeline.
+    - Updated `style.css` to use standard `@tailwind` directives.
+
+*Tailwind 效能優化：將樣式系統從 CDN 即時編譯遷移至建構時編譯 (PostCSS/Vite)，移除 1MB 以上的非必要腳本負載，大幅提升 App 啟動速度與渲染效能。*
+
+---
+
+## [2026-02-15T17:45:00+08:00] Fixed Tailwind Configuration for CommonJS Compatibility
+
+### Fixed
+- **Module Resolution Error**: Replaced ES Module `export default` with CommonJS `module.exports` in `tailwind.config.js` and `postcss.config.js` to match the project's `"type": "commonjs"` environment. This fixes the layout breakage in the development environment.
+- **Content Paths**: Expanded Tailwind content scanning to explicitly include `./js/pages/*.js` and `./js/components/*.js` to ensure all dynamic classes are correctly purged and compiled.
+
+*修正編譯配置：將配置檔切換至 CommonJS 語法以相容目前專案環境，修復開發環境樣式失效（跑版）問題，並擴展 JS 組件掃描路徑以確保樣式完整編譯。*
+
+---
+
+## [2026-02-15T17:48:00+08:00] Fixed Tailwind CSS v4 PostCSS Integration
+
+### Fixed
+- **PostCSS Compatibility**: Resolved a compilation error where Tailwind CSS v4 required the separate `@tailwindcss/postcss` package. 
+- **Configuration Update**: Updated `postcss.config.js` to use `@tailwindcss/postcss` instead of the legacy `tailwindcss` plugin.
+
+*修正 Tailwind v4 相容性：安裝 `@tailwindcss/postcss` 套件並更新 PostCSS 配置，解決 v4 版架構變更導致的編譯錯誤。*
+
+---
+
+## [2026-02-15T17:55:00+08:00] Migrated to Tailwind CSS v4 Vite Plugin
+
+### Improved
+- **Compiler Architecture**: Migrated from PostCSS-based integration to the native **Tailwind CSS v4 Vite Plugin** (`@tailwindcss/vite`). This provides a more robust and faster compilation process within the Vite ecosystem.
+- **Zero-Config Styling**: Deprecated separate `tailwind.config.js` and `postcss.config.js` files in favor of the new CSS-first configuration using the `@theme` block in `style.css`.
+- **CSS Consolidation**: Moved all remaining inline `<style>` blocks from `index.html` into the centralized `style.css` for better maintainability and performance.
+
+### Technical Detail
+- Installed `@tailwindcss/vite` and configured it in `vite.config.js`.
+- Cleaned up development cache (`node_modules/.vite`) to ensure fresh compilation of all utility classes.
+
+*架構升級：全面遷移至 Tailwind CSS v4 官方 Vite 插件，棄用舊有的 JS 配置檔，改為 CSS 優先的配置模式，並整合全站樣式至 `style.css` 以追求極致性能與乾淨代碼。*
+
+---
+
+## [2026-02-15T18:00:00+08:00] Fixed Font Rendering & Layout Consistency
+
+### Fixed
+- **Typography Calibration**: Explicitly defined the `sans` font stack and root `16px` font size in `style.css` to match the production site's aesthetics. Fixed the "abnormal font size" issue caused by missing font-family tokens.
+- **Vite Processing Guarantee**: Migrated `style.css` from a static `<link>` tag in `index.html` to a module `import` in `js/app.js`. This ensures Vite + Tailwind v4 correctly processes the theme tokens and utility classes.
+- **Config Stability**: Renamed `vite.config.js` to `vite.config.mjs` to ensure reliable ESM loading across all environments.
+
+*核心視覺修正：明確定義 Noto Sans 字體系統與 16px 基準，並將 CSS 載入模式改為 Vite 模組化導入，徹底修復字體大小異常與開發環境編譯失效的問題。*
+
+---
+
+## [2026-02-15T18:05:00+08:00] Reverted to Production Baseline (Tailwind CDN)
+
+### Decisions
+- **Abandon Tailwind Build-time Compilation**: Due to significant layout shifts and typography inconsistencies in the local environment compared to production, the decision was made to revert all infrastructure changes.
+- **Restore UI Integrity**: Prioritized 100% visual consistency with the live `nichi-nichi.web.app` site over performance micro-optimizations.
+
+### Reverted Changes
+- **Infrastructure**: Removed `tailwindcss`, `postcss`, and `vite-plugin-tailwind` from dependencies.
+- **Config**: Deleted `tailwind.config.js`, `postcss.config.js`, and reverted `vite.config.js`.
+- **Scripts**: Restored Tailwind CSS CDN script and inline configuration in `index.html`.
+- **Styling**: Restored original `style.css` and removed module-based CSS imports.
+
+*全面還原：因本地編譯環境與正式版樣式存在偏差，已將所有配置還原至與 `nichi-nichi.web.app` 相同的 CDN 開發模式，確保 UI 視覺 100% 準確。*
+
+
+
+
+
+
+
