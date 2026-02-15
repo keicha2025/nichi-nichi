@@ -33,7 +33,7 @@ import {
 
 const firebaseConfig = {
     apiKey: "AIzaSyCoiPuZo6BwzLJBQdHjC6wc-ol6T-cMeb0",
-    authDomain: "project-2096109701191973112.firebaseapp.com",
+    authDomain: "nichi-nichi.web.app",
     projectId: "project-2096109701191973112",
     storageBucket: "project-2096109701191973112.firebasestorage.app",
     messagingSenderId: "690825505366",
