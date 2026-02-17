@@ -1,22 +1,25 @@
-<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-    <style>
+<svg width="140" height="140" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+    <style><![CDATA[
         @import url('https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@500&display=swap');
         .icon-rect { fill: none; stroke: #4A4A4A; stroke-width: 2px; }
         .icon-rect-filled { fill: #4A4A4A; stroke: #4A4A4A; stroke-width: 2px; }
         .text-zh { font-family: 'Zen Old Mincho', serif; font-weight: 500; font-size: 28px; fill: #4A4A4A; letter-spacing: 0.15em; text-anchor: middle; }
         .text-en { font-family: 'Helvetica Neue', Arial, sans-serif; font-weight: 400; font-size: 10px; fill: #4A4A4A; letter-spacing: 0.25em; text-transform: uppercase; text-anchor: middle; }
-    </style>
+    ]]></style>
     
-    <!-- Icon Group (Centered) -->
-    <g transform="translate(35, 0)">
-        <rect x="0" y="0" width="50" height="12" rx="2" class="icon-rect" />
-        <rect x="5" y="16" width="50" height="12" rx="2" class="icon-rect-filled" />
-        <rect x="0" y="32" width="50" height="12" rx="2" class="icon-rect" />
-    </g>
+    <!-- Main content container with padding -->
+    <g transform="translate(10, 10)">
+        <!-- Icon Group (Centered) -->
+        <g transform="translate(35, 0)">
+            <rect x="0" y="0" width="50" height="12" rx="2" class="icon-rect" />
+            <rect x="5" y="16" width="50" height="12" rx="2" class="icon-rect-filled" />
+            <rect x="0" y="32" width="50" height="12" rx="2" class="icon-rect" />
+        </g>
 
-    <!-- Text Group (Centered) -->
-    <g transform="translate(60, 80)">
-        <text x="0" y="0" class="text-zh">日日記</text>
-        <text x="0" y="20" class="text-en">NICHI-NICHI</text>
+        <!-- Text Group (Centered) -->
+        <g transform="translate(60, 80)">
+            <text x="0" y="0" class="text-zh">日日記</text>
+            <text x="0" y="20" class="text-en">NICHI-NICHI</text>
+        </g>
     </g>
 </svg>

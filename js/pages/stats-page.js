@@ -26,10 +26,16 @@ export const StatsPage = {
             <!-- 一般模式下的日期選擇與過濾 -->
             <div v-show="filterMode === 'normal'" class="flex flex-col space-y-2">
                <input v-if="dateMode === 'month'" type="month" v-model="selectedMonth" class="text-xs bg-bg-subtle px-3 h-9 rounded-xl outline-none text-txt-primary border border-transparent focus:bg-white focus:border-bdr-default transition-all">
-               <div v-else-if="dateMode === 'range'" class="grid grid-cols-2 gap-3">
-                   <input type="date" v-model="startDate" class="text-xs bg-bg-subtle px-3 h-9 rounded-xl outline-none text-txt-primary border border-transparent focus:bg-white focus:border-bdr-default transition-all">
-                   <input type="date" v-model="endDate" class="text-xs bg-bg-subtle px-3 h-9 rounded-xl outline-none text-txt-primary border border-transparent focus:bg-white focus:border-bdr-default transition-all">
-               </div>
+                <div v-else-if="dateMode === 'range'" class="flex flex-col space-y-2">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-[9px] text-txt-muted w-4">從</span>
+                        <input type="date" v-model="startDate" class="flex-1 text-xs bg-bg-subtle px-3 h-9 rounded-xl outline-none text-txt-primary border border-transparent focus:bg-white focus:border-bdr-default transition-all">
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-[9px] text-txt-muted w-4">至</span>
+                        <input type="date" v-model="endDate" class="flex-1 text-xs bg-bg-subtle px-3 h-9 rounded-xl outline-none text-txt-primary border border-transparent focus:bg-white focus:border-bdr-default transition-all">
+                    </div>
+                </div>
                
                <!-- 過濾選項區塊 -->
                <div class="flex flex-wrap items-center gap-x-4 gap-y-2 px-1 pt-1">
@@ -174,7 +180,7 @@ export const StatsPage = {
                     }
                     return t.projectId === this.selectedProjectId;
                 } else {
-                    const tDate = t.spendDate.split(' ')[0].replace(/\//g, '-');
+                    const tDate = t.spendDate.slice(0, 10).replace(/\//g, '-');
                     let timeMatch = true;
                     if (this.dateMode === 'month') timeMatch = tDate.startsWith(this.selectedMonth);
                     else if (this.dateMode === 'range') timeMatch = (tDate >= this.startDate && tDate <= this.endDate);

@@ -1100,9 +1100,27 @@ Added comprehensive debug logging throughout the category save flow for easier t
 
 *全面還原：因本地編譯環境與正式版樣式存在偏差，已將所有配置還原至與 `nichi-nichi.web.app` 相同的 CDN 開發模式，確保 UI 視覺 100% 準確。*
 
+---
+
+## [2026-02-16T15:00:00+08:00] Logo Padding & SVG Syntax Fix
+
+### Improved
+- **SVG Buffer Space**: Expanded the canvas and added padding to `logo-full-horizontal.svg`, `logo-full-vertical.svg`, and `logo-icon.svg`.
+- **Syntax Correction**: Fixed "Invalid character in entity name" error by wrapping CSS within `<![CDATA[ ]]>` blocks, ensuring Google Font URLs with ampersands (`&`) are correctly parsed by all XML editors.
+- **Compatibility**: Reset `viewBox` starting coordinates to `0 0` and used `transform: translate` for padding to ensure maximum compatibility with different SVG renderers.
+
+*標誌修復與優化：擴大畫布範圍提供緩衝空間，並修復 SVG 語法錯誤（使用 CDATA 封裝 CSS），解決部分編輯器無法開啟含 & 符號位址的問題。*
 
 
+---
 
+## [2026-02-17T17:00:00+08:00] Stats Page Mobile Layout & Date Filter Fix
 
+### Fixed
+- **Mobile Horizontal Scrolling**: Replaced the side-by-side grid layout for "Custom" date inputs with a vertical stack on small screens. Added "From" and "To" labels for better UX clarity. This ensures the page width remains fixed and prevents unintended horizontal scrolling on mobile devices.
+- **Single-Day Statistics**: Fixed a bug where selecting a single day (e.g., 2/17 to 2/17) resulted in zero results. Standardized transaction date comparison by slicing the timestamp to a pure `YYYY-MM-DD` format to match the date picker's output.
 
+### Affected Files
+- `js/pages/stats-page.js`
 
+*統計頁面優化：修正選取「自訂」日期範圍時手機版會出現左右滑動的問題（改為垂直堆疊排列），並修復無法顯示單日統計資料的 Bug。*
