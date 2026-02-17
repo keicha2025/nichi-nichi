@@ -1124,3 +1124,15 @@ Added comprehensive debug logging throughout the category save flow for easier t
 - `js/pages/stats-page.js`
 
 *統計頁面優化：修正選取「自訂」日期範圍時手機版會出現左右滑動的問題（改為垂直堆疊排列），並修復無法顯示單日統計資料的 Bug。*
+
+---
+
+## [2026-02-17T17:15:00+08:00] Page Transition Animation Consistency
+
+### Fixed
+- **History Page Entrance Animation**: Added missing `animate-in` class to the History Page (`HistoryPage`). This ensures that when switching to the history view, the page now has the same "fade-in and slide-up" effect as all other main pages (Overview, Stats, Add, Settings), providing a more cohesive and premium user experience.
+
+### Affected Files
+- `js/pages/history-page.js`
+
+*介面一致性優化：補上明細頁面缺失的進場動畫，確保所有主要分頁在切換時都具備統一的往上升過場效果。*

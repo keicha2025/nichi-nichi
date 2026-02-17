@@ -3,7 +3,7 @@ import { SearchBar } from '../components/search-bar.js';
 export const HistoryPage = {
     components: { SearchBar },
     template: `
-    <section class="relative space-y-4 py-4 fade-in pb-32 min-h-[60dvh] overflow-x-hidden">
+    <section class="relative space-y-4 py-4 animate-in fade-in pb-32 min-h-[60dvh] overflow-x-hidden">
         <!-- 搜尋與篩選列 Component -->
         <search-bar v-model="localFilter" v-show="!isSelectionMode"></search-bar>
 
