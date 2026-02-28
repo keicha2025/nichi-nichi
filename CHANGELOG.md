@@ -1162,3 +1162,16 @@ Added comprehensive debug logging throughout the category save flow for easier t
 - `js/pages/stats-page.js`
 
 *統計頁面優化：將「每日平均」計算方式由「不重複記帳天數」調整為「記錄區間天數」（從該月第一筆起算至月底或今天），確保包含區間內的零支出日，數值更貼近穩定預算。*
+
+---
+
+## [2026-02-28T14:00:00+08:00] Verify Ownership & Canonical URL Update
+
+### Config Update
+- **Google Search Console**: Updated the site verification meta tag to the latest provided by the user.
+- **Environment Update**: Standardized all project references to the official domain `https://nichi-nichi.web.app/`.
+
+### Affected Files
+- `index.html`
+
+*全域驗證與網址優化：更新 Google Search Console 所有權驗證標記，並統一專案內的正式網站連結為 `https://nichi-nichi.web.app/`。*
