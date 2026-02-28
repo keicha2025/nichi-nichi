@@ -232,24 +232,12 @@ export const StatsPage = {
         totalPeriodAmount() { return this.processedList.reduce((acc, cur) => acc + cur.convertedAmount, 0); },
         dailyAverage() {
             if (this.processedList.length === 0) return 0;
-            let days = 1;
-            if (this.dateMode === 'month') {
-                const parts = this.selectedMonth.split('-');
-                const now = new Date();
-                const isCurrent = (now.getFullYear() === parseInt(parts[0]) && (now.getMonth() + 1) === parseInt(parts[1]));
-                days = isCurrent ? now.getDate() : new Date(parts[0], parts[1], 0).getDate();
-            } else if (this.dateMode === 'range') {
-                const diff = new Date(this.endDate) - new Date(this.startDate);
-                days = Math.max(1, Math.ceil(diff / (1000 * 60 * 60 * 24)) + 1);
-            } else if (this.dateMode === 'all') {
-                const dates = this.processedList.map(t => new Date(t.spendDate.split(' ')[0].replace(/\//g, '-')));
-                if (dates.length > 0) {
-                    const minDate = new Date(Math.min(...dates));
-                    const maxDate = new Date(Math.max(...dates));
-                    const diff = maxDate - minDate;
-                    days = Math.max(1, Math.ceil(diff / (1000 * 60 * 60 * 24)) + 1);
-                }
-            }
+            // 方案 1：計算「實際記錄天數」 (Distinct Days with Records)
+            // 取得所有支出記錄的不重複日期
+            const uniqueDates = new Set(
+                this.processedList.map(t => t.spendDate.split(' ')[0])
+            );
+            const days = Math.max(1, uniqueDates.size);
             return this.totalPeriodAmount / days;
         },
         paymentStats() {

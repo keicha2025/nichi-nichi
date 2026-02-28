@@ -1136,3 +1136,16 @@ Added comprehensive debug logging throughout the category save flow for easier t
 - `js/pages/history-page.js`
 
 *介面一致性優化：補上明細頁面缺失的進場動畫，確保所有主要分頁在切換時都具備統一的往上升過場效果。*
+
+---
+
+## [2026-02-28T12:52:00+08:00] Stats Page Daily Average Calculation Logic Update
+
+### Improved
+- **Daily Average Precision**: Updated the `Daily Avg` calculation on the Stats page to be based on the number of unique days with recorded transactions, rather than total days in the month or range.
+- **Selective Calculation**: This ensures that if a user starts recording mid-month, the average reflects the actual recording activity instead of being diluted by empty days at the start of the period.
+
+### Affected Files
+- `js/pages/stats-page.js`
+
+*統計頁面優化：將「每日平均」的計算邏輯改為除以「實際有記錄的天數」，避免月初未記錄的空白天數稀釋平均值，更精確反映實際支出情形。*
