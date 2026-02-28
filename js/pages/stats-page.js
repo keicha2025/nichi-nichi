@@ -232,12 +232,44 @@ export const StatsPage = {
         totalPeriodAmount() { return this.processedList.reduce((acc, cur) => acc + cur.convertedAmount, 0); },
         dailyAverage() {
             if (this.processedList.length === 0) return 0;
-            // 方案 1：計算「實際記錄天數」 (Distinct Days with Records)
-            // 取得所有支出記錄的不重複日期
-            const uniqueDates = new Set(
-                this.processedList.map(t => t.spendDate.split(' ')[0])
-            );
-            const days = Math.max(1, uniqueDates.size);
+
+            // 方案 2：計算「記錄區間天數」 (Recorded Date Range)
+            const dates = this.processedList.map(t => new Date(t.spendDate.split(' ')[0].replace(/\//g, '-')));
+            const minRecordDate = new Date(Math.min(...dates));
+            minRecordDate.setHours(0, 0, 0, 0);
+
+            let calcStartDate = minRecordDate;
+            let calcEndDate = new Date(Math.max(...dates));
+            calcEndDate.setHours(0, 0, 0, 0);
+
+            const now = new Date();
+            now.setHours(0, 0, 0, 0);
+
+            if (this.dateMode === 'month') {
+                const [year, month] = this.selectedMonth.split('-').map(Number);
+                const monthEnd = new Date(year, month, 0);
+
+                calcStartDate = minRecordDate;
+                const isCurrentMonth = (now.getFullYear() === year && (now.getMonth() + 1) === month);
+                calcEndDate = isCurrentMonth ? now : monthEnd;
+            } else if (this.dateMode === 'range') {
+                calcStartDate = minRecordDate;
+                calcEndDate = new Date(this.endDate);
+                calcEndDate.setHours(0, 0, 0, 0);
+                if (calcEndDate > now) calcEndDate = now;
+            } else if (this.dateMode === 'all') {
+                // 所有模式下，從第一筆算到最後一筆（或今天）
+                calcStartDate = minRecordDate;
+                // calcEndDate 已經預設為 Math.max(...dates)
+                if (calcEndDate > now) calcEndDate = now;
+            }
+
+            // 確保結束日期不早於開始日期 (防呆)
+            if (calcEndDate < calcStartDate) calcEndDate = calcStartDate;
+
+            const diff = calcEndDate - calcStartDate;
+            const days = Math.max(1, Math.ceil(diff / (1000 * 60 * 60 * 24)) + 1);
+
             return this.totalPeriodAmount / days;
         },
         paymentStats() {

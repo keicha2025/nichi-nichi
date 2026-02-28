@@ -1149,3 +1149,16 @@ Added comprehensive debug logging throughout the category save flow for easier t
 - `js/pages/stats-page.js`
 
 *統計頁面優化：將「每日平均」的計算邏輯改為除以「實際有記錄的天數」，避免月初未記錄的空白天數稀釋平均值，更精確反映實際支出情形。*
+
+---
+
+## [2026-02-28T13:55:00+08:00] Stats Page Daily Average Calculation Logic Adjustment (Option 2)
+
+### Improved
+- **Daily Average Calculation (Option 2)**: Adjusted the calculation from using "distinct recorded days" to "recorded date range". The denominator is now calculated from the first transaction date of the period to the end of the period (or today).
+- **Better UX Expectations**: This correctly handles 0-spending days within the recording period, providing a more intuitive daily average that aligns with user expectations (e.g., if a month starts from 1/20, the average is calculated across the remaining days of the month).
+
+### Affected Files
+- `js/pages/stats-page.js`
+
+*統計頁面優化：將「每日平均」計算方式由「不重複記帳天數」調整為「記錄區間天數」（從該月第一筆起算至月底或今天），確保包含區間內的零支出日，數值更貼近穩定預算。*
