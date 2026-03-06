@@ -180,3 +180,20 @@ input[type="checkbox"] {
     opacity: 0;
     margin-top: 0 !important;
 }
+
+/* Word Cloud Styles */
+.word-cloud-tag {
+    display: inline-block;
+    color: var(--txt-secondary);
+    font-weight: 300;
+    line-height: 1.2;
+    transition: all 0.3s ease;
+    cursor: default;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.word-cloud-tag:hover {
+    color: var(--txt-primary);
+    transform: scale(1.1);
+}

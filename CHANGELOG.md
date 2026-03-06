@@ -1,6 +1,11 @@
-## [2026-03-06] Calculator Feature & AddPage UX
+## [2026-03-06] Calculator, Predictive Input & Word Cloud
 
 ### Added
+- **Word Cloud Statistics Visualization**:
+    - Added a dynamic "Common Keywords" section at the bottom of the Statistics page.
+    - **Intelligent Grouping**: Implemented case-insensitive deduplication and a "substring containment" algorithm (e.g., "mos breakfast" automatically merges into "mos").
+    - **Representative Labeling**: The word cloud display picks the original input format with the highest frequency within each group as the label.
+    - **Weight-based Styling**: Keywords scale their font size (10px - 24px) and opacity based on their frequency of occurrence.
 - **Inline Calculator for AddPage**: Integrated a minimalist, toggleable calculator directly next to the amount input field.
   - Supports basic operations: `+`, `-`, `*`, `/`, and `()`.
   - **Real-time Calculation**: Automatically updates the amount field as you type, without needing to press `=`.

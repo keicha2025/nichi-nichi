@@ -129,6 +129,19 @@ export const StatsPage = {
                      <span class="text-[10px] text-txt-muted">{{ getIntPercentage(cat.total, totalPeriodAmount) }}%</span>
                  </div>
              </div>
+             </div>
+         </div>
+
+         <!-- 5. Word Cloud (Keywords) -->
+         <div v-if="wordCloudData.length > 0" class="bg-white p-6 rounded-[2rem] muji-shadow border border-bdr-default space-y-4">
+             <h3 class="text-[10px] text-txt-secondary uppercase tracking-widest font-medium px-2">Common Keywords</h3>
+             <div class="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 p-4 min-h-[120px]">
+                 <span v-for="w in wordCloudData" :key="w.label" 
+                       :style="{ fontSize: w.fontSize + 'px', opacity: w.opacity }"
+                       class="word-cloud-tag">
+                     {{ w.label }}
+                 </span>
+             </div>
          </div>
     </section>
     `,
@@ -296,6 +309,90 @@ export const StatsPage = {
                 map[t.categoryId].count++;
             });
             return Object.values(map).sort((a, b) => b.total - a.total);
+        },
+        wordCloudData() {
+            if (this.processedList.length === 0) return [];
+
+            // 1. Initial count of trimmed names (case-insensitive grouping)
+            let groups = {}; // lowercase -> { originalCounts: { "Mos": 5 }, totalWeight: 8 }
+
+            this.processedList.forEach(t => {
+                const raw = (t.name || '').trim();
+                if (!raw) return;
+                const lower = raw.toLowerCase();
+
+                if (!groups[lower]) {
+                    groups[lower] = { originalCounts: {}, totalWeight: 0 };
+                }
+                groups[lower].originalCounts[raw] = (groups[lower].originalCounts[raw] || 0) + 1;
+                groups[lower].totalWeight += 1;
+            });
+
+            // 2. Advanced Match: Merge longer strings into their substrings (e.g. "mos早餐" -> "mos")
+            let keys = Object.keys(groups).sort((a, b) => a.length - b.length);
+            let mergedKeys = new Set();
+
+            for (let i = 0; i < keys.length; i++) {
+                const parent = keys[i];
+                if (mergedKeys.has(parent)) continue;
+
+                for (let j = i + 1; j < keys.length; j++) {
+                    const child = keys[j];
+                    if (mergedKeys.has(child)) continue;
+
+                    if (child.includes(parent)) {
+                        // Merge child into parent
+                        const childData = groups[child];
+                        for (let form in childData.originalCounts) {
+                            groups[parent].originalCounts[form] = (groups[parent].originalCounts[form] || 0) + childData.originalCounts[form];
+                        }
+                        groups[parent].totalWeight += childData.totalWeight;
+                        mergedKeys.add(child);
+                    }
+                }
+            }
+
+            // 3. Finalize data and pick representative labels
+            let result = [];
+            for (let key in groups) {
+                if (mergedKeys.has(key)) continue;
+
+                const data = groups[key];
+                // Pick most frequent original form
+                let maxCount = -1;
+                let bestLabel = '';
+                for (let form in data.originalCounts) {
+                    if (data.originalCounts[form] > maxCount) {
+                        maxCount = data.originalCounts[form];
+                        bestLabel = form;
+                    }
+                }
+
+                result.push({
+                    label: bestLabel,
+                    weight: data.totalWeight
+                });
+            }
+
+            if (result.length === 0) return [];
+
+            // 4. Scaling (Font size 10px - 24px)
+            const weights = result.map(r => r.weight);
+            const minW = Math.min(...weights);
+            const maxW = Math.max(...weights);
+            const minS = 10, maxS = 24;
+
+            return result.map(r => {
+                let size = minS;
+                if (maxW > minW) {
+                    size = minS + ((r.weight - minW) / (maxW - minW)) * (maxS - minS);
+                }
+                return {
+                    ...r,
+                    fontSize: Math.round(size),
+                    opacity: 0.6 + (size / maxS) * 0.4 // Higher weight = more visible
+                };
+            }).sort((a, b) => b.weight - a.weight);
         }
     },
     methods: {
