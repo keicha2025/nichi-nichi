@@ -16,7 +16,32 @@ export const AddPage = {
                 <div class="flex items-center justify-center space-x-3">
                     <span @click.stop="$emit('toggle-currency')" class="text-xs font-medium text-txt-secondary border border-bdr-subtle px-3 py-1 rounded-full cursor-pointer">{{ form.currency }}</span>
                     <input type="number" v-model="form.amount" class="text-5xl font-light w-48 text-center bg-transparent outline-none" placeholder="0" inputmode="decimal">
+                    <button @click.stop="toggleCalculator" class="p-2 -mr-10 text-txt-secondary hover:text-txt-primary transition-colors">
+                        <span class="material-symbols-rounded text-2xl">{{ showCalculator ? 'keyboard' : 'calculate' }}</span>
+                    </button>
                 </div>
+                
+                <!-- Calculator Panel -->
+                <transition name="calc">
+                    <div v-if="showCalculator" class="mt-6 bg-bg-subtle p-4 rounded-3xl">
+                        <div class="bg-white/50 mb-4 p-3 rounded-xl text-right overflow-hidden border border-bdr-subtle min-h-[40px] flex items-center justify-end">
+                            <span class="text-sm font-light tracking-wider text-txt-secondary truncate break-all">{{ calcExpression || '0' }}</span>
+                        </div>
+                        <div class="grid grid-cols-4 gap-2">
+                            <button v-for="btn in ['(', ')', 'C', '÷']" :key="btn" @click.stop="onCalcPress(btn)" 
+                                    class="h-12 rounded-xl bg-white/80 text-txt-secondary text-sm font-medium hover:bg-white active:scale-95 transition-all">{{ btn }}</button>
+                            <button v-for="btn in ['7', '8', '9', '×']" :key="btn" @click.stop="onCalcPress(btn)" 
+                                    class="h-12 rounded-xl bg-white text-txt-primary text-sm font-medium hover:bg-white active:scale-95 transition-all">{{ btn }}</button>
+                            <button v-for="btn in ['4', '5', '6', '-']" :key="btn" @click.stop="onCalcPress(btn)" 
+                                    class="h-12 rounded-xl bg-white text-txt-primary text-sm font-medium hover:bg-white active:scale-95 transition-all">{{ btn }}</button>
+                            <button v-for="btn in ['1', '2', '3', '+']" :key="btn" @click.stop="onCalcPress(btn)" 
+                                    class="h-12 rounded-xl bg-white text-txt-primary text-sm font-medium hover:bg-white active:scale-95 transition-all">{{ btn }}</button>
+                            <button v-for="btn in ['0', '.', '⌫', '=']" :key="btn" @click.stop="onCalcPress(btn)" 
+                                    :class="btn === '=' ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-white text-txt-primary'"
+                                    class="h-12 rounded-xl text-sm font-medium hover:opacity-90 active:scale-95 transition-all">{{ btn }}</button>
+                        </div>
+                    </div>
+                </transition>
             </div>
 
             <div class="space-y-5">
@@ -161,7 +186,8 @@ export const AddPage = {
     data() {
         return {
             isAddingFriend: false, addFriendTarget: '', newFriendName: '', selectedFriends: [], splitMode: 'auto',
-            isProjectModeOpen: false, isAddingNewProject: false, newProjectName: '', isSubmitting: false
+            isProjectModeOpen: false, isAddingNewProject: false, newProjectName: '', isSubmitting: false,
+            showCalculator: false, calcExpression: ''
         };
     },
     computed: {
@@ -202,6 +228,55 @@ export const AddPage = {
         }
     },
     methods: {
+        toggleCalculator() {
+            this.showCalculator = !this.showCalculator;
+            if (this.showCalculator) {
+                this.calcExpression = this.form.amount ? String(this.form.amount) : '';
+                // 震動回饋
+                if (navigator.vibrate) navigator.vibrate(5);
+            }
+        },
+        onCalcPress(btn) {
+            if (navigator.vibrate) navigator.vibrate(2);
+            if (btn === 'C') {
+                this.calcExpression = '';
+            } else if (btn === '⌫') {
+                this.calcExpression = this.calcExpression.slice(0, -1);
+            } else if (btn === '=') {
+                this.evaluateExpression(true); // Pressing = means final confirmation and close
+                return;
+            } else {
+                const map = { '×': '*', '÷': '/' };
+                this.calcExpression += map[btn] || btn;
+            }
+            // Real-time calculation for every press (except =)
+            this.evaluateExpression(false);
+        },
+        evaluateExpression(shouldClose) {
+            if (!this.calcExpression) return;
+            try {
+                // 安全的簡單運算評估 (僅允許 0-9, +, -, *, /, ., (, ))
+                const sanitized = this.calcExpression.replace(/[^-+*/().0-9]/g, '');
+
+                // If it ends with an operator, don't try to evaluate yet (prevent syntax errors during typing)
+                if (/[+\-*/(.]$/.test(sanitized)) return;
+
+                // count parentheses
+                const openCount = (sanitized.match(/\(/g) || []).length;
+                const closeCount = (sanitized.match(/\)/g) || []).length;
+                if (openCount !== closeCount && !shouldClose) return; // Wait for matching brackets unless confirmed
+
+                // eslint-disable-next-line no-new-func
+                const result = new Function(`return ${sanitized}`)();
+                if (isFinite(result)) {
+                    this.form.amount = Math.round(result * 100) / 100; // 保留兩位小數
+                    if (shouldClose) this.showCalculator = false;
+                }
+            } catch (e) {
+                // During typing, ignore errors
+                if (shouldClose) console.error('Calculation error:', e);
+            }
+        },
         toggleProjectMode() {
             if (this.form.projectId) {
                 // Currently ON, turn OFF

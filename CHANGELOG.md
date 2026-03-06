@@ -1,4 +1,16 @@
-# Changelog
+## [2026-03-06] Calculator Feature & AddPage UX
+
+### Added
+- **Inline Calculator for AddPage**: Integrated a minimalist, toggleable calculator directly next to the amount input field.
+  - Supports basic operations: `+`, `-`, `*`, `/`, and `()`.
+  - **Real-time Calculation**: Automatically updates the amount field as you type, without needing to press `=`.
+  - **Smooth Animations**: Added slide-down entrance and slide-up collapse animations for the calculator panel.
+  - Optimized for MUJI aesthetics with low-saturation colors.
+  - Features haptic feedback (vibration) for a tactile input experience on mobile devices.
+  - **Auto-Collapse**: Pressing `=` now calculates the final result and gracefully collapses the calculator.
+- **Sanitized Math Evaluation**: Implemented a secure math expression evaluator with input sanitization.
+
+*優化計算機功能：新增即時運算支援，輸入公式時即自動更新金額；加入展開與收合平滑動畫；按「等於」即完成運算並自動收合計算機。*
 
 ## [2026-02-13] Friend Features & UI Refinement (Main Branch)
 

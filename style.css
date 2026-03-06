@@ -114,3 +114,21 @@ input[type="checkbox"] {
 .amount-update {
     animation: amount-flash 0.4s linear;
 }
+
+/* Calculator Transition */
+.calc-enter-active,
+.calc-leave-active {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    max-height: 600px;
+    opacity: 1;
+    overflow: hidden;
+}
+
+.calc-enter-from,
+.calc-leave-to {
+    max-height: 0;
+    opacity: 0;
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
