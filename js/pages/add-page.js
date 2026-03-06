@@ -87,7 +87,7 @@ export const AddPage = {
                     </div>
                 </div>
                 <!-- Name Suggestions -->
-                <transition-group name="suggestion" tag="div" class="flex flex-wrap gap-2 px-2 mt-1 min-h-[24px]">
+                <transition-group v-show="nameSuggestions.length > 0" name="suggestion" tag="div" class="flex flex-wrap gap-2 px-2 mt-1">
                     <div v-for="s in nameSuggestions" :key="s" @click="form.name = s" 
                          class="suggestion-bubble">{{ s }}</div>
                 </transition-group>
@@ -108,7 +108,7 @@ export const AddPage = {
 
                 <textarea v-model="form.note" placeholder="備註..." class="w-full text-sm p-4 bg-bg-subtle rounded-2xl outline-none h-20 resize-none"></textarea>
                 <!-- Note Suggestions -->
-                <transition-group name="suggestion" tag="div" class="flex flex-wrap gap-2 px-2 mt-1 min-h-[24px]">
+                <transition-group v-show="noteSuggestions.length > 0" name="suggestion" tag="div" class="flex flex-wrap gap-2 px-2 mt-1">
                     <div v-for="s in noteSuggestions" :key="s" @click="form.note = s" 
                          class="suggestion-bubble">{{ s }}</div>
                 </transition-group>
