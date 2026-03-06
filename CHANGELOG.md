@@ -5,7 +5,9 @@
     - Implemented a sophisticated 5-level hierarchy based on frequency rank.
     - Added non-linear power scaling (`normalized^0.6`) for dramatic font size contrast.
     - Dynamic font weights (300 to 600) and color/opacity mapping for multi-dimensional emphasis.
-    - Improved spiral layout with **Level 1 Centering Optimization**: forces top-weighted keywords to the absolute center and uses a tighter radius step for core clustering.
+    - Implemented **Archimedean Spiral Layout** (`r = k * theta`) for the Word Cloud, starting from the absolute center.
+    - Restricted **Level 1** to strictly the single highest-weighted keyword, forced at `(0,0)`.
+    - Improved collision detection for smoother spiral flow from the origin.
     - Added z-index control to ensure priority keywords remain on top.
 - **Radial Word Cloud Layout**:
     - Added a dynamic "Common Keywords" section with a Golden Angle Spiral layout.

@@ -405,25 +405,18 @@ export const StatsPage = {
 
                 const size = minS + powerNorm * (maxS - minS);
 
-                // Determine Level (1 to 5) based on rank (result is already sorted or we sort it now)
-                const rank = (idx / wordCount);
+                // Level logic: Level 1 is strictly Top-1.
                 let level = 5;
-                let fontWeight = 300;
-                let color = 'var(--txt-secondary)';
-                let opacity = 0.5 + (powerNorm * 0.5);
+                const rank = (idx / wordCount);
+                if (idx === 0) level = 1;
+                else if (rank < 0.25) level = 2;
+                else if (rank < 0.55) level = 3;
+                else if (rank < 0.85) level = 4;
 
-                if (rank < 0.1) {
-                    level = 1; fontWeight = 600; color = 'var(--txt-primary)';
-                } else if (rank < 0.3) {
-                    level = 2; fontWeight = 500; color = 'var(--txt-primary)';
-                } else if (rank < 0.6) {
-                    level = 3; fontWeight = 400; color = 'var(--txt-secondary)';
-                } else if (rank < 0.85) {
-                    level = 4; fontWeight = 300; color = 'var(--txt-secondary)';
-                } else {
-                    level = 5; fontWeight = 300; color = 'var(--txt-secondary)';
-                    opacity = Math.max(0.4, opacity * 0.7);
-                }
+                // Scaling properties based on level/rank
+                const fontWeight = level === 1 ? 600 : (level === 2 ? 500 : (level === 3 ? 400 : 300));
+                const color = level <= 2 ? 'var(--txt-primary)' : 'var(--txt-secondary)';
+                const opacity = level === 5 ? 0.45 : (level === 4 ? 0.75 : 1);
 
                 return {
                     ...r,
@@ -435,39 +428,40 @@ export const StatsPage = {
                 };
             });
 
-            // 5. Radial Layout (Spiral + Collision Avoidance)
+            // 5. Archimedean Spiral Layout
             const placed = [];
-            const goldenAngle = 137.5 * (Math.PI / 180);
-
-            // Re-sort baseList to ensure Level 1 is processed first
             const sortedList = [...baseList].sort((a, b) => a.level - b.level || b.weight - a.weight);
 
             return sortedList.map((item, index) => {
-                let radius = 0;
-                let angle = 0;
                 let x = 0;
                 let y = 0;
 
-                const baseStep = wordCount < 10 ? 35 : 22;
-                const stepMultiplier = item.level === 1 ? 0.6 : (item.level >= 4 ? 1.4 : 1.0);
-
                 // Heuristic box size with level-based padding
-                const padding = item.level <= 2 ? 12 : 20;
+                const padding = item.level <= 2 ? 14 : 26;
                 const w = item.label.length * item.fontSize * 0.6 + padding;
                 const h = item.fontSize + padding;
 
                 let found = false;
-                let attempt = 0;
-                const maxAttempts = index === 0 ? 1 : 1500; // Force first item to center
+                let t = 0; // theta for spiral
+                const tStep = 0.12; // Spiral resolution
+                const k = wordCount < 12 ? 1.6 : 1.0; // r = k * theta growth factor
 
-                while (!found && attempt < maxAttempts) {
-                    const currentAngle = attempt * goldenAngle;
-                    const r = Math.sqrt(attempt) * baseStep * stepMultiplier;
+                // Force Rank #1 (Level 1) to absolute center
+                if (index === 0) {
+                    x = 0;
+                    y = 0;
+                    found = true;
+                }
 
-                    x = r * Math.cos(currentAngle);
-                    y = r * Math.sin(currentAngle);
+                while (!found && t < 1200) {
+                    // Archimedean Spiral: r = k * theta
+                    const r = k * t;
+                    const angle = t;
 
-                    // Collision check
+                    x = r * Math.cos(angle);
+                    y = r * Math.sin(angle);
+
+                    // Check for collisions with previously placed items
                     const collides = placed.some(p => {
                         return Math.abs(x - p.x) < (w + p.w) / 2 &&
                             Math.abs(y - p.y) < (h + p.h) / 2;
@@ -476,7 +470,7 @@ export const StatsPage = {
                     if (!collides) {
                         found = true;
                     } else {
-                        attempt++;
+                        t += tStep;
                     }
                 }
 
