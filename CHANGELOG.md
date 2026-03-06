@@ -12,9 +12,10 @@
   - **Real-time Filtering**: Suggestions appear as soon as the first character is typed.
   - **Top-2 Limit**: Displays strictly up to 2 most relevant historical matches to maintain minimalism.
   - **Instant Auto-fill**: Clicking a suggestion bubble automatically populates the input field.
+  - **Smart Deduplication**: Improved suggestion logic to handle case-insensitivity and whitespace trimming, preventing duplicate entries.
 - **Sanitized Math Evaluation**: Implemented a secure math expression evaluator with input sanitization.
 
-*優化功能：新增「項目名稱」與「備註」的智慧預測輸入（聯想詞），輸入首字即動態過濾歷史紀錄並限額顯示 2 筆，點擊即可自動帶入；同時支援計算機即時運算、平滑動畫與自動收合。*
+*優化功能：新增「項目名稱」與「備註」的智慧預測輸入（聯想詞），支援大小寫不敏感與自動去重；同時支援計算機即時運算、平滑動畫與自動收合。*
 
 ## [2026-02-13] Friend Features & UI Refinement (Main Branch)
 

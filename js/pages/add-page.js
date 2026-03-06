@@ -223,24 +223,24 @@ export const AddPage = {
         },
         nameSuggestions() {
             if (!this.form.name || this.form.name.trim().length === 0) return [];
-            const query = this.form.name.toLowerCase();
+            const query = this.form.name.toLowerCase().trim();
             const matches = (this.transactions || [])
-                .map(t => t.name)
-                .filter(name => name && name.toLowerCase().includes(query) && name !== this.form.name)
+                .map(t => (t.name || '').trim())
+                .filter(name => name && name.toLowerCase().includes(query) && name.toLowerCase() !== this.form.name.toLowerCase().trim())
                 .reduce((acc, name) => {
-                    if (!acc.includes(name)) acc.push(name);
+                    if (!acc.find(item => item.toLowerCase() === name.toLowerCase())) acc.push(name);
                     return acc;
                 }, []);
             return matches.slice(0, 2);
         },
         noteSuggestions() {
             if (!this.form.note || this.form.note.trim().length === 0) return [];
-            const query = this.form.note.toLowerCase();
+            const query = this.form.note.toLowerCase().trim();
             const matches = (this.transactions || [])
-                .map(t => t.note)
-                .filter(note => note && note.toLowerCase().includes(query) && note !== this.form.note)
+                .map(t => (t.note || '').trim())
+                .filter(note => note && note.toLowerCase().includes(query) && note.toLowerCase() !== this.form.note.toLowerCase().trim())
                 .reduce((acc, note) => {
-                    if (!acc.includes(note)) acc.push(note);
+                    if (!acc.find(item => item.toLowerCase() === note.toLowerCase())) acc.push(note);
                     return acc;
                 }, []);
             return matches.slice(0, 2);
