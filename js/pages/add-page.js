@@ -86,6 +86,11 @@ export const AddPage = {
                         <span class="text-[9px] mt-1 font-medium">{{ cat.name }}</span>
                     </div>
                 </div>
+                <!-- Name Suggestions -->
+                <transition-group name="suggestion" tag="div" class="flex flex-wrap gap-2 px-2 mt-1 min-h-[24px]">
+                    <div v-for="s in nameSuggestions" :key="s" @click="form.name = s" 
+                         class="suggestion-bubble">{{ s }}</div>
+                </transition-group>
 
                 <input type="text" v-model="form.name" placeholder="項目名稱" class="w-full text-sm py-4 border-b border-bdr-subtle outline-none">
 
@@ -102,6 +107,11 @@ export const AddPage = {
                 </div>
 
                 <textarea v-model="form.note" placeholder="備註..." class="w-full text-sm p-4 bg-bg-subtle rounded-2xl outline-none h-20 resize-none"></textarea>
+                <!-- Note Suggestions -->
+                <transition-group name="suggestion" tag="div" class="flex flex-wrap gap-2 px-2 mt-1 min-h-[24px]">
+                    <div v-for="s in noteSuggestions" :key="s" @click="form.note = s" 
+                         class="suggestion-bubble">{{ s }}</div>
+                </transition-group>
 
                 <!-- 6. 分帳功能 (支出) -->
                 <div v-if="form.type === '支出'" class="pt-4 border-t border-bdr-subtle space-y-4">
@@ -181,7 +191,7 @@ export const AddPage = {
         </div>
     </section>
     `,
-    props: ['form', 'categories', 'friends', 'loading', 'paymentMethods', 'projects', 'currentUser'],
+    props: ['form', 'categories', 'friends', 'loading', 'paymentMethods', 'projects', 'currentUser', 'transactions'],
     inject: ['dialog'],
     data() {
         return {
@@ -210,6 +220,30 @@ export const AddPage = {
                 const isSelected = this.form.payer === f.id || this.form.friendName === f.id || this.selectedFriends.includes(f.id);
                 return (f.visible !== false) || isSelected;
             });
+        },
+        nameSuggestions() {
+            if (!this.form.name || this.form.name.trim().length === 0) return [];
+            const query = this.form.name.toLowerCase();
+            const matches = (this.transactions || [])
+                .map(t => t.name)
+                .filter(name => name && name.toLowerCase().includes(query) && name !== this.form.name)
+                .reduce((acc, name) => {
+                    if (!acc.includes(name)) acc.push(name);
+                    return acc;
+                }, []);
+            return matches.slice(0, 2);
+        },
+        noteSuggestions() {
+            if (!this.form.note || this.form.note.trim().length === 0) return [];
+            const query = this.form.note.toLowerCase();
+            const matches = (this.transactions || [])
+                .map(t => t.note)
+                .filter(note => note && note.toLowerCase().includes(query) && note !== this.form.note)
+                .reduce((acc, note) => {
+                    if (!acc.includes(note)) acc.push(note);
+                    return acc;
+                }, []);
+            return matches.slice(0, 2);
         }
     },
     watch: {

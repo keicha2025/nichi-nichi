@@ -132,3 +132,36 @@ input[type="checkbox"] {
     padding-top: 0 !important;
     padding-bottom: 0 !important;
 }
+
+/* Prediction Suggestions */
+.suggestion-bubble {
+    background: var(--bg-subtle);
+    color: var(--txt-secondary);
+    font-size: 10px;
+    padding: 6px 12px;
+    border-radius: 9999px;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    cursor: pointer;
+    white-space: nowrap;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.suggestion-bubble:active {
+    background: white;
+    transform: scale(0.95);
+    border-color: var(--color-outline);
+}
+
+.suggestion-enter-active,
+.suggestion-leave-active {
+    transition: all 0.2s ease;
+}
+
+.suggestion-enter-from,
+.suggestion-leave-to {
+    opacity: 0;
+    transform: translateY(-5px);
+}

@@ -8,9 +8,13 @@
   - Optimized for MUJI aesthetics with low-saturation colors.
   - Features haptic feedback (vibration) for a tactile input experience on mobile devices.
   - **Auto-Collapse**: Pressing `=` now calculates the final result and gracefully collapses the calculator.
+- **Dynamic Predictive Input Suggestions**: Smart history auto-fill for Project Name and Note fields.
+  - **Real-time Filtering**: Suggestions appear as soon as the first character is typed.
+  - **Top-2 Limit**: Displays strictly up to 2 most relevant historical matches to maintain minimalism.
+  - **Instant Auto-fill**: Clicking a suggestion bubble automatically populates the input field.
 - **Sanitized Math Evaluation**: Implemented a secure math expression evaluator with input sanitization.
 
-*優化計算機功能：新增即時運算支援，輸入公式時即自動更新金額；加入展開與收合平滑動畫；按「等於」即完成運算並自動收合計算機。*
+*優化功能：新增「項目名稱」與「備註」的智慧預測輸入（聯想詞），輸入首字即動態過濾歷史紀錄並限額顯示 2 筆，點擊即可自動帶入；同時支援計算機即時運算、平滑動畫與自動收合。*
 
 ## [2026-02-13] Friend Features & UI Refinement (Main Branch)
 

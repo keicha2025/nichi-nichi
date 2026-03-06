@@ -82,7 +82,14 @@ export const EditPage = {
                     <div class="space-y-1">
                         <label class="text-[10px] text-txt-secondary uppercase font-medium">項目名稱</label>
                         <div v-if="isReadOnly" class="text-sm text-txt-primary">{{ form.name }}</div>
-                        <input v-else type="text" v-model="form.name" class="w-full text-sm py-2 border-b border-bdr-subtle outline-none">
+                        <template v-else>
+                            <!-- Name Suggestions -->
+                            <transition-group name="suggestion" tag="div" class="flex flex-wrap gap-2 mt-1 min-h-[24px]">
+                                <div v-for="s in nameSuggestions" :key="s" @click="form.name = s" 
+                                     class="suggestion-bubble">{{ s }}</div>
+                            </transition-group>
+                            <input type="text" v-model="form.name" class="w-full text-sm py-2 border-b border-bdr-subtle outline-none">
+                        </template>
                     </div>
                     
                     <!-- 5. [補回] 支付方式 -->
@@ -102,7 +109,14 @@ export const EditPage = {
                     <div class="space-y-1">
                         <label class="text-[10px] text-txt-secondary uppercase font-medium">備註</label>
                         <div v-if="isReadOnly" class="text-xs text-txt-secondary whitespace-pre-wrap">{{ form.note || '無備註' }}</div>
-                        <textarea v-else v-model="form.note" class="w-full text-sm p-4 bg-bg-subtle rounded-2xl outline-none h-20 resize-none"></textarea>
+                        <template v-else>
+                            <textarea v-model="form.note" class="w-full text-sm p-4 bg-bg-subtle rounded-2xl outline-none h-20 resize-none"></textarea>
+                            <!-- Note Suggestions -->
+                            <transition-group name="suggestion" tag="div" class="flex flex-wrap gap-2 mt-1 min-h-[24px]">
+                                <div v-for="s in noteSuggestions" :key="s" @click="form.note = s" 
+                                     class="suggestion-bubble">{{ s }}</div>
+                            </transition-group>
+                        </template>
                     </div>
                 </div>
 
@@ -192,7 +206,7 @@ export const EditPage = {
         </div>
     </section>
     `,
-    props: ['form', 'categories', 'friends', 'loading', 'paymentMethods', 'projects', 'currentUser'],
+    props: ['form', 'categories', 'friends', 'loading', 'paymentMethods', 'projects', 'currentUser', 'transactions'],
     data() {
         return {
             selectedFriends: [],
@@ -230,6 +244,30 @@ export const EditPage = {
             if (!this.form.projectId) return null;
             const p = (this.projects || []).find(pr => pr.id === this.form.projectId);
             return p ? p.name : this.form.projectId;
+        },
+        nameSuggestions() {
+            if (!this.form.name || this.form.name.trim().length === 0) return [];
+            const query = this.form.name.toLowerCase();
+            const matches = (this.transactions || [])
+                .map(t => t.name)
+                .filter(name => name && name.toLowerCase().includes(query) && name !== this.form.name)
+                .reduce((acc, name) => {
+                    if (!acc.includes(name)) acc.push(name);
+                    return acc;
+                }, []);
+            return matches.slice(0, 2);
+        },
+        noteSuggestions() {
+            if (!this.form.note || this.form.note.trim().length === 0) return [];
+            const query = this.form.note.toLowerCase();
+            const matches = (this.transactions || [])
+                .map(t => t.note)
+                .filter(note => note && note.toLowerCase().includes(query) && note !== this.form.note)
+                .reduce((acc, note) => {
+                    if (!acc.includes(note)) acc.push(note);
+                    return acc;
+                }, []);
+            return matches.slice(0, 2);
         }
     },
     methods: {
