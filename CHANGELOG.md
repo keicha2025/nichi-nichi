@@ -1,11 +1,16 @@
 ## [2026-03-06] Calculator, Predictive Input & Word Cloud
 
 ### Added
-- **Word Cloud Statistics Visualization**:
-    - Added a dynamic "Common Keywords" section at the bottom of the Statistics page.
-    - **Intelligent Grouping**: Implemented case-insensitive deduplication and a "substring containment" algorithm (e.g., "mos breakfast" automatically merges into "mos").
-    - **Representative Labeling**: The word cloud display picks the original input format with the highest frequency within each group as the label.
-    - **Weight-based Styling**: Keywords scale their font size (10px - 24px) and opacity based on their frequency of occurrence.
+- **Word Cloud 5-Level Visual Hierarchy**:
+    - Implemented a sophisticated 5-level hierarchy based on frequency rank.
+    - Added non-linear power scaling (`normalized^0.6`) for dramatic font size contrast.
+    - Dynamic font weights (300 to 600) and color/opacity mapping for multi-dimensional emphasis.
+    - Improved spiral layout with **Level 1 Centering Optimization**: forces top-weighted keywords to the absolute center and uses a tighter radius step for core clustering.
+    - Added z-index control to ensure priority keywords remain on top.
+- **Radial Word Cloud Layout**:
+    - Added a dynamic "Common Keywords" section with a Golden Angle Spiral layout.
+    - Implemented intelligent grouping and substring merging (e.g., "mos breakfast" -> "mos").
+    - Representative labels are automatically chosen based on highest input frequency.
 - **Inline Calculator for AddPage**: Integrated a minimalist, toggleable calculator directly next to the amount input field.
   - Supports basic operations: `+`, `-`, `*`, `/`, and `()`.
   - **Real-time Calculation**: Automatically updates the amount field as you type, without needing to press `=`.

@@ -438,30 +438,34 @@ export const StatsPage = {
             // 5. Radial Layout (Spiral + Collision Avoidance)
             const placed = [];
             const goldenAngle = 137.5 * (Math.PI / 180);
-            const step = 2; // Initial radius step
 
-            return baseList.map((item, index) => {
+            // Re-sort baseList to ensure Level 1 is processed first
+            const sortedList = [...baseList].sort((a, b) => a.level - b.level || b.weight - a.weight);
+
+            return sortedList.map((item, index) => {
                 let radius = 0;
                 let angle = 0;
                 let x = 0;
                 let y = 0;
 
-                // Heuristic box size with increased padding
-                const w = item.label.length * item.fontSize * 0.6 + 28;
-                const h = item.fontSize + 20;
+                const baseStep = wordCount < 10 ? 35 : 22;
+                const stepMultiplier = item.level === 1 ? 0.6 : (item.level >= 4 ? 1.4 : 1.0);
+
+                // Heuristic box size with level-based padding
+                const padding = item.level <= 2 ? 12 : 20;
+                const w = item.label.length * item.fontSize * 0.6 + padding;
+                const h = item.fontSize + padding;
 
                 let found = false;
                 let attempt = 0;
-                const maxAttempts = 1000;
+                const maxAttempts = index === 0 ? 1 : 1500; // Force first item to center
 
                 while (!found && attempt < maxAttempts) {
-                    // Spiral coordinates
                     const currentAngle = attempt * goldenAngle;
-                    const spreadFactor = wordCount < 10 ? 40 : 28;
-                    const currentRadius = Math.sqrt(attempt) * spreadFactor;
+                    const r = Math.sqrt(attempt) * baseStep * stepMultiplier;
 
-                    x = Math.cos(currentAngle) * currentRadius;
-                    y = Math.sin(currentAngle) * currentRadius;
+                    x = r * Math.cos(currentAngle);
+                    y = r * Math.sin(currentAngle);
 
                     // Collision check
                     const collides = placed.some(p => {
