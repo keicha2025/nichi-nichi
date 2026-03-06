@@ -75,10 +75,16 @@ export const AddPage = {
                 </div>
 
                 <!-- 5. 基礎日期、分類、名稱 -->
-                <label class="flex items-center justify-between px-2 cursor-pointer active:bg-bg-subtle rounded-xl p-2 transition-colors">
-                    <span class="text-[10px] text-txt-secondary uppercase tracking-widest">Date</span>
-                    <input type="datetime-local" v-model="form.spendDate" class="text-sm bg-transparent outline-none text-right cursor-pointer">
-                </label>
+                <div class="flex items-center justify-between px-2 h-12 bg-bg-subtle rounded-2xl border border-transparent transition-all active:scale-[0.98] cursor-pointer"
+                     @click="triggerPicker($refs.dateInput)">
+                    <span class="text-[10px] text-txt-secondary uppercase tracking-widest font-bold">Date</span>
+                    <input 
+                        ref="dateInput"
+                        type="datetime-local" 
+                        v-model="form.spendDate" 
+                        class="text-sm bg-transparent outline-none text-right cursor-pointer h-full"
+                    >
+                </div>
 
                 <div v-if="form.type !== '收款'" class="grid grid-cols-4 gap-4 py-2">
                     <div v-for="cat in filteredCategories" :key="cat.id" @click.stop="form.categoryId = cat.id" :class="form.categoryId === cat.id ? 'bg-[var(--action-primary-bg)] text-white shadow-lg' : 'bg-bg-subtle text-txt-secondary'" class="flex flex-col items-center p-3 rounded-2xl transition-all">
@@ -444,6 +450,14 @@ export const AddPage = {
 
             // Re-enable after short delay in case parent doesn't unmount (Optimistic UI fallback)
             setTimeout(() => { this.isSubmitting = false; }, 2000);
+        },
+        triggerPicker(el) {
+            if (el && el.showPicker) {
+                try { el.showPicker(); } catch (e) { el.focus(); }
+            } else if (el) {
+                el.focus();
+                el.click();
+            }
         }
     }
 };

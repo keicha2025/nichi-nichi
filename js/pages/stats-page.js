@@ -24,16 +24,41 @@ export const StatsPage = {
             </div>
 
             <!-- 一般模式下的日期選擇與過濾 -->
-            <div v-show="filterMode === 'normal'" class="flex flex-col space-y-2">
-               <input v-if="dateMode === 'month'" type="month" v-model="selectedMonth" class="text-xs bg-bg-subtle px-3 h-9 rounded-xl outline-none text-txt-primary border border-transparent focus:bg-white focus:border-bdr-default transition-all">
-                <div v-else-if="dateMode === 'range'" class="flex flex-col space-y-2">
-                    <div class="flex items-center space-x-2">
-                        <span class="text-[9px] text-txt-muted w-4">從</span>
-                        <input type="date" v-model="startDate" class="flex-1 text-xs bg-bg-subtle px-3 h-9 rounded-xl outline-none text-txt-primary border border-transparent focus:bg-white focus:border-bdr-default transition-all">
+            <div v-show="filterMode === 'normal'" class="flex flex-col space-y-3">
+                <!-- 按月選擇器 -->
+                <div v-if="dateMode === 'month'" 
+                     class="flex items-center px-4 h-11 bg-bg-subtle rounded-2xl border border-transparent focus-within:bg-white focus-within:border-bdr-default transition-all active:scale-[0.98] cursor-pointer"
+                     @click="triggerPicker($refs.monthInput)">
+                    <span class="material-symbols-rounded text-txt-secondary text-lg">calendar_month</span>
+                    <input 
+                        ref="monthInput"
+                        type="month" 
+                        v-model="selectedMonth" 
+                        class="flex-1 text-xs ml-3 outline-none text-txt-primary font-medium bg-transparent cursor-pointer"
+                    >
+                </div>
+
+                <!-- 自訂區間選擇器 -->
+                <div v-else-if="dateMode === 'range'" class="flex flex-col space-y-3">
+                    <div class="flex items-center px-4 h-11 bg-bg-subtle rounded-2xl border border-transparent focus-within:bg-white focus-within:border-bdr-default transition-all active:scale-[0.98] cursor-pointer"
+                         @click="triggerPicker($refs.startInput)">
+                        <span class="text-[9px] text-txt-muted w-4 font-bold">從</span>
+                        <input 
+                            ref="startInput"
+                            type="date" 
+                            v-model="startDate" 
+                            class="flex-1 text-xs ml-3 outline-none text-txt-primary font-medium bg-transparent cursor-pointer"
+                        >
                     </div>
-                    <div class="flex items-center space-x-2">
-                        <span class="text-[9px] text-txt-muted w-4">至</span>
-                        <input type="date" v-model="endDate" class="flex-1 text-xs bg-bg-subtle px-3 h-9 rounded-xl outline-none text-txt-primary border border-transparent focus:bg-white focus:border-bdr-default transition-all">
+                    <div class="flex items-center px-4 h-11 bg-bg-subtle rounded-2xl border border-transparent focus-within:bg-white focus-within:border-bdr-default transition-all active:scale-[0.98] cursor-pointer"
+                         @click="triggerPicker($refs.endInput)">
+                        <span class="text-[9px] text-txt-muted w-4 font-bold">至</span>
+                        <input 
+                            ref="endInput"
+                            type="date" 
+                            v-model="endDate" 
+                            class="flex-1 text-xs ml-3 outline-none text-txt-primary font-medium bg-transparent cursor-pointer"
+                        >
                     </div>
                 </div>
                
@@ -133,9 +158,19 @@ export const StatsPage = {
          </div>
 
          <!-- 5. Word Cloud (Keywords) -->
-         <div v-if="wordCloudData.length > 0" class="bg-white p-6 rounded-[2rem] muji-shadow border border-bdr-default space-y-4">
-             <h3 class="text-[10px] text-txt-secondary uppercase tracking-widest font-medium px-2">Common Keywords</h3>
-            <div class="relative w-full aspect-square max-w-[300px] mx-auto">
+         <div v-if="wordCloudData.length > 0" class="bg-white p-6 rounded-[2rem] muji-shadow border border-bdr-default">
+             <div class="flex items-center justify-between mb-4 px-2">
+                 <h3 class="text-[10px] text-txt-secondary uppercase tracking-widest font-medium">Common Keywords</h3>
+                 <button @click="toggleWordCloudMode" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-bg-light transition-all active:scale-95 group overflow-hidden">
+                     <transition name="muji-fade-scale" mode="out-in">
+                        <span :key="wordCloudMode" 
+                              class="material-symbols-rounded text-[20px] text-txt-muted group-hover:text-txt-primary opacity-70 group-hover:opacity-100 transition-all">
+                            {{ wordCloudMode === 'count' ? 'format_list_numbered' : 'monetization_on' }}
+                        </span>
+                     </transition>
+                 </button>
+             </div>
+            <div class="relative w-full aspect-square max-w-[340px] mx-auto overflow-hidden">
                 <span v-for="w in wordCloudData" :key="w.label" 
                       :style="{ 
                           fontSize: w.fontSize + 'px', 
@@ -146,7 +181,7 @@ export const StatsPage = {
                           top: 'calc(50% + ' + w.y + 'px)',
                           zIndex: w.level <= 2 ? 10 : 1
                       }"
-                      class="word-cloud-tag absolute transform -translate-x-1/2 -translate-y-1/2">
+                        class="word-cloud-tag absolute transform -translate-x-1/2 -translate-y-1/2 whitespace-nowrap transition-all duration-500">
                     {{ w.label }}
                 </span>
              </div>
@@ -174,7 +209,8 @@ export const StatsPage = {
             centerLabel: 'TOTAL',
             filterMode: 'normal', // normal, project
             selectedProjectId: '',
-            excludeProjects: false
+            excludeProjects: false,
+            wordCloudMode: 'count' // 'count' | 'amount'
         };
     },
     computed: {
@@ -325,18 +361,23 @@ export const StatsPage = {
             let groups = {}; // lowercase -> { originalCounts: { "Mos": 5 }, totalWeight: 8 }
 
             this.processedList.forEach(t => {
-                const raw = (t.name || '').trim();
+                let raw = (t.name || '').trim();
                 if (!raw) return;
-                const lower = raw.toLowerCase();
+
+                // Normalize: strip common punctuation/symbols for better fuzzy grouping
+                // e.g. "Mos -" -> "Mos", "Cafe!" -> "Cafe"
+                const normalized = raw.replace(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+$/, '').trim();
+                const lower = normalized.toLowerCase();
 
                 if (!groups[lower]) {
-                    groups[lower] = { originalCounts: {}, totalWeight: 0 };
+                    groups[lower] = { originalCounts: {}, totalWeight: 0, totalAmount: 0 };
                 }
                 groups[lower].originalCounts[raw] = (groups[lower].originalCounts[raw] || 0) + 1;
                 groups[lower].totalWeight += 1;
+                groups[lower].totalAmount += t.convertedAmount;
             });
 
-            // 2. Advanced Match: Merge longer strings into their substrings (e.g. "mos早餐" -> "mos")
+            // 2. Advanced Match: Merge longer strings into their substrings
             let keys = Object.keys(groups).sort((a, b) => a.length - b.length);
             let mergedKeys = new Set();
 
@@ -349,24 +390,23 @@ export const StatsPage = {
                     if (mergedKeys.has(child)) continue;
 
                     if (child.includes(parent)) {
-                        // Merge child into parent
                         const childData = groups[child];
                         for (let form in childData.originalCounts) {
                             groups[parent].originalCounts[form] = (groups[parent].originalCounts[form] || 0) + childData.originalCounts[form];
                         }
                         groups[parent].totalWeight += childData.totalWeight;
+                        groups[parent].totalAmount += childData.totalAmount;
                         mergedKeys.add(child);
                     }
                 }
             }
 
-            // 3. Finalize data and pick representative labels
+            // 3. Finalize data and sort by WEIGHT (Critical Fix)
             let result = [];
             for (let key in groups) {
                 if (mergedKeys.has(key)) continue;
 
                 const data = groups[key];
-                // Pick most frequent original form
                 let maxCount = -1;
                 let bestLabel = '';
                 for (let form in data.originalCounts) {
@@ -378,32 +418,36 @@ export const StatsPage = {
 
                 result.push({
                     label: bestLabel,
-                    weight: data.totalWeight
+                    weight: this.wordCloudMode === 'amount' ? data.totalAmount : data.totalWeight
                 });
             }
 
+            // CRITICAL: Sort by weight DESC so that Level 1 is truly the TOP item
+            result.sort((a, b) => b.weight - a.weight);
+
             if (result.length === 0) return [];
 
-            // 4. Scaling (Dynamic range based on word count)
+            // 4. Scaling (Stepped Level Scaling for "Fullness")
             const weights = result.map(r => r.weight);
             const minW = Math.min(...weights);
             const maxW = Math.max(...weights);
 
             const wordCount = result.length;
-            let minS = 10, maxS = 24;
-            if (wordCount < 10) {
-                minS = 16; maxS = 36;
-            } else if (wordCount < 20) {
-                minS = 12; maxS = 28;
-            }
+
+            // Base ranges for different levels to ensure "Gap"
+            const levelRanges = {
+                1: { min: 42, max: 54 },
+                2: { min: 28, max: 36 },
+                3: { min: 20, max: 26 },
+                4: { min: 14, max: 18 },
+                5: { min: 11, max: 13 }
+            };
 
             const baseList = result.map((r, idx) => {
                 // Normalized weight (0 to 1)
                 const norm = maxW > minW ? (r.weight - minW) / (maxW - minW) : 1;
-                // Power scale for "pop" (0.6 makes high weights much larger)
+                // Power scale for "pop"
                 const powerNorm = Math.pow(norm, 0.6);
-
-                const size = minS + powerNorm * (maxS - minS);
 
                 // Level logic: Level 1 is strictly Top-1.
                 let level = 5;
@@ -413,10 +457,13 @@ export const StatsPage = {
                 else if (rank < 0.55) level = 3;
                 else if (rank < 0.85) level = 4;
 
+                const range = levelRanges[level];
+                const size = range.min + powerNorm * (range.max - range.min);
+
                 // Scaling properties based on level/rank
                 const fontWeight = level === 1 ? 600 : (level === 2 ? 500 : (level === 3 ? 400 : 300));
                 const color = level <= 2 ? 'var(--txt-primary)' : 'var(--txt-secondary)';
-                const opacity = level === 5 ? 0.45 : (level === 4 ? 0.75 : 1);
+                const opacity = level === 5 ? 0.35 : (level === 4 ? 0.6 : (level === 3 ? 0.85 : 1));
 
                 return {
                     ...r,
@@ -436,15 +483,30 @@ export const StatsPage = {
                 let x = 0;
                 let y = 0;
 
-                // Heuristic box size with level-based padding
-                const padding = item.level <= 2 ? 14 : 26;
-                const w = item.label.length * item.fontSize * 0.6 + padding;
-                const h = item.fontSize + padding;
+                // Heuristic box size: Chinese characters are roughly square
+                const isChinese = /[\u4e00-\u9fa5]/.test(item.label);
+                const charFactor = isChinese ? 1.2 : 0.75;
+                const paddingW = item.level <= 2 ? 16 : 10;
+                const paddingH = item.level <= 2 ? 10 : 6;
+
+                const w = item.label.length * item.fontSize * charFactor + paddingW;
+                const h = item.fontSize + paddingH;
 
                 let found = false;
                 let t = 0; // theta for spiral
-                const tStep = 0.12; // Spiral resolution
-                const k = wordCount < 12 ? 1.6 : 1.0; // r = k * theta growth factor
+                const tStep = 0.1; // High resolution search
+
+                // Balanced growth factor
+                const kBase = Math.max(1.5, 20 / Math.sqrt(wordCount + 1));
+                const k = index === 0 ? 0 : kBase;
+
+                // Random jitter for more natural spread
+                const tOffset = (index * 137.5 * Math.PI) / 180;
+
+                // Reduced Radial Push: keep a tighter cluster while still filling edges
+                if (item.level >= 3) {
+                    t = 8 + (item.level * 4);
+                }
 
                 // Force Rank #1 (Level 1) to absolute center
                 if (index === 0) {
@@ -453,13 +515,18 @@ export const StatsPage = {
                     found = true;
                 }
 
-                while (!found && t < 1200) {
-                    // Archimedean Spiral: r = k * theta
+                while (!found && t < 2000) {
+                    const angle = t + tOffset;
                     const r = k * t;
-                    const angle = t;
-
                     x = r * Math.cos(angle);
                     y = r * Math.sin(angle);
+
+                    // Strict Boundary Check: ensure full label fits within 340px container
+                    const halfW = (w / 2);
+                    const halfH = (h / 2);
+                    if (Math.abs(x) + halfW > 165 || Math.abs(y) + halfH > 165) {
+                        break;
+                    }
 
                     // Check for collisions with previously placed items
                     const collides = placed.some(p => {
@@ -474,18 +541,32 @@ export const StatsPage = {
                     }
                 }
 
-                placed.push({ x, y, w, h });
-                return { ...item, x, y };
-            });
+                if (found) {
+                    placed.push({ x, y, w, h });
+                    return { ...item, x, y };
+                }
+                return null;
+            }).filter(Boolean);
         }
     },
     methods: {
+        toggleWordCloudMode() {
+            this.wordCloudMode = this.wordCloudMode === 'count' ? 'amount' : 'count';
+        },
         getPaymentName(id) { const pm = this.paymentMethods.find(p => p.id === id); return pm ? pm.name : id; },
         getStatusLabel(status) {
             const map = { 'Active': '進行中', 'Archived': '已封存' };
             return map[status] || status;
         },
         formatNumber(num) { return new Intl.NumberFormat().format(Math.round(num || 0)); },
+        triggerPicker(el) {
+            if (el && el.showPicker) {
+                try { el.showPicker(); } catch (e) { el.focus(); }
+            } else if (el) {
+                el.focus();
+                el.click();
+            }
+        },
         getIntPercentage(val, total) { return total > 0 ? Math.round((val / total) * 100) : 0; },
         resetChartSelection() { this.centerLabel = 'TOTAL'; this.updateCenterFromVisible(this.categoryChart); },
         updateCenterFromVisible(chart) {

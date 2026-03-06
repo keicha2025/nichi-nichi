@@ -9,6 +9,20 @@
     - Restricted **Level 1** to strictly the single highest-weighted keyword, forced at `(0,0)`.
     - Improved collision detection for smoother spiral flow from the origin.
     - Added z-index control to ensure priority keywords remain on top.
+    - **Word Cloud Dual-Dimension Toggle**:
+        - Implemented a cycling toggle to switch between **Frequency** (count) and **Amount** (total personal share) dimensions.
+        - Added micro-interactions with smooth icon transitions (`monetization_on`, `format_list_numbered`) and scale animations.
+        - Optimized visual scaling with a level-based "stepped" font size system to ensure container fullness.
+        - Fixed icon display by correcting the Material Symbols class to `rounded`.
+        - Resolved keyword overlap by refining the Archimedean spiral collision detection (adjusted character width multiplier to 1.05 for Chinese characters).
+        - Achieved "average distribution" by implementing a dynamic growth factor `k` and golden-angle jitter, ensuring keywords fill the container more evenly regardless of the word count.
+        - Strengthened word cloud expansion with an aggressive growth multiplier and "Radial Level Push" for lower-priority keywords, ensuring the full 340px container area is utilized.
+        - Balanced word cloud spread and fixed overflow clipping by implementing width-aware boundary checks and a refined growth factor.
+        - Eliminated keyword overlaps with "Precision Collision Logic": increased Chinese character buffer (1.2x), reduced spiral search step (0.1), and enforced a strict no-overlap placement rule (skipping keywords that cannot find a valid spot).
+        - Fixed a major data aggregation bug where word cloud sizes were determined by alphabetical order instead of weight.
+        - Improved fuzzy keyword grouping with automatic normalization (stripping trailing punctuation and symbols) and robust weight-based sorting.
+- **Bug Fixes**:
+    - **StatsPage**: Fixed `TypeError: Cannot read properties of undefined (reading 'length')` by restoring the `computed` property block and merging duplicate `methods`.
 - **Radial Word Cloud Layout**:
     - Added a dynamic "Common Keywords" section with a Golden Angle Spiral layout.
     - Implemented intelligent grouping and substring merging (e.g., "mos breakfast" -> "mos").
@@ -27,7 +41,7 @@
   - **Smart Deduplication**: Improved suggestion logic to handle case-insensitivity and whitespace trimming, preventing duplicate entries.
 - **Sanitized Math Evaluation**: Implemented a secure math expression evaluator with input sanitization.
 
-*優化功能：新增「項目名稱」與「備註」的智慧預測輸入（聯想詞），支援大小寫不敏感與自動去重；同時支援計算機即時運算、平滑動畫與自動收合。*
+*優化功能：新增「項目名稱」與「備註」的智慧預測輸入（聯想詞），支援自動去重與模糊匹配；支援計算機即時運算與平滑動畫；並實作 5 級視覺層次之文字雲，採用阿基米德螺旋線佈局確保核心關鍵字完美置中。*
 
 ## [2026-02-13] Friend Features & UI Refinement (Main Branch)
 
@@ -1203,4 +1217,23 @@ Added comprehensive debug logging throughout the category save flow for easier t
 ### Affected Files
 - `index.html`
 
-*全域驗證與網址優化：更新 Google Search Console 所有權驗證標記，並統一專案內的正式網站連結為 `https://nichi-nichi.web.app/`。*
+
+---
+
+## [2026-03-06T14:55:00+08:00] UX Optimization: Expanded Date/Month Selectors
+
+### Features
+- **Expanded Clickable Areas**: Wrapped date, month, and datetime-local inputs in larger containers (min-height 44px) to meet accessibility standards and improve touch interaction.
+- **Global Hit Area Optimization**: Applied CSS to expand the native `::-webkit-calendar-picker-indicator` to cover the entire input area, making the whole field clickable.
+- **Programmatic Picker Triggers**: Implemented `triggerPicker` logic using `showPicker()` (with focus/click fallbacks) to ensure the calendar opens reliably when any part of the container is tapped.
+
+### Technical Details
+- Modified `js/pages/stats-page.js` and `js/pages/add-page.js` to include the `triggerPicker` method and update templates.
+- Updated `style.css` with global positioning rules for `input[type="date"]`, `input[type="month"]`, and `input[type="datetime-local"]`.
+
+### Affected Files
+- `js/pages/stats-page.js`
+- `js/pages/add-page.js`
+- `style.css`
+
+*優化日期與月份選擇器之點擊範圍：透過 CSS 擴大原生指標區域並結合 `showPicker()` 觸發邏輯，讓使用者點擊整個輸入框任一處皆可開啟日曆，大幅提升行動端操作的便利性。*
