@@ -135,10 +135,15 @@ export const StatsPage = {
          <!-- 5. Word Cloud (Keywords) -->
          <div v-if="wordCloudData.length > 0" class="bg-white p-6 rounded-[2rem] muji-shadow border border-bdr-default space-y-4">
              <h3 class="text-[10px] text-txt-secondary uppercase tracking-widest font-medium px-2">Common Keywords</h3>
-             <div class="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 p-4 min-h-[120px]">
+             <div class="relative w-full aspect-square max-w-[320px] mx-auto overflow-hidden">
                  <span v-for="w in wordCloudData" :key="w.label" 
-                       :style="{ fontSize: w.fontSize + 'px', opacity: w.opacity }"
-                       class="word-cloud-tag">
+                       :style="{ 
+                           fontSize: w.fontSize + 'px', 
+                           opacity: w.opacity,
+                           left: 'calc(50% + ' + w.x + 'px)',
+                           top: 'calc(50% + ' + w.y + 'px)'
+                       }"
+                       class="word-cloud-tag absolute transform -translate-x-1/2 -translate-y-1/2">
                      {{ w.label }}
                  </span>
              </div>
@@ -382,7 +387,7 @@ export const StatsPage = {
             const maxW = Math.max(...weights);
             const minS = 10, maxS = 24;
 
-            return result.map(r => {
+            const baseList = result.map(r => {
                 let size = minS;
                 if (maxW > minW) {
                     size = minS + ((r.weight - minW) / (maxW - minW)) * (maxS - minS);
@@ -390,9 +395,53 @@ export const StatsPage = {
                 return {
                     ...r,
                     fontSize: Math.round(size),
-                    opacity: 0.6 + (size / maxS) * 0.4 // Higher weight = more visible
+                    opacity: 0.6 + (size / maxS) * 0.4
                 };
             }).sort((a, b) => b.weight - a.weight);
+
+            // 5. Radial Layout (Spiral + Collision Avoidance)
+            const placed = [];
+            const goldenAngle = 137.5 * (Math.PI / 180);
+            const step = 2; // Initial radius step
+
+            return baseList.map((item, index) => {
+                let radius = 0;
+                let angle = 0;
+                let x = 0;
+                let y = 0;
+
+                // Heuristic box size
+                const w = item.label.length * item.fontSize * 0.6 + 10; // padding
+                const h = item.fontSize + 8;
+
+                let found = false;
+                let attempt = 0;
+                const maxAttempts = 500;
+
+                while (!found && attempt < maxAttempts) {
+                    // Spiral coordinates
+                    const currentAngle = attempt * goldenAngle;
+                    const currentRadius = Math.sqrt(attempt) * 12; // Spread factor
+
+                    x = Math.cos(currentAngle) * currentRadius;
+                    y = Math.sin(currentAngle) * currentRadius;
+
+                    // Collision check
+                    const collides = placed.some(p => {
+                        return Math.abs(x - p.x) < (w + p.w) / 2 &&
+                            Math.abs(y - p.y) < (h + p.h) / 2;
+                    });
+
+                    if (!collides) {
+                        found = true;
+                    } else {
+                        attempt++;
+                    }
+                }
+
+                placed.push({ x, y, w, h });
+                return { ...item, x, y };
+            });
         }
     },
     methods: {
