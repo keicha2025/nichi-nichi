@@ -136,16 +136,19 @@ export const StatsPage = {
          <div v-if="wordCloudData.length > 0" class="bg-white p-6 rounded-[2rem] muji-shadow border border-bdr-default space-y-4">
              <h3 class="text-[10px] text-txt-secondary uppercase tracking-widest font-medium px-2">Common Keywords</h3>
             <div class="relative w-full aspect-square max-w-[300px] mx-auto">
-                 <span v-for="w in wordCloudData" :key="w.label" 
-                       :style="{ 
-                           fontSize: w.fontSize + 'px', 
-                           opacity: w.opacity,
-                           left: 'calc(50% + ' + w.x + 'px)',
-                           top: 'calc(50% + ' + w.y + 'px)'
-                       }"
-                       class="word-cloud-tag absolute transform -translate-x-1/2 -translate-y-1/2">
-                     {{ w.label }}
-                 </span>
+                <span v-for="w in wordCloudData" :key="w.label" 
+                      :style="{ 
+                          fontSize: w.fontSize + 'px', 
+                          opacity: w.opacity,
+                          fontWeight: w.fontWeight,
+                          color: w.color,
+                          left: 'calc(50% + ' + w.x + 'px)',
+                          top: 'calc(50% + ' + w.y + 'px)',
+                          zIndex: w.level <= 2 ? 10 : 1
+                      }"
+                      class="word-cloud-tag absolute transform -translate-x-1/2 -translate-y-1/2">
+                    {{ w.label }}
+                </span>
              </div>
          </div>
     </section>
@@ -394,17 +397,43 @@ export const StatsPage = {
                 minS = 12; maxS = 28;
             }
 
-            const baseList = result.map(r => {
-                let size = minS;
-                if (maxW > minW) {
-                    size = minS + ((r.weight - minW) / (maxW - minW)) * (maxS - minS);
+            const baseList = result.map((r, idx) => {
+                // Normalized weight (0 to 1)
+                const norm = maxW > minW ? (r.weight - minW) / (maxW - minW) : 1;
+                // Power scale for "pop" (0.6 makes high weights much larger)
+                const powerNorm = Math.pow(norm, 0.6);
+
+                const size = minS + powerNorm * (maxS - minS);
+
+                // Determine Level (1 to 5) based on rank (result is already sorted or we sort it now)
+                const rank = (idx / wordCount);
+                let level = 5;
+                let fontWeight = 300;
+                let color = 'var(--txt-secondary)';
+                let opacity = 0.5 + (powerNorm * 0.5);
+
+                if (rank < 0.1) {
+                    level = 1; fontWeight = 600; color = 'var(--txt-primary)';
+                } else if (rank < 0.3) {
+                    level = 2; fontWeight = 500; color = 'var(--txt-primary)';
+                } else if (rank < 0.6) {
+                    level = 3; fontWeight = 400; color = 'var(--txt-secondary)';
+                } else if (rank < 0.85) {
+                    level = 4; fontWeight = 300; color = 'var(--txt-secondary)';
+                } else {
+                    level = 5; fontWeight = 300; color = 'var(--txt-secondary)';
+                    opacity = Math.max(0.4, opacity * 0.7);
                 }
+
                 return {
                     ...r,
+                    level,
                     fontSize: Math.round(size),
-                    opacity: 0.6 + (size / maxS) * 0.4
+                    fontWeight,
+                    color,
+                    opacity
                 };
-            }).sort((a, b) => b.weight - a.weight);
+            });
 
             // 5. Radial Layout (Spiral + Collision Avoidance)
             const placed = [];
