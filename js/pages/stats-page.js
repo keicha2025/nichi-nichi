@@ -135,7 +135,7 @@ export const StatsPage = {
          <!-- 5. Word Cloud (Keywords) -->
          <div v-if="wordCloudData.length > 0" class="bg-white p-6 rounded-[2rem] muji-shadow border border-bdr-default space-y-4">
              <h3 class="text-[10px] text-txt-secondary uppercase tracking-widest font-medium px-2">Common Keywords</h3>
-             <div class="relative w-full aspect-square max-w-[320px] mx-auto overflow-hidden">
+            <div class="relative w-full aspect-square max-w-[300px] mx-auto">
                  <span v-for="w in wordCloudData" :key="w.label" 
                        :style="{ 
                            fontSize: w.fontSize + 'px', 
@@ -381,11 +381,18 @@ export const StatsPage = {
 
             if (result.length === 0) return [];
 
-            // 4. Scaling (Font size 10px - 24px)
+            // 4. Scaling (Dynamic range based on word count)
             const weights = result.map(r => r.weight);
             const minW = Math.min(...weights);
             const maxW = Math.max(...weights);
-            const minS = 10, maxS = 24;
+
+            const wordCount = result.length;
+            let minS = 10, maxS = 24;
+            if (wordCount < 10) {
+                minS = 16; maxS = 36;
+            } else if (wordCount < 20) {
+                minS = 12; maxS = 28;
+            }
 
             const baseList = result.map(r => {
                 let size = minS;
@@ -410,18 +417,19 @@ export const StatsPage = {
                 let x = 0;
                 let y = 0;
 
-                // Heuristic box size
-                const w = item.label.length * item.fontSize * 0.6 + 10; // padding
-                const h = item.fontSize + 8;
+                // Heuristic box size with increased padding
+                const w = item.label.length * item.fontSize * 0.6 + 28;
+                const h = item.fontSize + 20;
 
                 let found = false;
                 let attempt = 0;
-                const maxAttempts = 500;
+                const maxAttempts = 1000;
 
                 while (!found && attempt < maxAttempts) {
                     // Spiral coordinates
                     const currentAngle = attempt * goldenAngle;
-                    const currentRadius = Math.sqrt(attempt) * 12; // Spread factor
+                    const spreadFactor = wordCount < 10 ? 40 : 28;
+                    const currentRadius = Math.sqrt(attempt) * spreadFactor;
 
                     x = Math.cos(currentAngle) * currentRadius;
                     y = Math.sin(currentAngle) * currentRadius;

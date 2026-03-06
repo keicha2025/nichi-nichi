@@ -195,5 +195,6 @@ input[type="checkbox"] {
 
 .word-cloud-tag:hover {
     color: var(--txt-primary);
-    transform: scale(1.1);
+    background: var(--bg-hover-soft);
+    border-radius: 99px;
 }
