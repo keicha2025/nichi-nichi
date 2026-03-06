@@ -1237,3 +1237,18 @@ Added comprehensive debug logging throughout the category save flow for easier t
 - `style.css`
 
 *優化日期與月份選擇器之點擊範圍：透過 CSS 擴大原生指標區域並結合 `showPicker()` 觸發邏輯，讓使用者點擊整個輸入框任一處皆可開啟日曆，大幅提升行動端操作的便利性。*
+
+---
+
+## [2026-03-06T14:56:00+08:00] Deployment: Secure Secret Injection
+
+### Security
+- **Secure Secret Handling**: Refactored the GitHub Actions deployment workflow to use environment variables for `GAS_URL` and `SPREADSHEET_URL` instead of direct shell interpolation. This follows security best practices and eliminates IDE warnings.
+
+### Technical Details
+- Updated `.github/workflows/deploy.yml` with the correct `env` mapping in the "Inject Secrets" step.
+
+### Affected Files
+- `.github/workflows/deploy.yml`
+
+*部署腳本安全性優化：將 GitHub Actions 中的 Secrets 改為透過環境變數傳遞，避免腳本警告並提升安全性。*

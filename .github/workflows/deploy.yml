@@ -25,9 +25,12 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Inject Secrets
+        env:
+          GAS_URL: ${{ secrets.GAS_URL }}
+          SPREADSHEET_URL: ${{ secrets.SPREADSHEET_URL }}
         run: |
-          sed -i "s|__GAS_URL__|${{ secrets.GAS_URL }}|g" js/config.js
-          sed -i "s|__SPREADSHEET_URL__|${{ secrets.SPREADSHEET_URL }}|g" js/config.js
+          sed -i "s|__GAS_URL__|$GAS_URL|g" js/config.js
+          sed -i "s|__SPREADSHEET_URL__|$SPREADSHEET_URL|g" js/config.js
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
