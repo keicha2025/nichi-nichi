@@ -165,3 +165,18 @@ input[type="checkbox"] {
     opacity: 0;
     transform: translateY(-5px);
 }
+
+/* Container Expand Animation */
+.suggestion-container-enter-active,
+.suggestion-container-leave-active {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    max-height: 60px;
+    overflow: hidden;
+}
+
+.suggestion-container-enter-from,
+.suggestion-container-leave-to {
+    max-height: 0;
+    opacity: 0;
+    margin-top: 0 !important;
+}

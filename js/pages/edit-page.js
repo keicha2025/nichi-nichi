@@ -84,10 +84,12 @@ export const EditPage = {
                         <div v-if="isReadOnly" class="text-sm text-txt-primary">{{ form.name }}</div>
                         <template v-else>
                             <!-- Name Suggestions -->
-                            <transition-group v-show="nameSuggestions.length > 0" name="suggestion" tag="div" class="flex flex-wrap gap-2 mt-1">
-                                <div v-for="s in nameSuggestions" :key="s" @click="form.name = s" 
-                                     class="suggestion-bubble">{{ s }}</div>
-                            </transition-group>
+                            <transition name="suggestion-container">
+                                <transition-group v-if="nameSuggestions.length > 0" name="suggestion" tag="div" class="flex flex-wrap gap-2 mt-1">
+                                    <div v-for="s in nameSuggestions" :key="s" @click="form.name = s" 
+                                         class="suggestion-bubble">{{ s }}</div>
+                                </transition-group>
+                            </transition>
                             <input type="text" v-model="form.name" class="w-full text-sm py-2 border-b border-bdr-subtle outline-none">
                         </template>
                     </div>
@@ -112,10 +114,12 @@ export const EditPage = {
                         <template v-else>
                             <textarea v-model="form.note" class="w-full text-sm p-4 bg-bg-subtle rounded-2xl outline-none h-20 resize-none"></textarea>
                             <!-- Note Suggestions -->
-                            <transition-group v-show="noteSuggestions.length > 0" name="suggestion" tag="div" class="flex flex-wrap gap-2 mt-1">
-                                <div v-for="s in noteSuggestions" :key="s" @click="form.note = s" 
-                                     class="suggestion-bubble">{{ s }}</div>
-                            </transition-group>
+                            <transition name="suggestion-container">
+                                <transition-group v-if="noteSuggestions.length > 0" name="suggestion" tag="div" class="flex flex-wrap gap-2 mt-1">
+                                    <div v-for="s in noteSuggestions" :key="s" @click="form.note = s" 
+                                         class="suggestion-bubble">{{ s }}</div>
+                                </transition-group>
+                            </transition>
                         </template>
                     </div>
                 </div>
