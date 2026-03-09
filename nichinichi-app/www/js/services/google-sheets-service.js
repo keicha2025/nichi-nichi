@@ -1,0 +1,297 @@
+export const GoogleSheetsService = {
+    // --- Internal Helpers ---
+
+    /**
+     * Fetch with Automatic Retry for 401/403 Errors
+     * @param {string} url 
+     * @param {object} options 
+     * @param {string} token - Initial valid token
+     * @param {function} onTokenExpired - Async callback to get a new token. Should return new token string.
+     */
+    async _fetchWithRetry(url, options, token, onTokenExpired) {
+        let currentToken = token;
+
+        // Helper to construct headers
+        const getHeaders = (t) => {
+            const h = { 'Authorization': `Bearer ${t}`, ...options.headers };
+            // Remove 'Content-Type' if it's FormData (browser handles it), BUT our calls usually send JSON
+            return h;
+        };
+
+        try {
+            // First Attempt
+            options.headers = getHeaders(currentToken);
+            let res = await fetch(url, options);
+
+            // Check for Auth Error
+            if (res.status === 401 || res.status === 403) {
+                console.warn("[GoogleSheetsService] Token expired or invalid. Attempting refresh...");
+
+                if (typeof onTokenExpired === 'function') {
+                    // 1. Invalidate old token (handled by caller ideally, but we can assume onTokenExpired does the job of getting a FRESH one)
+                    // 2. Get New Token
+                    try {
+                        const newToken = await onTokenExpired();
+                        if (newToken) {
+                            console.log("[GoogleSheetsService] Token refreshed. Retrying request...");
+                            currentToken = newToken;
+                            // Update Headers
+                            options.headers = getHeaders(currentToken);
+                            // Retry
+                            res = await fetch(url, options);
+                        } else {
+                            throw new Error("Failed to refresh token");
+                        }
+                    } catch (refreshErr) {
+                        console.error("[GoogleSheetsService] Re-auth failed", refreshErr);
+                        throw refreshErr; // Propagate the refresh error
+                    }
+                } else {
+                    console.warn("[GoogleSheetsService] No refresh callback provided.");
+                }
+            }
+
+            // Final Response Check
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.error?.message || `Request Failed: ${res.status}`);
+            }
+            return await res.json();
+
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    // --- Drive Folder & File Helpers ---
+
+    async ensureFolder(name, token, onTokenExpired) {
+        let folder = await this.findFolder(name, token, onTokenExpired);
+        if (!folder) folder = await this.createFolder(name, token, onTokenExpired);
+        return folder;
+    },
+
+    async findFolder(name, token, onTokenExpired) {
+        const q = `name = '${name}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`;
+        const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name)`;
+
+        const data = await this._fetchWithRetry(url, { method: 'GET' }, token, onTokenExpired);
+        return data.files?.[0];
+    },
+
+    async createFolder(name, token, onTokenExpired) {
+        const url = 'https://www.googleapis.com/drive/v3/files';
+        const options = {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, mimeType: 'application/vnd.google-apps.folder' })
+        };
+        return await this._fetchWithRetry(url, options, token, onTokenExpired);
+    },
+
+    async moveFileToFolder(fileId, folderId, token, onTokenExpired) {
+        // Get current parents
+        const getUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?fields=parents`;
+        const fileData = await this._fetchWithRetry(getUrl, { method: 'GET' }, token, onTokenExpired);
+        const prevParents = fileData.parents?.join(',') || '';
+
+        const moveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?addParents=${folderId}&removeParents=${prevParents}`;
+        await this._fetchWithRetry(moveUrl, { method: 'PATCH' }, token, onTokenExpired);
+    },
+
+    async saveJsonFile(folderId, name, data, token, onTokenExpired) {
+        const metadata = { name, parents: [folderId], mimeType: 'application/json' };
+        const fileContent = JSON.stringify(data, null, 2);
+
+        const boundary = '-------nichinichi_boundary_314159';
+        const delimiter = "\r\n--" + boundary + "\r\n";
+        const close_delim = "\r\n--" + boundary + "--";
+
+        const multipartRequestBody =
+            delimiter +
+            'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+            JSON.stringify(metadata) +
+            delimiter +
+            'Content-Type: application/json\r\n\r\n' +
+            fileContent +
+            close_delim;
+
+        const url = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+        const options = {
+            method: 'POST',
+            headers: {
+                'Content-Type': `multipart/related; boundary=${boundary}`,
+                'Content-Length': multipartRequestBody.length
+            },
+            body: multipartRequestBody
+        };
+        return await this._fetchWithRetry(url, options, token, onTokenExpired);
+    },
+
+    // --- Sheets API Helpers ---
+
+    async createSpreadsheet(title, token, onTokenExpired) {
+        const url = 'https://sheets.googleapis.com/v4/spreadsheets';
+        const options = {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ properties: { title } })
+        };
+        return await this._fetchWithRetry(url, options, token, onTokenExpired);
+    },
+
+    async writeData(spreadsheetId, range, values, token, onTokenExpired) {
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`;
+        const options = {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ values })
+        };
+        return await this._fetchWithRetry(url, options, token, onTokenExpired);
+    },
+
+    // --- High Level Functions ---
+
+    /**
+     * Generate YYMMDDHHMM timestamp string
+     */
+    _getTimestamp() {
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        const yy = String(now.getFullYear()).slice(-2);
+        return `${yy}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}`;
+    },
+
+    /**
+     * Backup Full Data to JSON in '/日日記' folder
+     * @param {object} data 
+     * @param {string} token 
+     * @param {function} onTokenExpired - Callback to refresh token
+     */
+    async backupFullData(data, token, onTokenExpired) {
+        const folder = await this.ensureFolder('日日記', token, onTokenExpired);
+        const ts = this._getTimestamp();
+        const fileName = `系統還原用備份檔_${ts}.json`;
+
+        const result = await this.saveJsonFile(folder.id, fileName, data, token, onTokenExpired);
+        return {
+            folderName: folder.name,
+            folderId: folder.id,
+            fileName: fileName,
+            fileId: result.id
+        };
+    },
+
+    /**
+     * Export Readable Spreadsheet to '/日日記' folder
+     * @param {object} data
+     * @param {string} token
+     * @param {function} onTokenExpired - Callback to refresh token
+     */
+    async exportReadableSheet(data, token, onTokenExpired) {
+        const folder = await this.ensureFolder('日日記', token, onTokenExpired);
+        const ts = this._getTimestamp();
+        const title = `瀏覽用記帳匯出_${ts}`;
+
+        // 1. Create Sheet (Root)
+        const ss = await this.createSpreadsheet(title, token, onTokenExpired);
+
+        // 2. Move to Folder
+        const moveToken = token; // Can reuse token or if refreshed?
+        // Note: The previous call might have refreshed the token but we don't return it up the chain easily.
+        // Ideally, if a token is refreshed, we should use the new one.
+        // BUT, since we pass onTokenExpired to EACH call, if the next call fails (401), it will refresh AGAIN.
+        // It's slightly inefficient (double refresh potentially if the first refresh wasn't persisted by caller),
+        // but since onTokenExpired updates app state/storage, the SECOND call to onTokenExpired (by the app) 
+        // should either return the valid token immediately or just do a quick check.
+        // To make it better: onTokenExpired usually invokes API.requestIncrementalScope which sets Storage.
+        // So the second call should be fast.
+
+        await this.moveFileToFolder(ss.spreadsheetId, folder.id, token, onTokenExpired);
+
+        // 3. Prepare Readable Data
+        const rows = this.prepareReadableRows(data);
+
+        // 4. Write
+        await this.writeData(ss.spreadsheetId, 'A1', rows, token, onTokenExpired);
+
+        return { url: ss.spreadsheetUrl, folder: folder.name };
+    },
+
+    /**
+     * Helper to convert IDs to Names for Export
+     */
+    prepareReadableRows(data) {
+        const { transactions, categories, paymentMethods, projects } = data;
+        const headers = ["日期", "項目名稱", "分類", "金額", "幣別", "支付方式", "分帳狀態", "個人金額", "備註", "付款人", "專案", "分帳對象"];
+        const rows = [headers];
+
+        transactions.forEach(t => {
+            const cat = categories.find(c => c.id === t.categoryId);
+            const pm = paymentMethods.find(p => p.id === t.paymentMethod);
+            const proj = projects.find(p => p.id === t.projectId);
+
+            const catName = cat ? cat.name : (t.categoryId === 'income' ? '收入' : '其他');
+            const pmName = pm ? pm.name : (t.paymentMethod || '');
+            const projName = proj ? proj.name : '';
+
+            // Format Friend Name (Split Object)
+            // Logic: t.friendName string
+            const friendName = t.friendName || '';
+
+            rows.push([
+                t.spendDate,
+                t.name,
+                catName,
+                t.amount,
+                t.originalCurrency || t.currency || 'JPY',
+                pmName,
+                t.isSplit ? '是' : '否',
+                t.personalShare || t.amount,
+                t.note || '',
+                t.payer || '我',
+                projName,
+                friendName
+            ]);
+        });
+        return rows;
+    },
+
+    /**
+     * Cloud Save: Save both JSON backup + Spreadsheet to Google Drive '日日記' folder
+     * @param {object} data
+     * @param {string} token
+     * @param {function} onTokenExpired
+     */
+    async cloudSave(data, token, onTokenExpired) {
+        const [backupResult, sheetResult] = await Promise.all([
+            this.backupFullData(data, token, onTokenExpired),
+            this.exportReadableSheet(data, token, onTokenExpired)
+        ]);
+        return {
+            folderName: backupResult.folderName,
+            folderId: backupResult.folderId,
+            backupFile: backupResult.fileName,
+            sheetUrl: sheetResult.url
+        };
+    },
+
+    /**
+     * Generate CSV content string from transaction data (for local export)
+     * @param {object} data
+     * @returns {string} CSV string
+     */
+    generateCsvContent(data) {
+        const rows = this.prepareReadableRows(data);
+        return rows.map(row =>
+            row.map(cell => {
+                const str = String(cell ?? '');
+                // Escape cells containing commas, quotes, or newlines
+                if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                    return `"${str.replace(/"/g, '""')}"`;
+                }
+                return str;
+            }).join(',')
+        ).join('\n');
+    }
+};

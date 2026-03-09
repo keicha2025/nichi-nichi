@@ -1,0 +1,40 @@
+import { AppSelect } from './app-select.js';
+
+export const SearchBar = {
+    components: {
+        'app-select': AppSelect
+    },
+    template: `
+    <!-- Transaction Filter Bar -->
+    <div class="py-2">
+        <div class="flex space-x-2">
+            <!-- Search Input -->
+            <div class="flex-1 bg-white rounded-xl flex items-center px-3 h-9 shadow-sm border border-bdr-subtle transition-shadow focus-within:shadow-md">
+                <span class="material-symbols-rounded text-txt-secondary text-lg">search</span>
+                <input 
+                    type="text" 
+                    :value="modelValue.keyword"
+                    @input="$emit('update:modelValue', { ...modelValue, keyword: $event.target.value })"
+                    placeholder="搜尋..." 
+                    class="w-full text-xs ml-2 outline-none text-txt-primary placeholder-txt-muted bg-transparent"
+                >
+            </div>
+            
+            <!-- Type Filter -->
+            <div class="w-24">
+                <app-select 
+                    :modelValue="modelValue.mode"
+                    @update:modelValue="$emit('update:modelValue', { ...modelValue, mode: $event })"
+                    :options="[
+                        { label: '全部', value: 'all' },
+                        { label: '一般', value: 'general' },
+                        { label: '專案', value: 'project' }
+                    ]"
+                ></app-select>
+            </div>
+        </div>
+    </div>
+    `,
+    props: ['modelValue'],
+    emits: ['update:modelValue']
+};

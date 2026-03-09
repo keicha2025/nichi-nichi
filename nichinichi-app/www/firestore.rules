@@ -1,0 +1,42 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // User Data
+    match /users/{userId} {
+      // Owner has full access
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // Allow finding user by activeSharedIds (Viewer Mode)
+      // Use 'in' check to prevent errors on docs missing the field
+      allow list: if 'activeSharedIds' in resource.data && resource.data.activeSharedIds.size() > 0;
+      allow get: if 'activeSharedIds' in resource.data && resource.data.activeSharedIds.size() > 0;
+
+      // Shared Links Config
+      match /shared_links/{linkId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+        // Public can read link config if they know the ID
+        allow get: if true; 
+      }
+
+      // Transactions Subcollection
+      match /transactions/{txId} {
+        // Owner has full access
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+        
+        // Viewer Mode: Allow read if the parent user has ANY active shared links
+        // Use .get() with default to safely handle missing fields
+        allow read: if get(/databases/$(database)/documents/users/$(userId)).data.get('activeSharedIds', []).size() > 0;
+      }
+    }
+
+    // Friend Connections (Mutual Linking Signal)
+    match /friend_connections/{connId} {
+      // Any logged-in user can create a connection signal
+      allow create: if request.auth != null;
+      // Only the target user (inviter) can read or delete the signal
+      allow read, delete: if request.auth != null && resource.data.toUid == request.auth.uid;
+    }
+  }
+}

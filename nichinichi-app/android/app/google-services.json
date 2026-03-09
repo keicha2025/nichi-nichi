@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "690825505366",
+    "project_id": "project-2096109701191973112",
+    "storage_bucket": "project-2096109701191973112.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:690825505366:android:93cb50bfa8559fa3b369f7",
+        "android_client_info": {
+          "package_name": "com.nichinichi.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "690825505366-uo56fb79qbh5462v5efq0heip02nfmor.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCxOb_SqrhYnaonI8-nVrEY5Of7vegf-Q0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "690825505366-uo56fb79qbh5462v5efq0heip02nfmor.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

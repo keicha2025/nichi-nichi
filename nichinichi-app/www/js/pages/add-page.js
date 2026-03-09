@@ -1,0 +1,464 @@
+import { API } from '../api.js'; // Ensure API is imported if needed, or rely on emit
+export const AddPage = {
+    template: `
+    <section class="space-y-6 py-4 animate-in fade-in">
+        <div class="bg-white p-6 rounded-[2.5rem] muji-shadow space-y-6">
+            <!-- 1. 類型切換 -->
+            <div class="flex bg-bg-subtle rounded-xl p-1 relative">
+                <button v-for="t in ['支出', '收入', '收款']" :key="t"
+                        @click.stop="form.type = t" 
+                        :class="form.type === t ? 'bg-white text-txt-primary shadow-sm' : 'text-txt-secondary'" 
+                        class="flex-1 py-2 text-[10px] tracking-widest rounded-lg transition-all z-10 font-medium">{{ t }}</button>
+            </div>
+
+            <!-- 2. 金額 -->
+            <div class="text-center py-6 border-b border-bdr-subtle">
+                <div class="flex items-center justify-center space-x-3">
+                    <span @click.stop="$emit('toggle-currency')" class="text-xs font-medium text-txt-secondary border border-bdr-subtle px-3 py-1 rounded-full cursor-pointer">{{ form.currency }}</span>
+                    <input type="number" v-model="form.amount" class="text-5xl font-light w-48 text-center bg-transparent outline-none" placeholder="0" inputmode="decimal">
+                    <button @click.stop="toggleCalculator" class="p-2 -mr-10 text-txt-secondary hover:text-txt-primary transition-colors">
+                        <span class="material-symbols-rounded text-2xl">{{ showCalculator ? 'keyboard' : 'calculate' }}</span>
+                    </button>
+                </div>
+                
+                <!-- Calculator Panel -->
+                <transition name="calc">
+                    <div v-if="showCalculator" class="mt-6 bg-bg-subtle p-4 rounded-3xl">
+                        <div class="bg-white/50 mb-4 p-3 rounded-xl text-right overflow-hidden border border-bdr-subtle min-h-[40px] flex items-center justify-end">
+                            <span class="text-sm font-light tracking-wider text-txt-secondary truncate break-all">{{ calcExpression || '0' }}</span>
+                        </div>
+                        <div class="grid grid-cols-4 gap-2">
+                            <button v-for="btn in ['(', ')', 'C', '÷']" :key="btn" @click.stop="onCalcPress(btn)" 
+                                    class="h-12 rounded-xl bg-white/80 text-txt-secondary text-sm font-medium hover:bg-white active:scale-95 transition-all">{{ btn }}</button>
+                            <button v-for="btn in ['7', '8', '9', '×']" :key="btn" @click.stop="onCalcPress(btn)" 
+                                    class="h-12 rounded-xl bg-white text-txt-primary text-sm font-medium hover:bg-white active:scale-95 transition-all">{{ btn }}</button>
+                            <button v-for="btn in ['4', '5', '6', '-']" :key="btn" @click.stop="onCalcPress(btn)" 
+                                    class="h-12 rounded-xl bg-white text-txt-primary text-sm font-medium hover:bg-white active:scale-95 transition-all">{{ btn }}</button>
+                            <button v-for="btn in ['1', '2', '3', '+']" :key="btn" @click.stop="onCalcPress(btn)" 
+                                    class="h-12 rounded-xl bg-white text-txt-primary text-sm font-medium hover:bg-white active:scale-95 transition-all">{{ btn }}</button>
+                            <button v-for="btn in ['0', '.', '⌫', '=']" :key="btn" @click.stop="onCalcPress(btn)" 
+                                    :class="btn === '=' ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-white text-txt-primary'"
+                                    class="h-12 rounded-xl text-sm font-medium hover:opacity-90 active:scale-95 transition-all">{{ btn }}</button>
+                        </div>
+                    </div>
+                </transition>
+            </div>
+
+            <div class="space-y-5">
+                <!-- 3. 付款者選擇 (支出) -->
+                <div v-if="form.type === '支出'" class="space-y-2">
+                    <label class="text-[10px] text-txt-secondary uppercase tracking-widest px-2 font-medium">付款人</label>
+                    <div class="flex flex-wrap gap-2 px-2">
+                        <button @click="form.payer = '我'" :class="form.payer === '我' ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-bg-subtle text-txt-secondary'" class="px-4 py-1.5 rounded-full text-[10px]">我</button>
+                        <button v-for="f in displayFriends" :key="'p-'+f.id" @click="form.payer = f.id" :class="form.payer === f.id ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-bg-subtle text-txt-secondary'" class="px-4 py-1.5 rounded-full text-[10px]">{{ f.name }}</button>
+                        <button @click="triggerAddFriend('payer')" class="px-3 py-1.5 rounded-full bg-bg-subtle text-txt-secondary text-[10px]">+</button>
+                    </div>
+                    <!-- 本區塊新增輸入框 -->
+                    <div v-if="isAddingFriend && addFriendTarget === 'payer'" class="mx-2 bg-bg-subtle p-3 rounded-2xl flex items-center space-x-2 mt-2">
+                        <input type="text" v-model="newFriendName" placeholder="新付款人名字" class="flex-grow bg-white p-2 rounded-xl text-xs outline-none">
+                        <button @click="confirmAddFriend" class="bg-[var(--action-primary-bg)] text-white px-4 py-2 rounded-xl text-[10px]">OK</button>
+                    </div>
+                </div>
+
+                <!-- 4. 收款對象選擇 (收款) -->
+                <div v-if="form.type === '收款'" class="space-y-2">
+                    <label class="text-[10px] text-txt-secondary uppercase tracking-widest px-2 font-medium">收款對象</label>
+                    <div class="flex flex-wrap gap-2 px-2">
+                        <button v-for="f in displayFriends" :key="'r-'+f.id" @click="form.friendName = f.id" :class="form.friendName === f.id ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-bg-subtle text-txt-secondary'" class="px-4 py-1.5 rounded-full text-[10px]">{{ f.name }}</button>
+                        <button @click="triggerAddFriend('friendName')" class="px-3 py-1.5 rounded-full bg-bg-subtle text-txt-secondary text-[10px]">+</button>
+                    </div>
+                    <!-- 本區塊新增輸入框 -->
+                    <div v-if="isAddingFriend && addFriendTarget === 'friendName'" class="mx-2 bg-bg-subtle p-3 rounded-2xl flex items-center space-x-2 mt-2">
+                        <input type="text" v-model="newFriendName" placeholder="新收款人名字" class="flex-grow bg-white p-2 rounded-xl text-xs outline-none">
+                        <button @click="confirmAddFriend" class="bg-[var(--action-primary-bg)] text-white px-4 py-2 rounded-xl text-[10px]">OK</button>
+                    </div>
+                </div>
+
+                <!-- 5. 基礎日期、分類、名稱 -->
+                <div class="flex items-center justify-between px-2 h-12 bg-bg-subtle rounded-2xl border border-transparent transition-all active:scale-[0.98] cursor-pointer"
+                     @click="triggerPicker($refs.dateInput)">
+                    <span class="text-[10px] text-txt-secondary uppercase tracking-widest font-bold">Date</span>
+                    <input 
+                        ref="dateInput"
+                        type="datetime-local" 
+                        v-model="form.spendDate" 
+                        class="text-sm bg-transparent outline-none text-right cursor-pointer h-full"
+                    >
+                </div>
+
+                <div v-if="form.type !== '收款'" class="grid grid-cols-4 gap-4 py-2">
+                    <div v-for="cat in filteredCategories" :key="cat.id" @click.stop="form.categoryId = cat.id" :class="form.categoryId === cat.id ? 'bg-[var(--action-primary-bg)] text-white shadow-lg' : 'bg-bg-subtle text-txt-secondary'" class="flex flex-col items-center p-3 rounded-2xl transition-all">
+                        <span class="material-symbols-rounded text-xl">{{ cat.icon }}</span>
+                        <span class="text-[9px] mt-1 font-medium">{{ cat.name }}</span>
+                    </div>
+                </div>
+                <!-- Name Suggestions -->
+                <transition name="suggestion-container">
+                    <transition-group v-if="nameSuggestions.length > 0" name="suggestion" tag="div" class="flex flex-wrap gap-2 px-2 mt-1">
+                        <div v-for="s in nameSuggestions" :key="s" @click="form.name = s" 
+                             class="suggestion-bubble">{{ s }}</div>
+                    </transition-group>
+                </transition>
+
+                <input type="text" v-model="form.name" placeholder="項目名稱" class="w-full text-sm py-4 border-b border-bdr-subtle outline-none">
+
+                <div class="space-y-2">
+                    <label class="text-[10px] text-txt-secondary uppercase tracking-widest px-2 font-medium">支付方式</label>
+                    <div class="flex space-x-2 overflow-x-auto no-scrollbar py-2 px-2">
+                        <button v-for="pm in paymentMethods" :key="pm.id" @click.stop="form.paymentMethod = pm.id"
+                                :class="pm.id === form.paymentMethod ? 'bg-[var(--action-primary-bg)] text-white shadow-md' : 'bg-bg-subtle text-txt-secondary'"
+                                class="whitespace-nowrap px-4 py-2 rounded-2xl flex items-center space-x-2 transition-all border border-transparent">
+                             <span class="material-symbols-rounded text-base">{{ pm.icon || 'payments' }}</span>
+                             <span class="text-[10px] whitespace-nowrap">{{ pm.name }}</span>
+                        </button>
+                    </div>
+                </div>
+
+                <textarea v-model="form.note" placeholder="備註..." class="w-full text-sm p-4 bg-bg-subtle rounded-2xl outline-none h-20 resize-none"></textarea>
+                <!-- Note Suggestions -->
+                <transition name="suggestion-container">
+                    <transition-group v-if="noteSuggestions.length > 0" name="suggestion" tag="div" class="flex flex-wrap gap-2 px-2 mt-1">
+                        <div v-for="s in noteSuggestions" :key="s" @click="form.note = s" 
+                             class="suggestion-bubble">{{ s }}</div>
+                    </transition-group>
+                </transition>
+
+                <!-- 6. 分帳功能 (支出) -->
+                <div v-if="form.type === '支出'" class="pt-4 border-t border-bdr-subtle space-y-4">
+                    <div class="flex items-center justify-between" @click.stop="form.isSplit = !form.isSplit">
+                        <span class="text-xs text-txt-secondary font-light">幫朋友代墊 / 需分帳</span>
+                        <div class="w-10 h-5 rounded-full shadow-sm relative transition-colors" :class="form.isSplit ? 'bg-[var(--action-primary-bg)]' : 'bg-bg-subtle'">
+                            <div class="absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform" :class="{'translate-x-5': form.isSplit}"></div>
+                        </div>
+                    </div>
+
+                    <div v-if="form.isSplit" class="bg-bg-subtle p-6 rounded-3xl space-y-6">
+                        <div class="flex flex-wrap gap-2">
+                            <button v-for="f in visibleFriends" :key="'s-'+f.id" @click="toggleFriendInSplit(f.id)" :class="selectedFriends.includes(f.id) ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-white text-txt-secondary border border-bdr-subtle'" class="px-4 py-1.5 rounded-full text-[10px]">{{ f.name }}</button>
+                            <button @click="triggerAddFriend('split')" class="px-3 py-1.5 rounded-full bg-bg-subtle text-txt-secondary text-[10px]">+</button>
+                        </div>
+                        
+                        <!-- 本區塊新增輸入框 -->
+                        <div v-if="isAddingFriend && addFriendTarget === 'split'" class="mx-2 bg-white p-3 rounded-2xl flex items-center space-x-2 shadow-sm animate-in slide-in-from-top-1">
+                            <input type="text" v-model="newFriendName" placeholder="新分帳人名字" class="flex-grow bg-bg-subtle p-2 rounded-xl text-xs outline-none">
+                            <button @click="confirmAddFriend" class="bg-[var(--action-primary-bg)] text-white px-4 py-2 rounded-xl text-[10px]">OK</button>
+                        </div>
+
+                        <div class="flex bg-white rounded-lg p-1 text-[9px] uppercase tracking-widest">
+                            <button @click="splitMode = 'auto'" :class="splitMode === 'auto' ? 'bg-bg-subtle text-txt-primary' : 'text-txt-secondary'" class="flex-1 py-1 rounded">自動平分</button>
+                            <button @click="splitMode = 'manual'" :class="splitMode === 'manual' ? 'bg-bg-subtle text-txt-primary' : 'text-txt-secondary'" class="flex-1 py-1 rounded">手動份額</button>
+                        </div>
+                        <div class="flex justify-between items-center pt-3 border-t border-bdr-subtle">
+                            <span class="text-[10px] text-txt-secondary uppercase">My Share</span>
+                            <input v-if="splitMode === 'manual'" type="number" v-model="form.personalShare" class="text-right bg-white border border-bdr-subtle rounded-lg px-2 text-sm w-24">
+                            <span v-else class="text-sm font-medium">¥ {{ formatNumber(autoShareValue) }}</span>
+                        </div>
+                        <div class="flex items-center justify-between border-t border-bdr-subtle pt-3">
+                            <span class="text-[10px] text-txt-secondary">對方已當場付清 (不計入欠款)</span>
+                            <input type="checkbox" v-model="form.isAlreadyPaid" class="accent-txt-primary">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. 旅行計畫模式 (取代原本的進階選項) -->
+            <div class="pt-4 border-t border-bdr-subtle space-y-4">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs text-txt-secondary font-light">旅行計畫模式</span>
+                    <!-- Toggle Switch -->
+                    <div class="w-10 h-5 rounded-full shadow-sm relative transition-colors cursor-pointer" 
+                         :class="form.projectId ? 'bg-[var(--action-primary-bg)]' : 'bg-bg-subtle'"
+                         @click="toggleProjectMode">
+                        <div class="absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform" 
+                             :class="{'translate-x-5': form.projectId}"></div>
+                    </div>
+                </div>
+
+                <div v-if="form.projectId || isProjectModeOpen" class="bg-bg-subtle p-6 rounded-3xl space-y-4 animate-in slide-in-from-top-2">
+                     <div class="flex flex-wrap gap-2">
+                        <button v-for="p in activeProjects" :key="p.id" 
+                                @click="form.projectId = p.id"
+                                :class="form.projectId === p.id ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-white text-txt-secondary border border-bdr-subtle'" 
+                                class="px-4 py-1.5 rounded-full text-[10px]">{{ p.name }}</button>
+                        <!-- Add Project Button -->
+                        <button @click="isAddingNewProject = !isAddingNewProject" class="px-3 py-1.5 rounded-full bg-bg-subtle text-txt-secondary text-[10px]">+</button>
+                     </div>
+
+                     <!-- Quick Add Project Input -->
+                     <div v-if="isAddingNewProject" class="mx-2 bg-white p-3 rounded-2xl flex items-center space-x-2 mt-2 shadow-sm">
+                        <input type="text" v-model="newProjectName" placeholder="新旅行計畫" class="flex-grow bg-bg-subtle p-2 rounded-xl text-xs outline-none">
+                        <button @click="quickCreateProject" class="bg-[var(--action-primary-bg)] text-white px-4 py-2 rounded-xl text-[10px]">OK</button>
+                     </div>
+                </div>
+            </div>
+
+            <button @click.stop="prepareAndSubmit" :disabled="loading || isSubmitting" 
+                    class="w-full bg-[var(--action-primary-bg)] text-white py-5 rounded-2xl text-[10px] font-medium tracking-[0.4em] uppercase shadow-lg 
+                           transition-all duration-200 ease-in-out active:scale-95 
+                           disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100">
+                Confirm & Save
+            </button>
+        </div>
+    </section>
+    `,
+    props: ['form', 'categories', 'friends', 'loading', 'paymentMethods', 'projects', 'currentUser', 'transactions'],
+    inject: ['dialog'],
+    data() {
+        return {
+            isAddingFriend: false, addFriendTarget: '', newFriendName: '', selectedFriends: [], splitMode: 'auto',
+            isProjectModeOpen: false, isAddingNewProject: false, newProjectName: '', isSubmitting: false,
+            showCalculator: false, calcExpression: ''
+        };
+    },
+    computed: {
+        filteredCategories() { return this.categories.filter(c => c.type === (this.form.type === '收款' ? '支出' : this.form.type)); },
+        autoShareValue() {
+            if (!this.form.amount) return 0;
+            const totalPeople = (this.form.isSplit ? this.selectedFriends.length : 0) + 1;
+            return Math.round(this.form.amount / totalPeople);
+        },
+        activeProjects() {
+            // 只顯示 Active 且未被刪除的專案
+            return (this.projects || []).filter(p => (p.status !== 'Archived' && p.status !== 'archived') && p.visible !== false);
+        },
+        visibleFriends() {
+            return (this.friends || []).filter(f => f.visible !== false);
+        },
+        displayFriends() {
+            // In ADD page, displayFriends is essentially visibleFriends + currently selected (if any)
+            return (this.friends || []).filter(f => {
+                const isSelected = this.form.payer === f.id || this.form.friendName === f.id || this.selectedFriends.includes(f.id);
+                return (f.visible !== false) || isSelected;
+            });
+        },
+        nameSuggestions() {
+            if (!this.form.name || this.form.name.trim().length === 0) return [];
+            const query = this.form.name.toLowerCase().trim();
+            const matches = (this.transactions || [])
+                .map(t => (t.name || '').trim())
+                .filter(name => name && name.toLowerCase().includes(query) && name.toLowerCase() !== this.form.name.toLowerCase().trim())
+                .reduce((acc, name) => {
+                    if (!acc.find(item => item.toLowerCase() === name.toLowerCase())) acc.push(name);
+                    return acc;
+                }, []);
+            return matches.slice(0, 2);
+        },
+        noteSuggestions() {
+            if (!this.form.note || this.form.note.trim().length === 0) return [];
+            const query = this.form.note.toLowerCase().trim();
+            const matches = (this.transactions || [])
+                .map(t => (t.note || '').trim())
+                .filter(note => note && note.toLowerCase().includes(query) && note.toLowerCase() !== this.form.note.toLowerCase().trim())
+                .reduce((acc, note) => {
+                    if (!acc.find(item => item.toLowerCase() === note.toLowerCase())) acc.push(note);
+                    return acc;
+                }, []);
+            return matches.slice(0, 2);
+        }
+    },
+    watch: {
+        'form.spendDate': {
+            handler(newVal) {
+                if (!newVal) return;
+                this.autoSelectProject(newVal);
+            },
+            immediate: true
+        },
+        'projects': {
+            handler() {
+                if (this.form.spendDate && !this.form.projectId) this.autoSelectProject(this.form.spendDate);
+            },
+            deep: true
+        }
+    },
+    methods: {
+        toggleCalculator() {
+            this.showCalculator = !this.showCalculator;
+            if (this.showCalculator) {
+                this.calcExpression = this.form.amount ? String(this.form.amount) : '';
+                // 震動回饋
+                if (navigator.vibrate) navigator.vibrate(5);
+            }
+        },
+        onCalcPress(btn) {
+            if (navigator.vibrate) navigator.vibrate(2);
+            if (btn === 'C') {
+                this.calcExpression = '';
+            } else if (btn === '⌫') {
+                this.calcExpression = this.calcExpression.slice(0, -1);
+            } else if (btn === '=') {
+                this.evaluateExpression(true); // Pressing = means final confirmation and close
+                return;
+            } else {
+                const map = { '×': '*', '÷': '/' };
+                this.calcExpression += map[btn] || btn;
+            }
+            // Real-time calculation for every press (except =)
+            this.evaluateExpression(false);
+        },
+        evaluateExpression(shouldClose) {
+            if (!this.calcExpression) return;
+            try {
+                // 安全的簡單運算評估 (僅允許 0-9, +, -, *, /, ., (, ))
+                const sanitized = this.calcExpression.replace(/[^-+*/().0-9]/g, '');
+
+                // If it ends with an operator, don't try to evaluate yet (prevent syntax errors during typing)
+                if (/[+\-*/(.]$/.test(sanitized)) return;
+
+                // count parentheses
+                const openCount = (sanitized.match(/\(/g) || []).length;
+                const closeCount = (sanitized.match(/\)/g) || []).length;
+                if (openCount !== closeCount && !shouldClose) return; // Wait for matching brackets unless confirmed
+
+                // eslint-disable-next-line no-new-func
+                const result = new Function(`return ${sanitized}`)();
+                if (isFinite(result)) {
+                    this.form.amount = Math.round(result * 100) / 100; // 保留兩位小數
+                    if (shouldClose) this.showCalculator = false;
+                }
+            } catch (e) {
+                // During typing, ignore errors
+                if (shouldClose) console.error('Calculation error:', e);
+            }
+        },
+        toggleProjectMode() {
+            if (this.form.projectId) {
+                // Currently ON, turn OFF
+                this.form.projectId = '';
+                this.isProjectModeOpen = false;
+            } else {
+                // Currently OFF, turn ON
+                this.isProjectModeOpen = true;
+                // Auto-select the first active project if available, or just open the UI
+                if (this.activeProjects.length > 0) {
+                    this.form.projectId = this.activeProjects[0].id;
+                }
+            }
+        },
+        async quickCreateProject() {
+            if (!this.newProjectName) return;
+            // Emit a custom event or call API directly. 
+            // Since we need to refresh the projects list, best to emit 'create-project' to parent or use API here.
+            // Using API here to match logic in SettingsPage, but ideally should be emitted.
+            // Let's emit to keep it clean, but since we are in AddPage, we might need to handle it in app.js.
+            // Actually, let's just use API here for simplicity as requested by "Atomic Changes".
+            // However, we need to update the `projects` prop.
+            // For now, let's just alert user they need to refresh, or improved: emit 'refresh-data'
+
+
+            // Let's stick to emitting an event to handle the API call in parent (App.js) which already has API access.
+            this.$emit('create-project', this.newProjectName);
+            this.newProjectName = '';
+            this.isAddingNewProject = false;
+        },
+
+        autoSelectProject(dateStr) {
+            // dateStr format: YYYY-MM-DDTHH:mm
+            if (!dateStr || !this.projects) return;
+            const date = dateStr.split('T')[0]; // Get YYYY-MM-DD
+
+            // 尋找符合日期的專案
+            const match = this.activeProjects.find(p => {
+                if (!p.startDate || !p.endDate) return false;
+                return date >= p.startDate && date <= p.endDate;
+            });
+
+            // 若找到且目前沒選 (或是自動模式)，則選取
+            // 這裡採取稍微積極的策略：只要日期變動且符合專案，就切過去 (使用者隨時可切回無)
+            if (match) {
+                if (this.form.projectId !== match.id) {
+                    this.form.projectId = match.id;
+                    this.isProjectModeOpen = true; // Auto-open the UI
+                }
+            }
+        },
+        formatNumber(num) { return new Intl.NumberFormat().format(num); },
+
+        triggerAddFriend(target) {
+            // 如果點擊的是同一個 target，則切換開關；否則切換到新 target 並開啟
+            if (this.addFriendTarget === target) {
+                this.isAddingFriend = !this.isAddingFriend;
+            } else {
+                this.addFriendTarget = target;
+                this.isAddingFriend = true;
+            }
+        },
+        confirmAddFriend() {
+            if (this.newFriendName) {
+                const name = this.newFriendName;
+                this.$emit('add-friend-to-list', name);
+
+                // We need to wait for the next tick to find the newly added friend's ID
+                window.setTimeout(() => {
+                    const newF = this.friends.find(f => f.name === name);
+                    if (newF) {
+                        if (this.addFriendTarget === 'payer') this.form.payer = newF.id;
+                        else if (this.addFriendTarget === 'friendName') this.form.friendName = newF.id;
+                        else if (this.addFriendTarget === 'split') {
+                            if (!this.selectedFriends.includes(newF.id)) {
+                                this.selectedFriends.push(newF.id);
+                            }
+                        }
+                    }
+                }, 0);
+
+                this.newFriendName = '';
+                this.isAddingFriend = false;
+            }
+        },
+        toggleFriendInSplit(id) {
+            const idx = this.selectedFriends.indexOf(id);
+            if (idx > -1) this.selectedFriends.splice(idx, 1);
+            else this.selectedFriends.push(id);
+        },
+        prepareAndSubmit() {
+            if (this.isSubmitting) return;
+
+            // [新增] 資料檢查邏輯
+            if (!this.form.amount || this.form.amount <= 0) { this.dialog.alert('請輸入有效的金額'); return; }
+            if (!this.form.name) { this.dialog.alert('請輸入項目名稱'); return; }
+            if (!this.form.paymentMethod) { this.dialog.alert('請選擇支付方式'); return; }
+            if (this.form.type !== '收款' && !this.form.categoryId) { this.dialog.alert('請選擇分類'); return; }
+            if (this.form.isSplit && this.selectedFriends.length === 0) { this.dialog.alert('已開啟分帳模式，請至少選擇一位朋友'); return; }
+
+            // Haptic Feedback
+            if (navigator.vibrate) navigator.vibrate(10);
+
+            const share = this.splitMode === 'auto' ? this.autoShareValue : this.form.personalShare;
+            let debt = 0;
+            if (this.form.type === '支出') {
+                if (!this.form.isAlreadyPaid) {
+                    debt = (this.form.payer === '我') ? (this.form.amount - share) : -share;
+                }
+                // Always include "我" in the friend list if it's a split, for compatibility
+                const list = [...this.selectedFriends];
+                if (this.form.isSplit && !list.includes('我')) list.push('我');
+                this.form.friendName = list.join(', ');
+            } else if (this.form.type === '收款') {
+                debt = -this.form.amount;
+                this.form.personalShare = 0;
+                this.form.payer = this.form.friendName;
+            } else {
+                debt = 0;
+                this.form.personalShare = this.form.amount;
+            }
+            this.form.personalShare = (this.form.type === '支出') ? share : this.form.personalShare;
+            this.form.debtAmount = debt;
+
+            this.isSubmitting = true;
+            this.$emit('submit');
+
+            // Re-enable after short delay in case parent doesn't unmount (Optimistic UI fallback)
+            setTimeout(() => { this.isSubmitting = false; }, 2000);
+        },
+        triggerPicker(el) {
+            if (el && el.showPicker) {
+                try { el.showPicker(); } catch (e) { el.focus(); }
+            } else if (el) {
+                el.focus();
+                el.click();
+            }
+        }
+    }
+};
+

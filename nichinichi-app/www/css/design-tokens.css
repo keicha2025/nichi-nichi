@@ -1,0 +1,60 @@
+/* 
+ * Design Tokens - Default Theme
+ * 此檔案僅定義預設主題的核心語義變數。
+ */
+
+:root {
+    /* 1. 核心環境色 */
+    --bg-main: #FDFCFB;
+    /* 全域主背景色 */
+    --bg-subtle: #F9FAFB;
+    /* 微妙背景色 (用於輸入框、按鈕底色) */
+    --bg-canvas: #FFFFFF;
+    /* 卡片、畫布背景 */
+
+    /* 2. 核心文字色 */
+    --txt-primary: #424242;
+    --txt-secondary: #6B7280;
+    /* 次要文字、描述 */
+
+    /* 3. 品牌色 (主動作) */
+    --action-primary-bg: #424242;
+    /* 品牌色 (主按鈕) (對應原本 p-brand-600) */
+    --action-primary-text: #FFFFFF;
+    --action-primary-hover: #333333;
+
+    /* 4. 裝飾與特效 (由 style.css 提取) */
+    --shadow-color: rgba(0, 0, 0, 0.03);
+    /* 陰影色 */
+    --shadow-heavy: rgba(0, 0, 0, 0.15);
+    /* 按鈕/疊加物陰影 */
+    --scrollbar-thumb: rgba(0, 0, 0, 0.1);
+    /* 捲軸軌道顏色 */
+
+    /* 5. 統計圖表 8 色 (由深至淺，連動品牌色) */
+    --chart-color-1: #424242;
+    /* 主品牌色 */
+    --chart-color-2: #7a7a7a;
+    --chart-color-3: #9a9a9a;
+    --chart-color-4: #B3B3B3;
+    --chart-color-5: #bdbdbd;
+    --chart-color-6: #e5e5e5;
+    --chart-color-7: #d3c8bc;
+    --chart-color-8: #ecdfd1;
+
+    /* 6. 狀態語義 (強制連動基礎色，不定義獨立功能色) */
+    --color-danger: var(--action-primary-bg);
+    /* 用品牌深色顯示錯誤，維持風格一致 */
+    --color-success: var(--txt-secondary);
+    --color-border: #FFFFFF;
+    /* 主要是卡片邊框 */
+    --bdr-main: #EEEEEE;
+    /* 分割線、表單邊框 */
+    --color-outline: #e9eaeb;
+    /* 空心按鈕、Checkbox 邊框色 */
+
+    /* 圖表 UI 輔助 (連動核心色) */
+    --chart-txt-label: var(--txt-secondary);
+    --chart-txt-value: var(--action-primary-bg);
+    --chart-legend-text: var(--txt-secondary);
+}

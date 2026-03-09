@@ -1,0 +1,18 @@
+{
+  "name": "日日記 Nichi-Nichi Log",
+  "short_name": "日日記",
+  "description": "日本交換留學生專用極速記帳",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "var(--bg-main)",
+  "theme_color": "var(--action-primary-bg)",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "appicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

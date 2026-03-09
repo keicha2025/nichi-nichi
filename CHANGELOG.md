@@ -90,6 +90,48 @@
   - Updated Add/Edit pages to explicitly include "Me" (我) in the `friendName` field for split transactions, ensuring backward compatibility with older calculation engines.
   - *強化資料一致性：分帳交易現在會明確記錄「我」在參與名單中，提升舊版引擎的相容性。*
 
+---
+
+## [2026-03-07T15:30:00+08:00] Feature: Android App Widget Implementation
+
+### Added
+- **Android App Widget**: Implemented a "Nichi-Widget" that displays today's expense summary and provides a quick shortcut to the "Add" page.
+- **Data Sync Bridge**: Added `SharedPreferences` integration via `@capacitor/preferences` to share data between the web app and native widget.
+- **Deep Linking**: Configured `nichinichi://add` and `nichinichi://home` schemes to allow the widget to launch specific app pages.
+- **Native Notification**: Created a custom Capacitor plugin `WidgetUpdate` in `MainActivity.java` to trigger immediate widget updates on data changes.
+- **Design Assets**: Added MUJI-themed XML resources (colors, drawables, layouts) for the native widget UI.
+
+### Changed
+- **API Logic**: Added `syncWidget` to `js/api.js` to calculate today's total and update the native storage.
+- **App Management**: Integrated `transactions` watcher in `js/app.js` to ensure the widget is always in sync with the latest data.
+- **Android Manifest**: Registered `NichiWidget` receiver and added deep link intent filters to `MainActivity`.
+
+### Affected Files
+- `android/app/src/main/res/layout/nichi_widget.xml`
+- `android/app/src/main/res/xml/nichi_widget_info.xml`
+- `android/app/src/main/java/com/nichinichi/app/NichiWidget.java`
+- `android/app/src/main/java/com/nichinichi/app/MainActivity.java`
+- `android/app/src/main/AndroidManifest.xml`
+- `js/api.js`
+- `js/app.js`
+
+*實作 Android 桌面小工具：新增「今日支出」摘要與「快速記帳」捷徑。透過 SharedPreferences 與自定義 Capacitor Plugin 實現 Web 與原生系統間的即時數據同步。*
+
+---
+
+## [2026-03-07T14:45:00+08:00] UI: App Renamed to "日日記"
+
+### Changed
+- **Display Name**: Changed the official app name from `nichinichi` to `日日記` (Daily Diary) across all platforms.
+- **Android Resources**: Updated `strings.xml` and `capacitor.config.ts` to reflect the new Chinese name.
+- **Widget Identification**: Added the Chinese name to the App Widget receiver label for better visibility in the system widget picker.
+
+### Affected Files
+- `capacitor.config.ts`
+- `android/app/src/main/res/values/strings.xml`
+- `android/app/src/main/AndroidManifest.xml`
+
+*修改 App 名稱為「日日記」：全面更新 Android 系統顯示名稱與小工具標籤，使品牌形象更符合中文用戶直覺。*
 ## [2026-02-12] 12:30
 ### Added
 - **Unique Friend IDs & Data Integrity Refactor**:
@@ -1251,4 +1293,214 @@ Added comprehensive debug logging throughout the category save flow for easier t
 ### Affected Files
 - `.github/workflows/deploy.yml`
 
-*部署腳本安全性優化：將 GitHub Actions 中的 Secrets 改為透過環境變數傳遞，避免腳本警告並提升安全性。*
+
+---
+
+## [2026-03-07T00:52:00+08:00] Documentation: Mobile Optimization Guide
+
+### Added
+- **Mobile Optimization Guide**: Created a comprehensive guide for converting the web app into a mobile APK.
+    - **Performance Enhancements**: Documented Service Worker precaching, Firestore offline persistence, and splash screen strategies.
+    - **Mobile UX Refinement**: Detailed touch target enlargement, gesture navigation (edge swipe), and haptic feedback implementation.
+    - **Technical Implementation**: Proposed Capacitor/TWA as delivery paths for the APK.
+    - **Native Integration**: Suggested Biometric Auth and FCM push notifications.
+
+### Affected Files
+- `docs/mobile-optimization-guide.md`
+
+
+---
+
+## [2026-03-07T01:05:00+08:00] Infrastructure: Capacitor APK Environment Setup
+
+### Added
+- **Capacitor Integration**: Initialized a new Capacitor project in `nichinichi-app/` to support APK generation.
+- **Android Platform**: Added the Android native project and synced web assets from a localized `www` directory.
+- **Automated Asset Generation**: Integrated `@capacitor/assets` and generated all necessary Android `mipmap` icons and splash screens from the provided `appicon.png`.
+- **Localized Web Assets**: Created a deployment-ready `www` folder within the app directory containing all optimized JavaScript, CSS, and HTML resources.
+
+### Affected Files
+- `nichinichi-app/` (New Capacitor Project)
+- `nichinichi-app/android/` (Native Android Project)
+- `nichinichi-app/assets/` (Source Assets)
+- `nichinichi-app/www/` (Bundled Web Assets)
+
+
+---
+
+## [2026-03-07T14:18:00+08:00] Bug Fix: Mobile Google Authentication
+
+### Fixed
+- **Native Google Login**: Resolved an issue where login failed in the mobile app by installing the native `@codetrix-studio/capacitor-google-auth` plugin.
+- **API Logic**: Updated `js/api.js` to correctly bridge the native Google identity with Firebase Auth using `signInWithCredential`.
+- **Firebase Configuration**: Added missing `reauthenticateWithCredential` to the Firebase service layer for full account management support in mobile mode.
+- **Project Structure**: Synced latest web assets to the `nichinichi-app/www` directory and updated Capacitor sync.
+
+### Affected Files
+- `js/api.js`
+- `js/firebase-config.js`
+- `nichinichi-app/package.json`
+- `nichinichi-app/www/`
+
+
+---
+
+## [2026-03-07T14:25:00+08:00] Infrastructure: Package Name Unification & Google Auth Alignment
+
+### Changed
+- **Package ID Unification**: Renamed the Android package ID from `com.keicha.nichinichi` to `com.nichinichi.app` across all configuration files to match the Firebase console and `google-services.json`.
+- **Directory Structure**: Relocated `MainActivity.java` to `android/app/src/main/java/com/nichinichi/app/` to align with the new package declaration.
+- **Capacitor Configuration**: Updated `capacitor.config.ts` with the new `appId` and added `serverClientId` for enhanced Google Auth stability.
+- **Android Resources**: Updated `strings.xml` and `build.gradle` with the unified package identifier and namespace.
+
+### Affected Files
+- `capacitor.config.ts`
+- `android/app/build.gradle`
+- `android/app/src/main/AndroidManifest.xml` (implicitly via sync)
+- `android/app/src/main/res/values/strings.xml`
+- `android/app/src/main/java/com/nichinichi/app/MainActivity.java`
+
+
+*統一包名與 Google 登入設定：將專案包名全面改為 `com.nichinichi.app` 以匹配 Firebase 設定，並完成 Android 原始碼路徑重構與環境同步。*
+
+---
+
+## [2026-03-07T16:15:00+08:00] Bugfix: White Screen resolved & Dual Currency Widgets implemented
+
+### Fixed
+- **App Startup (White Screen)**: Unified JavaScript module imports by removing `?v=...` version suffixes. This prevents multiple module instances and conflicts in the WebView environment, which was the primary cause of startup failure.
+
+### Added
+- **Dual Currency Widgets**: Split the single daily expense widget into two separate native Android widgets: `NichiWidgetJpy` and `NichiWidgetTwd`.
+    - **NichiWidgetJpy**: Shows only Japanese Yen (JPY) daily expenses.
+    - **NichiWidgetTwd**: Shows only Taiwan Dollar (TWD) daily expenses.
+- **Native Android Registration**: Registered both `NichiWidgetJpy` and `NichiWidgetTwd` in `AndroidManifest.xml` and created their respective `AppWidgetProvider` classes and XML info files.
+
+### Changed
+- **Data Synchronization**: Updated `js/api.js` to calculate and store totals for both currencies in `SharedPreferences` as `today_total_jpy` and `today_total_twd`.
+
+### Affected Files
+- `js/app.js`
+- `js/api.js`
+- `index.html`
+- `android/app/src/main/AndroidManifest.xml`
+- `android/app/src/main/res/xml/nichi_widget_jpy_info.xml`
+- `android/app/src/main/res/xml/nichi_widget_twd_info.xml`
+- `android/app/src/main/java/com/nichinichi/app/NichiWidgetJpy.java`
+- `android/app/src/main/java/com/nichinichi/app/NichiWidgetTwd.java`
+
+*修復啟動白屏與實作雙幣別獨立小工具：統一模組引用格式解決白屏問題，並在安卓端新增兩個獨立小工具分別顯示 JPY 與 TWD 當日花費。*
+
+---
+
+## [2026-03-07T16:55:00+08:00] Verify: Android Build & Native Widgets Finalization
+
+### Summary
+Verified and finalized the Android build environment by ensuring the Capacitor `www` directory matches the project source. Confirmed the implementation of independent JPY and TWD widgets.
+
+### Technical Details
+- **Source Alignment:** Discovered that the `nichinichi-app/www` folder (used as source for Capacitor) contained outdated files with incorrect import paths. Synchronized `js/`, `css/`, and `index.html` from the root to `nichinichi-app/www/`.
+- **Capacitor Sync:** Ran `npx cap sync android` to update the native `android/` project with the aligned assets.
+- **Widget Consistency:** Re-verified that `syncWidget` in the deployed `api.js` now correctly populates `today_total_jpy` and `today_total_twd` for use by the two separate Android widgets.
+
+### Affected Files
+- `nichinichi-app/www/index.html` (Updated)
+- `nichinichi-app/www/js/app.js` (Updated)
+- `nichinichi-app/www/js/api.js` (Updated)
+- `android/app/src/main/assets/public/` (Synced)
+
+*最終環境確認：同步 Capacitor web 目錄並推送至 Android 原生專案，確認兩個獨立幣別的小工具逻辑已正確部署且不會產生白屏現象。*
+
+---
+
+## [2026-03-07T16:25:00+08:00] Fix: Widget Real-time Sync & Timezone Consistency
+
+### Summary
+Fixed the issue where Android App Widgets failed to update in real-time or displayed incorrect data due to timezone mismatches.
+
+### Technical Details
+- **JS Logic (api.js)**: 
+    - Migrated from UTC-based today detection to **Local Timezone (ISO)** detection to ensure "Today" in the widget matches the user's local day.
+    - Improved Payer identification to correctly include transactions where the payer is stored as a Firebase UID (post-Auth sync).
+- **Native Enhancement (MainActivity.java)**:
+    - Overhauled `WidgetUpdatePlugin` to use explicit Intent broadcasts for both `NichiWidgetJpy` and `NichiWidgetTwd`.
+    - This ensures that native layouts are forced to re-render immediately after JS data is saved to `SharedPreferences`.
+- **Consistency**: Re-synchronized web assets and native config.
+
+### Affected Files
+- `js/api.js` (Improved sync logic)
+- `nichinichi-app/android/app/src/main/java/com/nichinichi/app/MainActivity.java` (Direct widget refresh)
+
+*小工具同步修正：修正時區判定導致的數據偏移問題，並強化原生端的刷新機制，確保 App 紀錄新增後桌面的 JPY/TWD 小工具能立即更新正確數值。*
+
+---
+
+## [2026-03-07T16:35:00+08:00] UI: Bulk Delete UI Migration (History Page)
+
+### Summary
+Relocated the bulk delete button in the History Page to improve UI cleanliness and align with common mobile interaction patterns.
+
+### Technical Details
+- **UI Structure (HistoryPage)**: 
+    - Removed the floating capsule-style "Delete X items" button at the bottom.
+    - Integrated a compact **"Delete" (刪除)** button into the top selection bar, positioned to the right of the "Select All" button.
+    - Added a subtle separator line for visual hierarchy.
+- **Interactions**:
+    - The delete button only appears when at least one item is selected.
+    - Preserved the batch-deletion confirmation dialog.
+
+### Affected Files
+- `js/pages/history-page.js`
+
+*明細頁介面優化：移除底部浮動的刪除按鈕，改為整合於上方「已選取」狀態欄位中（位於「全選」右側），提升操作直覺性並優化視覺清爽度。*
+
+---
+
+## [2026-03-07T16:40:00+08:00] UI: Delete Button Color Update
+
+### Summary
+Changed the color of the delete button in the History Page from red to a neutral tone to maintain the "MUJI" minimalist aesthetic.
+
+### Technical Details
+- **UI Styling (HistoryPage)**: 
+    - Changed CSS class from `text-danger` to `text-txt-secondary`.
+    - Set hover state to `text-txt-primary` for subtle feedback.
+    - Updated both Web and App versions.
+- **Rationale**: Red was deemed too jarring for the current design system.
+
+### Affected Files
+- `js/pages/history-page.js`
+
+*刪除按鈕色彩修正：將原本紅色的刪除按鈕改為中性色（次要文字色），以符合整體的極簡風格，並已同步部署至網頁版與 App 版。*
+
+---
+
+## [2026-03-09T23:45:00+08:00] Refactor: Cache-First Rendering & Background Synchronization
+
+### Summary of changes
+Implemented a high-performance background synchronization system with cache-first rendering and optimistic UI updates to eliminate loading latency and improve user experience responsiveness.
+
+### Technical details of implementation
+- **Cache-First Loading Strategy**: Updated `loadData` to prioritize local cache in `localStorage` for immediate page rendering before data synchronization begins.
+- **Optimistic UI Updates**: All data modification operations (Create, Update, Delete) now reflect changes in the local state immediately, allowing the UI to remain responsive during network communication.
+- **Non-blocking Background Sync**: Replaced interruptive full-screen loading overlays with a subtle, non-blocking "SYNCING" indicator in the application header.
+- **Header UI Refinement**: Simplified the header by removing login status badges and focusing solely on the dynamic synchronization status to maintain MUJI minimalism.
+- **Project Detail Decoupling**: Refactored the Project Detail page to use event-based state management, moving API logic to the central `app.js` for consistent background sync handling.
+
+### Affected files or modules
+- `/js/app.js`: Core implementation of the background sync and caching engine.
+- `/js/components/app-header.js`: Dynamic sync status display logic.
+- `/js/pages/project-detail-page.js`: Refactored to emit sync events.
+- `index.html`: Updated event bindings for decentralized components.
+
+### Potential side effects or migration notes
+- Users will no longer see blocking spinners during data entry; the "SYNCING" status in the top-right is now the primary feedback.
+- Manual data refresh can be triggered by the "RETRY SYNC" button if a sync failure occurs.
+
+*效能與架構重構：實作「快取優先」載入與「樂觀更新」機制，數據變動會立即反應在畫面上並於背景同步，大幅提升流暢度。標題列已簡化為僅顯示動態同步狀態。*
+
+
+
+
+
+

@@ -1,0 +1,222 @@
+@import url('css/design-tokens.css');
+
+html {
+    overflow-y: scroll;
+    scrollbar-gutter: stable;
+}
+
+[v-cloak] {
+    display: none;
+}
+
+body {
+    background-color: var(--bg-main);
+    color: var(--txt-primary);
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* 全域 Checkbox 樣式優化 */
+input[type="checkbox"] {
+    accent-color: var(--action-primary-bg);
+    border: 1px solid var(--color-outline) !important;
+    border-radius: 4px;
+}
+
+.muji-shadow {
+    box-shadow: 0 10px 30px -5px var(--shadow-color);
+}
+
+.loading-overlay {
+    background: var(--bg-main);
+    opacity: 0.95;
+    backdrop-filter: blur(10px);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+/* Custom Subtle Scrollbar */
+.subtle-scrollbar::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+.subtle-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.subtle-scrollbar::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb);
+    border-radius: 4px;
+}
+
+.subtle-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.nav-item {
+    transition: all 0.3s ease;
+    padding: 8px;
+}
+
+.add-btn-wrap {
+    transform: translateY(-20px);
+}
+
+.add-btn {
+    background: var(--action-primary-bg);
+    color: var(--action-primary-text);
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 20px var(--shadow-heavy);
+    transition: transform 0.2s active;
+}
+
+.add-btn:active {
+    transform: scale(0.9);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-in {
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes amount-flash {
+    0% {
+        opacity: 1;
+    }
+
+    30% {
+        opacity: 0.9;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+.amount-update {
+    animation: amount-flash 0.4s linear;
+}
+
+/* Calculator Transition */
+.calc-enter-active,
+.calc-leave-active {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    max-height: 600px;
+    opacity: 1;
+    overflow: hidden;
+}
+
+.calc-enter-from,
+.calc-leave-to {
+    max-height: 0;
+    opacity: 0;
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* Prediction Suggestions */
+.suggestion-bubble {
+    background: var(--bg-subtle);
+    color: var(--txt-secondary);
+    font-size: 10px;
+    padding: 6px 12px;
+    border-radius: 9999px;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    cursor: pointer;
+    white-space: nowrap;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.suggestion-bubble:active {
+    background: white;
+    transform: scale(0.95);
+    border-color: var(--color-outline);
+}
+
+.suggestion-enter-active,
+.suggestion-leave-active {
+    transition: all 0.2s ease;
+}
+
+.suggestion-enter-from,
+.suggestion-leave-to {
+    opacity: 0;
+    transform: translateY(-5px);
+}
+
+/* Container Expand Animation */
+.suggestion-container-enter-active,
+.suggestion-container-leave-active {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    max-height: 60px;
+    overflow: hidden;
+}
+
+.suggestion-container-enter-from,
+.suggestion-container-leave-to {
+    max-height: 0;
+    opacity: 0;
+    margin-top: 0 !important;
+}
+
+/* Word Cloud Styles */
+.word-cloud-tag {
+    display: inline-block;
+    color: var(--txt-secondary);
+    font-weight: 300;
+    line-height: 1.2;
+    transition: all 0.3s ease;
+    cursor: default;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.word-cloud-tag:hover {
+    color: var(--txt-primary);
+    background: var(--bg-hover-soft);
+    border-radius: 99px;
+}
+
+/* Date/Month Picker Optimization */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="month"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+    opacity: 0;
+    /* Cover the whole area but keep it invisible so our custom UI shows */
+}
+
+input[type="date"],
+input[type="month"],
+input[type="datetime-local"] {
+    position: relative;
+}

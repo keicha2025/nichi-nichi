@@ -1,0 +1,17 @@
+{
+  "projects": {
+    "default": "project-2096109701191973112"
+  },
+  "targets": {
+    "project-2096109701191973112": {
+      "hosting": {
+        "prod": [
+          "project-2096109701191973112"
+        ],
+        "beta": [
+          "nichinichi-beta"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,414 @@
+import { CONFIG } from '../config.js';
+
+export const EditPage = {
+    template: `
+    <section class="space-y-6 py-4 animate-in fade-in pb-24">
+        <div class="bg-white p-6 rounded-[2.5rem] muji-shadow border border-bdr-subtle space-y-6">
+            <!-- Header Controls Integrated in Card -->
+            <div class="flex justify-between items-center px-1 border-b border-bdr-subtle pb-4">
+                <span class="text-[10px] text-txt-secondary uppercase tracking-[0.3em] font-medium">
+                    {{ isReadOnly ? '查看紀錄' : '編輯' + form.type }}
+                </span>
+                <button @click="$emit('cancel')" class="text-[10px] text-txt-muted uppercase tracking-widest hover:text-txt-secondary transition-colors">
+                    {{ isReadOnly ? '關閉' : '取消' }}
+                </button>
+            </div>
+
+            <!-- 1. 金額 -->
+            <div class="text-center py-2">
+                <p class="text-[10px] text-txt-muted mb-2">{{ form.type }}金額</p>
+                <div v-if="isReadOnly" class="text-5xl font-light text-txt-primary">
+                    <span class="text-xl mr-1">{{ form.currency === 'TWD' ? '$' : '¥' }}</span>{{ formatNumber(form.amount) }}
+                </div>
+                <div v-else class="flex items-center justify-center space-x-3">
+                    <span class="text-xs font-medium text-txt-muted">{{ form.currency }}</span>
+                    <input type="number" v-model="form.amount" class="text-5xl font-light w-48 text-center bg-transparent outline-none">
+                </div>
+            </div>
+
+            <div class="space-y-5">
+                <!-- 2. 付款/收款對象 -->
+                <div class="space-y-2 px-2">
+                    <label class="text-[10px] text-txt-secondary uppercase tracking-widest font-medium">
+                        {{ form.type === '收款' ? '收款對象' : '付款人' }}
+                    </label>
+                    <div v-if="isReadOnly" class="text-sm text-txt-primary">
+                        {{ form.type === '收款' ? getFriendName(form.friendName) : getFriendName(form.payer) }}
+                    </div>
+                    <!-- 編輯模式：同步新增頁面的加好友功能 -->
+                    <div v-else>
+                         <div class="flex flex-wrap gap-2">
+                            <template v-if="form.type === '收款'">
+                                <button v-for="f in displayFriends" :key="'e-r-'+f.id" @click="form.friendName = f.id" :class="form.friendName === f.id ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-bg-subtle text-txt-secondary'" class="px-4 py-1.5 rounded-full text-[10px] transition-all">{{ f.name }}</button>
+                                <button @click="triggerAddFriend('friendName')" class="px-3 py-1.5 rounded-full bg-bg-subtle text-txt-secondary text-[10px]">+</button>
+                            </template>
+                            <template v-else>
+                                <button @click="form.payer = '我'" :class="form.payer === '我' ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-bg-subtle text-txt-secondary'" class="px-4 py-1.5 rounded-full text-[10px]">我</button>
+                                <button v-for="f in displayFriends" :key="'e-p-'+f.id" @click="form.payer = f.id" :class="form.payer === f.id ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-bg-subtle text-txt-secondary'" class="px-4 py-1.5 rounded-full text-[10px]">{{ f.name }}</button>
+                                <button @click="triggerAddFriend('payer')" class="px-3 py-1.5 rounded-full bg-bg-subtle text-txt-secondary text-[10px]">+</button>
+                            </template>
+                        </div>
+                        <!-- 新增好友輸入框 -->
+                        <div v-if="isAddingFriend && (addFriendTarget === 'payer' || addFriendTarget === 'friendName')" class="mt-2 bg-bg-subtle p-3 rounded-2xl flex items-center space-x-2">
+                            <input type="text" v-model="newFriendName" :placeholder="addFriendTarget==='payer'?'新付款人':'新收款人'" class="flex-grow bg-white p-2 rounded-xl text-xs outline-none">
+                            <button @click="confirmAddFriend" class="bg-[var(--action-primary-bg)] text-white px-4 py-2 rounded-xl text-[10px]">OK</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. 日期 -->
+                <div class="flex items-center justify-between px-2 py-2 border-b border-bdr-subtle">
+                    <span class="text-[10px] text-txt-secondary uppercase tracking-widest">消費日期</span>
+                    <div v-if="isReadOnly" class="text-sm text-txt-primary">{{ formatDateWithTimezone(form.spendDate, form.utc) }}</div>
+                    <input v-else type="datetime-local" v-model="form.spendDate" class="text-sm bg-transparent outline-none text-right cursor-pointer">
+                </div>
+
+                <!-- 4. [補回] 分類 -->
+                <div v-if="form.type !== '收款'" class="space-y-2 px-2">
+                    <label class="text-[10px] text-txt-secondary uppercase tracking-widest font-medium">分類</label>
+                    <div v-if="isReadOnly" class="flex items-center space-x-2 text-sm text-txt-primary">
+                        <span class="material-symbols-rounded text-base text-txt-secondary">{{ getCategoryIcon(form.categoryId) }}</span>
+                        <span>{{ getCategoryName(form.categoryId) }}</span>
+                    </div>
+                    <div v-else class="grid grid-cols-4 gap-4 py-2">
+                        <div v-for="cat in filteredCategories" :key="cat.id" @click.stop="form.categoryId = cat.id" :class="form.categoryId === cat.id ? 'bg-[var(--action-primary-bg)] text-white shadow-lg' : 'bg-bg-subtle text-txt-muted'" class="flex flex-col items-center p-3 rounded-2xl transition-all">
+                            <span class="material-symbols-rounded text-xl">{{ cat.icon }}</span>
+                            <span class="text-[9px] mt-1">{{ cat.name }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-2 space-y-4">
+                    <div class="space-y-1">
+                        <label class="text-[10px] text-txt-secondary uppercase font-medium">項目名稱</label>
+                        <div v-if="isReadOnly" class="text-sm text-txt-primary">{{ form.name }}</div>
+                        <template v-else>
+                            <!-- Name Suggestions -->
+                            <transition name="suggestion-container">
+                                <transition-group v-if="nameSuggestions.length > 0" name="suggestion" tag="div" class="flex flex-wrap gap-2 mt-1">
+                                    <div v-for="s in nameSuggestions" :key="s" @click="form.name = s" 
+                                         class="suggestion-bubble">{{ s }}</div>
+                                </transition-group>
+                            </transition>
+                            <input type="text" v-model="form.name" class="w-full text-sm py-2 border-b border-bdr-subtle outline-none">
+                        </template>
+                    </div>
+                    
+                    <!-- 5. [補回] 支付方式 -->
+                    <div class="space-y-1">
+                        <label class="text-[10px] text-txt-secondary uppercase font-medium">支付方式</label>
+                        <div v-if="isReadOnly" class="text-sm text-txt-primary">{{ getPaymentName(form.paymentMethod) }}</div>
+                        <div v-else class="flex space-x-2 overflow-x-auto no-scrollbar py-2">
+                            <button v-for="pm in paymentMethods" :key="pm.id" @click.stop="form.paymentMethod = pm.id"
+                                    :class="pm.id === form.paymentMethod ? 'bg-[var(--action-primary-bg)] text-white shadow-md' : 'bg-bg-subtle text-txt-secondary'"
+                                    class="whitespace-nowrap px-4 py-2 rounded-2xl flex items-center space-x-2 transition-all border border-transparent">
+                                 <span class="material-symbols-rounded text-base">{{ pm.icon || 'payments' }}</span>
+                                 <span class="text-[10px] whitespace-nowrap">{{ pm.name }}</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-[10px] text-txt-secondary uppercase font-medium">備註</label>
+                        <div v-if="isReadOnly" class="text-xs text-txt-secondary whitespace-pre-wrap">{{ form.note || '無備註' }}</div>
+                        <template v-else>
+                            <textarea v-model="form.note" class="w-full text-sm p-4 bg-bg-subtle rounded-2xl outline-none h-20 resize-none"></textarea>
+                            <!-- Note Suggestions -->
+                            <transition name="suggestion-container">
+                                <transition-group v-if="noteSuggestions.length > 0" name="suggestion" tag="div" class="flex flex-wrap gap-2 mt-1">
+                                    <div v-for="s in noteSuggestions" :key="s" @click="form.note = s" 
+                                         class="suggestion-bubble">{{ s }}</div>
+                                </transition-group>
+                            </transition>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- 6. 分帳 (同步新增頁面進階功能) -->
+                <div v-if="form.type === '支出'" class="pt-4 border-t border-bdr-subtle space-y-4">
+                    <div class="flex items-center justify-between px-2">
+                        <span class="text-xs text-txt-secondary">幫朋友代墊 / 需分帳</span>
+                        <div v-if="!isReadOnly" class="w-10 h-5 rounded-full shadow-sm relative transition-colors" :class="form.isSplit ? 'bg-gray-400' : 'bg-bg-subtle'" @click="form.isSplit = !form.isSplit">
+                            <div class="absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform" :class="{'translate-x-5': form.isSplit}"></div>
+                        </div>
+                        <div v-else class="text-xs text-txt-secondary">{{ form.isSplit ? '有' : '無' }}</div>
+                    </div>
+                    <div v-if="form.isSplit" class="bg-bg-subtle p-6 rounded-3xl space-y-6 mx-2">
+                        <div v-if="!isReadOnly">
+                             <div class="flex flex-wrap gap-2">
+                                <button v-for="f in visibleFriends" :key="'e-s-'+f.id" @click="toggleFriendInSplit(f.id)" :class="selectedFriends.includes(f.id) ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-white text-txt-secondary'" class="px-4 py-1.5 rounded-full text-[10px]">{{ f.name }}</button>
+                                <button @click="triggerAddFriend('split')" class="px-3 py-1.5 rounded-full bg-bg-subtle text-txt-secondary text-[10px]">+</button>
+                             </div>
+                             <!-- 新增好友輸入框 -->
+                             <div v-if="isAddingFriend && addFriendTarget === 'split'" class="mt-2 bg-white p-3 rounded-2xl flex items-center space-x-2 shadow-sm">
+                                <input type="text" v-model="newFriendName" placeholder="新分帳人" class="flex-grow bg-bg-subtle p-2 rounded-xl text-xs outline-none">
+                                <button @click="confirmAddFriend" class="bg-[var(--action-primary-bg)] text-white px-4 py-2 rounded-xl text-[10px]">OK</button>
+                             </div>
+
+                             <div class="flex bg-white rounded-lg p-1 text-[9px] uppercase tracking-widest mt-4">
+                                <button @click="splitMode = 'auto'" :class="splitMode === 'auto' ? 'bg-bg-subtle text-txt-primary' : 'text-txt-muted'" class="flex-1 py-1 rounded">自動平分</button>
+                                <button @click="splitMode = 'manual'" :class="splitMode === 'manual' ? 'bg-bg-subtle text-txt-primary' : 'text-txt-muted'" class="flex-1 py-1 rounded">手動份額</button>
+                            </div>
+                        </div>
+                        <div v-else class="text-xs text-txt-primary">{{ getFriendNamesFromList(selectedFriends) }}</div>
+                        
+                        <div class="flex justify-between items-center pt-2 border-t border-bdr-subtle">
+                            <span class="text-[10px] text-txt-secondary">我的份額</span>
+                            <div v-if="!isReadOnly && splitMode === 'manual'">
+                                <input type="number" v-model="form.personalShare" class="text-right bg-white border border-bdr-subtle rounded-lg px-2 text-sm w-24">
+                            </div>
+                            <span v-else class="text-sm font-medium">¥ {{ formatNumber(splitMode === 'auto' ? autoShareValue : form.personalShare) }}</span>
+                        </div>
+                        <div class="flex items-center justify-between border-t border-bdr-subtle pt-3">
+                            <span class="text-[10px] text-txt-secondary">對方已當場付清</span>
+                            <input v-if="!isReadOnly" type="checkbox" v-model="form.isAlreadyPaid" class="accent-gray-600">
+                            <div v-else class="text-[10px] text-txt-secondary">{{ form.isAlreadyPaid ? '是' : '否' }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7. 旅行計畫模式 -->
+                <div v-if="!isReadOnly" class="pt-4 border-t border-bdr-subtle space-y-4 px-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-txt-secondary font-light">旅行計畫模式</span>
+                        <div class="w-10 h-5 rounded-full shadow-sm relative transition-colors cursor-pointer" 
+                             :class="form.projectId ? 'bg-[var(--action-primary-bg)]' : 'bg-bg-subtle'"
+                             @click="toggleProjectMode">
+                            <div class="absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform" 
+                                 :class="{'translate-x-5': form.projectId}"></div>
+                        </div>
+                    </div>
+
+                    <div v-if="form.projectId || isProjectModeOpen" class="bg-bg-subtle p-6 rounded-3xl space-y-4 animate-in slide-in-from-top-2">
+                         <div class="flex flex-wrap gap-2">
+                            <button v-for="p in activeProjects" :key="p.id" 
+                                    @click="form.projectId = p.id"
+                                    :class="form.projectId === p.id ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-white text-txt-secondary border border-bdr-subtle'" 
+                                    class="px-4 py-1.5 rounded-full text-[10px]">{{ p.name }}</button>
+                            <button @click="isAddingNewProject = !isAddingNewProject" class="px-3 py-1.5 rounded-full bg-bg-subtle text-txt-secondary text-[10px]">+</button>
+                         </div>
+                         <div v-if="isAddingNewProject" class="mx-2 bg-white p-3 rounded-2xl flex items-center space-x-2 mt-2 shadow-sm">
+                            <input type="text" v-model="newProjectName" placeholder="新旅行計畫" class="flex-grow bg-bg-subtle p-2 rounded-xl text-xs outline-none">
+                            <button @click="quickCreateProject" class="bg-[var(--action-primary-bg)] text-white px-4 py-2 rounded-xl text-[10px]">OK</button>
+                         </div>
+                    </div>
+                </div>
+                <div v-else-if="currentProjectName" class="px-2 pt-2 border-t border-bdr-subtle">
+                    <span class="text-[10px] text-txt-secondary uppercase tracking-widest block mb-1">旅行計畫</span>
+                    <span class="bg-[var(--action-primary-bg)] text-white px-4 py-1.5 rounded-full text-[10px] inline-block">{{ currentProjectName }}</span>
+                </div>
+            </div>
+
+            <!-- 7. 按鈕 -->
+            <div class="space-y-4 pt-6">
+                <button v-if="isReadOnly" @click="isReadOnly = false" class="w-full bg-[var(--action-primary-bg)] text-white py-5 rounded-2xl text-[10px] font-medium tracking-[0.4em] uppercase shadow-lg">開始編輯</button>
+                <template v-else>
+                    <button @click="prepareAndSubmit" :disabled="loading" class="w-full bg-[var(--action-primary-bg)] text-white py-5 rounded-2xl text-[10px] font-medium tracking-[0.4em] uppercase shadow-lg active:scale-95 transition-all">更新紀錄</button>
+                    <button @click="$emit('delete-item', form.row)" :disabled="loading" class="w-full border border-bdr-outline text-danger py-3 rounded-2xl text-[10px] font-medium tracking-[0.4em] uppercase active:bg-bg-subtle transition-all">刪除此筆資料</button>
+                </template>
+            </div>
+        </div>
+    </section>
+    `,
+    props: ['form', 'categories', 'friends', 'loading', 'paymentMethods', 'projects', 'currentUser', 'transactions'],
+    data() {
+        return {
+            selectedFriends: [],
+            isReadOnly: true,
+            isProjectModeOpen: false,
+            isAddingNewProject: false,
+            newProjectName: '',
+            // New Sync Data
+            isAddingFriend: false,
+            addFriendTarget: '',
+            newFriendName: '',
+            splitMode: 'auto'
+        };
+    },
+    computed: {
+        filteredCategories() { return this.categories.filter(c => c.type === (this.form.type === '收款' ? '支出' : this.form.type)); },
+        autoShareValue() {
+            const totalPeople = (this.selectedFriends ? this.selectedFriends.length : 0) + 1;
+            return Math.round(this.form.amount / totalPeople);
+        },
+        displayFriends() {
+            // Show visible friends, OR any friend that is currently selected in this item
+            return (this.friends || []).filter(f => {
+                const isSelected = this.form.payer === f.id || this.form.friendName === f.id || this.selectedFriends.includes(f.id);
+                return (f.visible !== false) || isSelected;
+            });
+        },
+        activeProjects() {
+            const currentId = this.form.projectId;
+            return (this.projects || []).filter(p =>
+                ((p.status !== 'Archived' && p.status !== 'archived') && p.visible !== false) || p.id === currentId
+            );
+        },
+        currentProjectName() {
+            if (!this.form.projectId) return null;
+            const p = (this.projects || []).find(pr => pr.id === this.form.projectId);
+            return p ? p.name : this.form.projectId;
+        },
+        nameSuggestions() {
+            if (!this.form.name || this.form.name.trim().length === 0) return [];
+            const query = this.form.name.toLowerCase().trim();
+            const matches = (this.transactions || [])
+                .map(t => (t.name || '').trim())
+                .filter(name => name && name.toLowerCase().includes(query) && name.toLowerCase() !== this.form.name.toLowerCase().trim())
+                .reduce((acc, name) => {
+                    if (!acc.find(item => item.toLowerCase() === name.toLowerCase())) acc.push(name);
+                    return acc;
+                }, []);
+            return matches.slice(0, 2);
+        },
+        noteSuggestions() {
+            if (!this.form.note || this.form.note.trim().length === 0) return [];
+            const query = this.form.note.toLowerCase().trim();
+            const matches = (this.transactions || [])
+                .map(t => (t.note || '').trim())
+                .filter(note => note && note.toLowerCase().includes(query) && note.toLowerCase() !== this.form.note.toLowerCase().trim())
+                .reduce((acc, note) => {
+                    if (!acc.find(item => item.toLowerCase() === note.toLowerCase())) acc.push(note);
+                    return acc;
+                }, []);
+            return matches.slice(0, 2);
+        }
+    },
+    methods: {
+        toggleProjectMode() {
+            if (this.form.projectId) {
+                this.form.projectId = '';
+                this.isProjectModeOpen = false;
+            } else {
+                this.isProjectModeOpen = true;
+                if (this.activeProjects.length > 0 && !this.form.projectId) {
+                    this.form.projectId = this.activeProjects[0].id;
+                }
+            }
+        },
+        async quickCreateProject() {
+            if (!this.newProjectName) return;
+            this.$emit('create-project', this.newProjectName);
+            this.newProjectName = '';
+            this.isAddingNewProject = false;
+        },
+        formatNumber(num) { return new Intl.NumberFormat().format(Math.round(num || 0)); },
+        getCategoryName(id) { return this.categories.find(c => c.id === id)?.name || '未分類'; },
+        getCategoryIcon(id) { return this.categories.find(c => c.id === id)?.icon || 'sell'; },
+        getPaymentName(id) { const pm = this.paymentMethods.find(p => p.id === id); return pm ? pm.name : id; },
+
+        toggleFriendInSplit(id) {
+            const idx = this.selectedFriends.indexOf(id);
+            if (idx > -1) this.selectedFriends.splice(idx, 1);
+            else this.selectedFriends.push(id);
+        },
+        getFriendName(idOrName) {
+            if (idOrName === '我') return '我';
+            if (!idOrName) return '';
+
+            // Check if it's the current user
+            if (this.currentUser && idOrName === this.currentUser.uid) return '我';
+
+            const f = (this.friends || []).find(x => x.id === idOrName || x.uid === idOrName || x.name === idOrName);
+            if (f) return f.name;
+
+            // Fallback for long IDs
+            if (idOrName.length > 20 || idOrName.includes('_')) return '朋友';
+            return idOrName;
+        },
+        getFriendNamesFromList(idsOrNames) {
+            if (!idsOrNames || idsOrNames.length === 0) return '';
+            const list = Array.isArray(idsOrNames) ? idsOrNames : idsOrNames.split(', ').filter(Boolean);
+            return list.map(id => this.getFriendName(id)).join(', ');
+        },
+
+        // Sync Methods from Add Page
+        triggerAddFriend(target) {
+            if (this.addFriendTarget === target) {
+                this.isAddingFriend = !this.isAddingFriend;
+            } else {
+                this.addFriendTarget = target;
+                this.isAddingFriend = true;
+            }
+        },
+        confirmAddFriend() {
+            if (this.newFriendName) {
+                const name = this.newFriendName;
+                this.$emit('add-friend-to-list', name);
+                window.setTimeout(() => {
+                    const newF = this.friends.find(f => f.name === name);
+                    if (newF) {
+                        if (this.addFriendTarget === 'payer') this.form.payer = newF.id;
+                        else if (this.addFriendTarget === 'friendName') this.form.friendName = newF.id;
+                        else if (this.addFriendTarget === 'split') {
+                            if (!this.selectedFriends.includes(newF.id)) this.selectedFriends.push(newF.id);
+                        }
+                    }
+                }, 0);
+                this.newFriendName = ''; this.isAddingFriend = false;
+            }
+        },
+
+        prepareAndSubmit() {
+            // Use manual share if mode is manual, otherwise auto
+            const share = this.splitMode === 'auto' ? this.autoShareValue : this.form.personalShare;
+            let debt = 0;
+            if (this.form.type === '支出') {
+                if (!this.form.isAlreadyPaid) {
+                    debt = (this.form.payer === '我') ? (this.form.amount - share) : -share;
+                }
+                // Always include "我" in the friend list if it's a split, for compatibility
+                const list = [...this.selectedFriends];
+                if (this.form.isSplit && !list.includes('我')) list.push('我');
+                this.form.friendName = list.join(', ');
+            } else if (this.form.type === '收款') {
+                debt = -this.form.amount;
+                this.form.payer = this.form.friendName;
+            } else {
+                // 一般支出
+                this.form.personalShare = this.form.amount;
+            }
+
+            this.form.personalShare = (this.form.type === '支出') ? share : this.form.personalShare;
+            this.form.debtAmount = debt;
+            this.$emit('submit');
+        },
+        formatDateWithTimezone(dateStr, utc) {
+            if (!dateStr) return '';
+            // Example: 2026-02-07T16:30 -> 2026.02.07 16:30
+            const formatted = dateStr.replace('T', ' ').replace(/-/g, '.');
+            // If utc exists (e.g. +08:00), append (GMT+0800)
+            if (utc) {
+                const zone = utc.replace(':', '');
+                return `${formatted} (GMT${zone})`;
+            }
+            return formatted;
+        }
+    },
+    watch: {
+        'form.row': {
+            handler() {
+                this.isReadOnly = true;
+                if (this.form.friendName) this.selectedFriends = this.form.friendName.split(', ').filter(Boolean);
+                this.isProjectModeOpen = !!this.form.projectId;
+
+                // Detection Logic for Split Mode
+                if (this.form.isSplit) {
+                    // Check if current personalShare ~ autoShare
+                    // Allow small tolerance for rounding? AddPage uses Math.round.
+                    const totalPeople = (this.selectedFriends.length) + 1;
+                    const auto = Math.round(this.form.amount / totalPeople);
+                    // If stored personalShare implies manual override (significantly different)
+                    if (Math.abs(this.form.personalShare - auto) > 1) {
+                        this.splitMode = 'manual';
+                    } else {
+                        this.splitMode = 'auto';
+                    }
+                } else {
+                    this.splitMode = 'auto';
+                }
+            },
+            immediate: true
+        }
+    }
+};
