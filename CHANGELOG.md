@@ -1499,6 +1499,31 @@ Implemented a high-performance background synchronization system with cache-firs
 
 *效能與架構重構：實作「快取優先」載入與「樂觀更新」機制，數據變動會立即反應在畫面上並於背景同步，大幅提升流暢度。標題列已簡化為僅顯示動態同步狀態。*
 
+---
+
+## [2026-03-11T19:00:00+08:00] UI/UX: Edit Page Calculator & Unified Date Picker
+
+### Summary of changes
+Unified the interaction experience between the transition add and edit flows by integrating the inline calculator into the Edit Page and standardizing date picker styling across the application.
+
+### Technical details of implementation
+- **Edit Page Calculator**: Ported the inline calculator component and logic from `AddPage` to `EditPage`, ensuring full feature parity (instant calc, haptic feedback).
+- **Unified Date Picker Styling**: Replaced legacy localized date inputs and underscore styles with a consistent "Round Box" background (`bg-bg-subtle`, `rounded-2xl`) across `AddPage`, `EditPage`, and `ProjectDetailPage`.
+- **Picker Trigger Utility**: Implemented a decentralized `triggerPicker` method to reliably invoke native OS date/time selectors via JavaScript for a smoother mobile experience.
+- **Form State Awareness**: Refactored `app.js`'s `toggleCurrency` to intelligently target either the Add or Edit form based on the current active tab.
+
+### Affected files or modules
+- `/js/pages/edit-page.js`: Implemented calculator and updated date styling.
+- `/js/pages/project-detail-page.js`: Standardized date input styling and interaction.
+- `/js/app.js`: Updated global currency toggle logic.
+- `index.html`: Bound new event listeners for the Edit Page component.
+
+### Potential side effects or migration notes
+- The "Edit Transaction" page now has a more modern feel; the date label is changed to "Date" for visual alignment.
+
+*介面一致性優化：將計算機功能引進「編輯頁面」，並統一全站日期輸入盒樣式為圓角方框，提升行動裝置操作的視覺連貫性與點擊手感。*
+
+
 
 
 

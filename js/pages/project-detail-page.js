@@ -59,11 +59,27 @@ export const ProjectDetailPage = {
                 <div class="grid grid-cols-2 gap-4">
                     <div class="space-y-2">
                         <label class="text-[10px] text-txt-secondary uppercase tracking-widest font-medium ml-2">開始日期</label>
-                        <input type="date" v-model="editForm.startDate" class="w-full bg-bg-subtle px-4 py-3 rounded-2xl text-xs outline-none text-txt-primary">
+                        <div class="flex items-center justify-between px-4 h-11 bg-bg-subtle rounded-2xl border border-transparent transition-all active:scale-[0.98] cursor-pointer"
+                             @click="triggerPicker($refs.startDateInput)">
+                             <input 
+                                ref="startDateInput"
+                                type="date" 
+                                v-model="editForm.startDate" 
+                                class="text-sm bg-transparent outline-none text-left w-full h-full cursor-pointer text-txt-primary"
+                             >
+                        </div>
                     </div>
                     <div class="space-y-2">
                         <label class="text-[10px] text-txt-secondary uppercase tracking-widest font-medium ml-2">結束日期</label>
-                        <input type="date" v-model="editForm.endDate" class="w-full bg-bg-subtle px-4 py-3 rounded-2xl text-xs outline-none text-txt-primary">
+                        <div class="flex items-center justify-between px-4 h-11 bg-bg-subtle rounded-2xl border border-transparent transition-all active:scale-[0.98] cursor-pointer"
+                             @click="triggerPicker($refs.endDateInput)">
+                             <input 
+                                ref="endDateInput"
+                                type="date" 
+                                v-model="editForm.endDate" 
+                                class="text-sm bg-transparent outline-none text-left w-full h-full cursor-pointer text-txt-primary"
+                             >
+                        </div>
                     </div>
                 </div>
 
@@ -167,6 +183,14 @@ export const ProjectDetailPage = {
         async deleteProject() {
             if (await this.dialog.confirm(`確定要刪除「${this.project.name}」嗎？\n這將會從清單中移除此計畫，但歷史交易明細仍會保留。`)) {
                 this.$emit('delete-project', this.project.id);
+            }
+        },
+        triggerPicker(el) {
+            if (el && el.showPicker) {
+                try { el.showPicker(); } catch (e) { el.focus(); }
+            } else if (el) {
+                el.focus();
+                el.click();
             }
         }
     }

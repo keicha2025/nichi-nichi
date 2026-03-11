@@ -909,7 +909,12 @@ createApp({
             handleSubmit, handleDelete, handleDeleteMultiple, handleEditItem,
             formatNumber: (n) => new Intl.NumberFormat().format(Math.round(n || 0)),
             getTabIcon,
-            toggleCurrency: () => form.value.currency = (form.value.currency === 'JPY' ? 'TWD' : 'JPY'),
+            toggleCurrency: () => {
+                const target = currentTab.value === 'edit' ? editForm.value : form.value;
+                if (target) {
+                    target.currency = target.currency === 'JPY' ? 'TWD' : 'JPY';
+                }
+            },
             handleAddFriendToList,
             resetForm,
             handleDrillDown: (id) => { historyFilter.value = { mode: 'all', categoryId: id, friendName: null, currency: null, keyword: '' }; currentTab.value = 'history'; },
