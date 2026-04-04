@@ -64,12 +64,12 @@ export const EditPage = {
                     <div v-else>
                          <div class="flex flex-wrap gap-2">
                             <template v-if="form.type === '收款'">
-                                <button v-for="f in displayFriends" :key="'e-r-'+f.id" @click="form.friendName = f.id" :class="isFriendMatch(form.friendName, f) ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-bg-subtle text-txt-secondary'" class="px-4 py-1.5 rounded-full text-[10px] transition-all">{{ f.name }}</button>
+                                <button v-for="f in displayFriends" :key="'e-r-'+f.id" @click="form.friendName = f.id" :class="form.friendName === f.id ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-bg-subtle text-txt-secondary'" class="px-4 py-1.5 rounded-full text-[10px] transition-all">{{ f.name }}</button>
                                 <button @click="triggerAddFriend('friendName')" class="px-3 py-1.5 rounded-full bg-bg-subtle text-txt-secondary text-[10px]">+</button>
                             </template>
                             <template v-else>
-                                <button @click="form.payer = '我'" :class="isMeMatch(form.payer) ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-bg-subtle text-txt-secondary'" class="px-4 py-1.5 rounded-full text-[10px]">我</button>
-                                <button v-for="f in displayFriends" :key="'e-p-'+f.id" @click="form.payer = f.id" :class="isFriendMatch(form.payer, f) ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-bg-subtle text-txt-secondary'" class="px-4 py-1.5 rounded-full text-[10px]">{{ f.name }}</button>
+                                <button @click="form.payer = '我'" :class="form.payer === '我' ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-bg-subtle text-txt-secondary'" class="px-4 py-1.5 rounded-full text-[10px]">我</button>
+                                <button v-for="f in displayFriends" :key="'e-p-'+f.id" @click="form.payer = f.id" :class="form.payer === f.id ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-bg-subtle text-txt-secondary'" class="px-4 py-1.5 rounded-full text-[10px]">{{ f.name }}</button>
                                 <button @click="triggerAddFriend('payer')" class="px-3 py-1.5 rounded-full bg-bg-subtle text-txt-secondary text-[10px]">+</button>
                             </template>
                         </div>
@@ -102,7 +102,7 @@ export const EditPage = {
                         <span class="material-symbols-rounded text-base text-txt-secondary">{{ getCategoryIcon(form.categoryId) }}</span>
                         <span>{{ getCategoryName(form.categoryId) }}</span>
                     </div>
-                    <div v-else class="grid grid-cols-4 gap-4 py-2" v-cloak>
+                    <div v-else class="grid grid-cols-4 gap-4 py-2">
                         <div v-for="cat in filteredCategories" :key="cat.id" @click.stop="form.categoryId = cat.id" :class="form.categoryId === cat.id ? 'bg-[var(--action-primary-bg)] text-white shadow-lg' : 'bg-bg-subtle text-txt-muted'" class="flex flex-col items-center p-3 rounded-2xl transition-all">
                             <span class="material-symbols-rounded text-xl">{{ cat.icon }}</span>
                             <span class="text-[9px] mt-1">{{ cat.name }}</span>
@@ -160,7 +160,7 @@ export const EditPage = {
                 <div v-if="form.type === '支出'" class="pt-4 border-t border-bdr-subtle space-y-4">
                     <div class="flex items-center justify-between px-2">
                         <span class="text-xs text-txt-secondary">幫朋友代墊 / 需分帳</span>
-                        <div v-if="!isReadOnly" class="w-10 h-5 rounded-full shadow-sm relative transition-colors cursor-pointer" :class="form.isSplit ? 'bg-[var(--action-primary-bg)]' : 'bg-bg-subtle'" @click="form.isSplit = !form.isSplit">
+                        <div v-if="!isReadOnly" class="w-10 h-5 rounded-full shadow-sm relative transition-colors" :class="form.isSplit ? 'bg-gray-400' : 'bg-bg-subtle'" @click="form.isSplit = !form.isSplit">
                             <div class="absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform" :class="{'translate-x-5': form.isSplit}"></div>
                         </div>
                         <div v-else class="text-xs text-txt-secondary">{{ form.isSplit ? '有' : '無' }}</div>
@@ -168,7 +168,7 @@ export const EditPage = {
                     <div v-if="form.isSplit" class="bg-bg-subtle p-6 rounded-3xl space-y-6 mx-2">
                         <div v-if="!isReadOnly">
                              <div class="flex flex-wrap gap-2">
-                                <button v-for="f in displayFriends" :key="'e-s-'+f.id" @click="toggleFriendInSplit(f.id)" :class="isFriendInSplit(f) ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-white text-txt-secondary'" class="px-4 py-1.5 rounded-full text-[10px]">{{ f.name }}</button>
+                                <button v-for="f in visibleFriends" :key="'e-s-'+f.id" @click="toggleFriendInSplit(f.id)" :class="selectedFriends.includes(f.id) ? 'bg-[var(--action-primary-bg)] text-white' : 'bg-white text-txt-secondary'" class="px-4 py-1.5 rounded-full text-[10px]">{{ f.name }}</button>
                                 <button @click="triggerAddFriend('split')" class="px-3 py-1.5 rounded-full bg-bg-subtle text-txt-secondary text-[10px]">+</button>
                              </div>
                              <!-- 新增好友輸入框 -->
@@ -262,16 +262,13 @@ export const EditPage = {
     computed: {
         filteredCategories() { return this.categories.filter(c => c.type === (this.form.type === '收款' ? '支出' : this.form.type)); },
         autoShareValue() {
-            if (!this.form.amount) return 0;
-            const totalPeople = (this.form.isSplit ? this.selectedFriends.length : 0) + 1;
+            const totalPeople = (this.selectedFriends ? this.selectedFriends.length : 0) + 1;
             return Math.round(this.form.amount / totalPeople);
         },
         displayFriends() {
-            // Show visible friends, OR any friend that is currently selected/involved in this item
+            // Show visible friends, OR any friend that is currently selected in this item
             return (this.friends || []).filter(f => {
-                const isSelected = this.isFriendMatch(this.form.payer, f) || 
-                                 this.isFriendMatch(this.form.friendName, f) || 
-                                 this.isFriendInSplit(f);
+                const isSelected = this.form.payer === f.id || this.form.friendName === f.id || this.selectedFriends.includes(f.id);
                 return (f.visible !== false) || isSelected;
             });
         },
@@ -312,22 +309,6 @@ export const EditPage = {
         }
     },
     methods: {
-        // Robust comparison helpers
-        isMeMatch(idOrName) {
-            if (idOrName === '我' || idOrName === 'Me') return true;
-            if (this.currentUser && idOrName === this.currentUser.uid) return true;
-            return false;
-        },
-        isFriendMatch(idOrName, f) {
-            if (!idOrName || !f) return false;
-            // Support matching by ID, Name, or UID
-            return idOrName === f.id || idOrName === f.name || idOrName === f.uid;
-        },
-        isFriendInSplit(f) {
-            // SelectedFriends may contain IDs or Names
-            return this.selectedFriends.some(idOrName => this.isFriendMatch(idOrName, f));
-        },
-
         toggleProjectMode() {
             if (this.form.projectId) {
                 this.form.projectId = '';
@@ -356,10 +337,13 @@ export const EditPage = {
             else this.selectedFriends.push(id);
         },
         getFriendName(idOrName) {
-            if (this.isMeMatch(idOrName)) return '我';
+            if (idOrName === '我') return '我';
             if (!idOrName) return '';
 
-            const f = (this.friends || []).find(x => this.isFriendMatch(idOrName, x));
+            // Check if it's the current user
+            if (this.currentUser && idOrName === this.currentUser.uid) return '我';
+
+            const f = (this.friends || []).find(x => x.id === idOrName || x.uid === idOrName || x.name === idOrName);
             if (f) return f.name;
 
             // Fallback for long IDs
@@ -400,41 +384,34 @@ export const EditPage = {
         },
 
         prepareAndSubmit() {
+            // Use manual share if mode is manual, otherwise auto
+            const share = this.splitMode === 'auto' ? this.autoShareValue : this.form.personalShare;
+            let debt = 0;
             if (this.form.type === '支出') {
-                if (this.form.isSplit) {
-                    const share = this.splitMode === 'auto' ? this.autoShareValue : this.form.personalShare;
-                    this.form.personalShare = share;
-                    if (!this.form.isAlreadyPaid) {
-                        this.form.debtAmount = (this.isMeMatch(this.form.payer)) ? (this.form.amount - share) : -share;
-                    } else {
-                        this.form.debtAmount = 0;
-                    }
-                    // Always include "我" in the friend list for backward compatibility in Firestore queries
-                    const list = [...this.selectedFriends];
-                    if (!list.includes('我')) list.push('我');
-                    this.form.friendName = list.join(', ');
-                } else {
-                    // Normal Expense: No split, personal share is total amount
-                    this.form.personalShare = this.form.amount;
-                    this.form.debtAmount = 0;
-                    this.form.friendName = ''; 
-                    this.selectedFriends = [];
+                if (!this.form.isAlreadyPaid) {
+                    debt = (this.form.payer === '我') ? (this.form.amount - share) : -share;
                 }
+                // Always include "我" in the friend list if it's a split, for compatibility
+                const list = [...this.selectedFriends];
+                if (this.form.isSplit && !list.includes('我')) list.push('我');
+                this.form.friendName = list.join(', ');
             } else if (this.form.type === '收款') {
-                this.form.debtAmount = -this.form.amount;
-                this.form.personalShare = 0;
+                debt = -this.form.amount;
                 this.form.payer = this.form.friendName;
             } else {
-                // Income
+                // 一般支出
                 this.form.personalShare = this.form.amount;
-                this.form.debtAmount = 0;
             }
 
+            this.form.personalShare = (this.form.type === '支出') ? share : this.form.personalShare;
+            this.form.debtAmount = debt;
             this.$emit('submit');
         },
         formatDateWithTimezone(dateStr, utc) {
             if (!dateStr) return '';
+            // Example: 2026-02-07T16:30 -> 2026.02.07 16:30
             const formatted = dateStr.replace('T', ' ').replace(/-/g, '.');
+            // If utc exists (e.g. +08:00), append (GMT+0800)
             if (utc) {
                 const zone = utc.replace(':', '');
                 return `${formatted} (GMT${zone})`;
@@ -490,33 +467,20 @@ export const EditPage = {
         }
     },
     watch: {
-        'form.isSplit'(newVal) {
-            if (!newVal) {
-                // Immediately reset fields when split is toggled off for better UX
-                this.form.personalShare = this.form.amount;
-                this.form.debtAmount = 0;
-                this.form.friendName = '';
-                this.selectedFriends = [];
-            }
-        },
         'form.row': {
             handler() {
                 this.isReadOnly = true;
-                // Parse friends using regex to handle inconsistent spacing
-                if (this.form.friendName) {
-                    this.selectedFriends = this.form.friendName.split(/,\s*/)
-                        .filter(f => f && !this.isMeMatch(f));
-                } else {
-                    this.selectedFriends = [];
-                }
-                
+                if (this.form.friendName) this.selectedFriends = this.form.friendName.split(', ').filter(Boolean);
                 this.isProjectModeOpen = !!this.form.projectId;
 
                 // Detection Logic for Split Mode
                 if (this.form.isSplit) {
+                    // Check if current personalShare ~ autoShare
+                    // Allow small tolerance for rounding? AddPage uses Math.round.
                     const totalPeople = (this.selectedFriends.length) + 1;
                     const auto = Math.round(this.form.amount / totalPeople);
-                    if (Math.abs(this.form.personalShare - auto) > 2) {
+                    // If stored personalShare implies manual override (significantly different)
+                    if (Math.abs(this.form.personalShare - auto) > 1) {
                         this.splitMode = 'manual';
                     } else {
                         this.splitMode = 'auto';

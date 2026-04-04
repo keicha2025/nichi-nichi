@@ -223,7 +223,8 @@
                 :payment-methods="paymentMethods" :friends="friends" :projects="projects" :loading="loading"
                 :current-user="currentUser" :transactions="transactions" @submit="handleSubmit(editForm)"
                 @delete-item="handleDelete" @cancel="currentTab = 'history'; editForm = null;"
-                @create-project="handleCreateProject" @add-friend-to-list="handleAddFriendToList"></edit-page>
+                @create-project="handleCreateProject" @add-friend-to-list="handleAddFriendToList"
+                @toggle-currency="toggleCurrency"></edit-page>
             <stats-page v-if="currentTab === 'stats'" :transactions="transactions" :categories="categories"
                 :payment-methods="paymentMethods" :fx-rate="fxRate" :projects="projects" :friends="friends"
                 :current-user="currentUser" @drill-down="handleDrillDown"></stats-page>
